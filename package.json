@@ -9,7 +9,10 @@
   },
   "dependencies": {
     "antd": "^4.12.3",
+    "axios": "^0.21.1",
+    "mongoose": "^5.11.18",
     "next": "10.0.7",
+    "next-redux-wrapper": "^6.0.2",
     "react": "17.0.1",
     "react-dom": "17.0.1",
     "react-redux": "^7.2.2",
