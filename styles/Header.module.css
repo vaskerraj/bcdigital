@@ -1,0 +1,60 @@
+.TopNav{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    color: #000;
+    min-height: 10vh;
+}
+.TopNav .navbar-brand{
+    margin-top: 0.1rem;
+    margin-left: -1.2rem;
+    color: #000;
+}
+.TopNav .SearchProduct{
+    width: 100% !important;
+    height: 4.0rem;
+    font-size: 14px;
+    border-radius: 50px;
+    border: none;
+    padding: 0 19px;
+    background: #f0f0f0;
+}
+.TopNav .SearchProduct::-webkit-search-cancel-button{
+    -webkit-appearance:none;
+}
+.TopNav .form-control.SearchProduct:focus{
+    outline: none;
+    border: none;
+    box-shadow: none;
+}
+.TopNav .form-control.SearchProduct::placeholder{
+    color: #aaa;
+}
+.TopNav .searchBtn{
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 5.5rem;
+    height: 100%;
+    color: #000;
+    text-align: center;
+    -webkit-transition: all .3s;
+    transition: all .3s;
+}
+
+.TopNav .searchBtn:active,
+.TopNav .searchBtn:focus
+{
+    outline:none;
+    box-shadow: none;
+}
+.TopNav .cartBadge {
+    width: 2rem;
+    height: 2rem;
+    text-align: center;
+    font-weight: bold;
+    position: absolute;
+    top: -1rem;
+    left: 17px;
+    border-radius: 50%;
+}
