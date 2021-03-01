@@ -32,3 +32,16 @@ a {
 * {
   box-sizing: border-box;
 }
+
+.font16{
+  font-size: 1.6rem;
+}
+.font13{
+  font-size:1.3rem;
+}
+.fR{
+  float: right;
+}
+.fL {
+  float: left;
+}
