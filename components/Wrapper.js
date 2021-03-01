@@ -4,7 +4,7 @@ import HeaderMenu from './nav/HeaderMenu';
 import { Layout, Row, Col } from 'antd';
 const { Header, Content, Footer } = Layout;
 
-import { Search, ShoppingCart, User as UserIcon } from 'react-feather';
+import { Search, ShoppingCart, User as UserIcon, ChevronDown } from 'react-feather';
 
 // css
 import styles from '../styles/Header.module.css';
@@ -34,11 +34,27 @@ const Wrapper = ({ children }) => {
                         </div>
                     </div>
                     <div className="col-5 col-sm-3 col-lg-3 col-xl-3">
-                        <div className="d-flex fR mr-3" style={{ fontSize: '1.4rem' }}>
+                        <div className="d-flex fR mr-5" style={{ fontSize: '1.4rem' }}>
                             <div className="d-block d-sm-none mr-4">
                                 <Search />
                             </div>
-                            <Link href="/signin"><a className="text-dark">Hello, Sign In</a></Link>
+                            <div className="d-inline-block text-right text-dark">
+                                <span className="d-none d-md-block">
+                                    <Link href="/signin">
+                                        <a className="text-dark mr-4">
+                                            Hello, Sign In
+                                            <ChevronDown size={14} />
+                                        </a>
+                                    </Link>
+                                </span>
+                                <span className="d-block d-md-none">
+                                    <Link href="/signin">
+                                        <a className="text-dark mr-4">
+                                            <UserIcon />
+                                        </a>
+                                    </Link>
+                                </span>
+                            </div>
                             <Link href="/cart">
                                 <a className="text-dark position-relative">
                                     <ShoppingCart />
