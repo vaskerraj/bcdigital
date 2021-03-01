@@ -4,14 +4,16 @@ import HeaderMenu from './nav/HeaderMenu';
 import { Layout, Row, Col } from 'antd';
 const { Header, Content, Footer } = Layout;
 
+import { Search, ShoppingCart, User as UserIcon } from 'react-feather';
+
 // css
-import '../styles/Header.module.css'
+import styles from '../styles/Header.module.css';
 
 const Wrapper = ({ children }) => {
     return (
-        <div className="container">
+        <div className="main">
             <div className="container">
-                <div className="TopNav row align-items-center">
+                <div className={`${styles.topnav} row align-items-center`} >
                     <div className="col-7 col-sm-4 col-lg-3 order-first">
                         <div className="d-flex">
                             <div className="mobileMenuToggle d-lg-none">
@@ -24,7 +26,7 @@ const Wrapper = ({ children }) => {
                                     </svg>
                                 </div>
                             </div>
-                            <Link className="navbar-brand " href="/">
+                            <Link className="" href="/">
                                 <img src="/logo192.png" height="53px" />
                             </Link>
                         </div>
@@ -32,17 +34,20 @@ const Wrapper = ({ children }) => {
                     <div className="col-5 col-sm-3 col-lg-3 col-xl-3">
                         <div className="d-flex fR mr-3" style={{ fontSize: '1.4rem' }}>
                             <div className="d-block d-sm-none mr-4">
+                                <Search />
                             </div>
-                            <Link href="/signin" className=" text-dark">Hello, Sign In</Link>
+                            <Link href="/signin" className="text-dark">Hello, Sign In</Link>
                             <Link href="/cart" className="text-dark position-relative">
-                                <div className="cartBadge badge-warning" style={{ fontSize: '1.3rem' }}>0</div>
+                                <ShoppingCart />
+                                <div className={`${styles.topnav_cartBadge} bg-warning`} style={{ fontSize: '1.3rem' }}>0</div>
                             </Link>
                         </div>
                     </div>
-                    <div className="SearchBarCol col-sm-5 col-lg-6 col-xl-6 order-sm-first d-none d-sm-block">
+                    <div className="topnav_searchBarCol col-sm-5 col-lg-6 col-xl-6 order-sm-first d-none d-sm-block">
                         <form method="GET" className="form-inline position-relative">
-                            <input className="form-control SearchProduct" type="search" placeholder="Search" />
-                            <button className="btn searchBtn">
+                            <input className={`form-control ${styles.topnav_searchProduct}`} type="search" placeholder="Search" />
+                            <button className={`btn ${styles.topnav_searchBtn}`} >
+                                <Search />
                             </button>
                         </form>
                     </div>
@@ -56,7 +61,7 @@ const Wrapper = ({ children }) => {
             <Footer>
 
             </Footer>
-        </div>
+        </div >
     );
 }
 
