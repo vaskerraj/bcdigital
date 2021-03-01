@@ -12,11 +12,7 @@ body {
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
 
-@media screen and (min-width: 1200px){
-  .container, .container-lg, .container-md, .container-sm {
-      max-width: 1440px;
-  }
-}
+
 @media screen and (min-width: 576px) and (max-width: 1199px){
   .container, .container-lg, .container-md, .container-sm {
       max-width: 100%;
