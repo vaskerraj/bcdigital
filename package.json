@@ -10,7 +10,6 @@
   "dependencies": {
     "antd": "^4.12.3",
     "axios": "^0.21.1",
-    "feather-icons": "^4.28.0",
     "mongoose": "^5.11.18",
     "next": "10.0.7",
     "next-redux-wrapper": "^6.0.2",
@@ -21,6 +20,7 @@
     "react-router-dom": "^5.2.0",
     "react-thunk": "^1.0.0",
     "redux": "^4.0.5",
-    "redux-thunk": "^2.3.0"
+    "redux-thunk": "^2.3.0",
+    "sass": "^1.32.8"
   }
 }
