@@ -27,7 +27,9 @@ const Wrapper = ({ children }) => {
                                 </div>
                             </div>
                             <Link className="" href="/">
-                                <img src="/logo192.png" height="53px" />
+                                <a>
+                                    <img src="/logo192.png" height="53px" />
+                                </a>
                             </Link>
                         </div>
                     </div>
@@ -36,10 +38,12 @@ const Wrapper = ({ children }) => {
                             <div className="d-block d-sm-none mr-4">
                                 <Search />
                             </div>
-                            <Link href="/signin" className="text-dark">Hello, Sign In</Link>
+                            <Link href="/signin" className="text-dark"><a>Hello, Sign In</a></Link>
                             <Link href="/cart" className="text-dark position-relative">
-                                <ShoppingCart />
-                                <div className={`${styles.topnav_cartBadge} bg-warning`} style={{ fontSize: '1.3rem' }}>0</div>
+                                <a>
+                                    <ShoppingCart />
+                                    <div className={`${styles.topnav_cartBadge} bg-warning`} style={{ fontSize: '1.3rem' }}>0</div>
+                                </a>
                             </Link>
                         </div>
                     </div>
