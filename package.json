@@ -10,6 +10,7 @@
   "dependencies": {
     "antd": "^4.12.3",
     "axios": "^0.21.1",
+    "firebase": "^8.2.9",
     "mongoose": "^5.11.18",
     "next": "10.0.7",
     "next-redux-wrapper": "^6.0.2",
