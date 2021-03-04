@@ -41,7 +41,7 @@ const Wrapper = ({ children }) => {
                                 </div>
                                 <div className="d-inline-block text-right text-dark">
                                     <span className="d-none d-md-block">
-                                        <Link href="../auth/register" as="/register">
+                                        <Link href="../auth/login" as="/login">
                                             <a className="text-dark mr-4">
                                                 Hello, Login
                                             <ChevronDown size={14} />
