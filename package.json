@@ -10,6 +10,7 @@
   "dependencies": {
     "antd": "^4.12.3",
     "axios": "^0.21.1",
+    "bootstrap": "^4.6.0",
     "firebase": "^8.2.9",
     "firebase-admin": "^9.5.0",
     "mongoose": "^5.11.18",
