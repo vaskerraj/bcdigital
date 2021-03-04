@@ -6,6 +6,9 @@ import { Divider } from 'antd';
 import GoogleIcon from '../../components/GoogleIcon';
 
 
+import { useSelector, useDispatch } from 'react-redux';
+import { userSignIn } from '../../redux/actions/userAction';
+
 const login = () => {
     const [mobile, setMobile] = useState('');
     const [password, setPassword] = useState('');
@@ -14,6 +17,14 @@ const login = () => {
     const router = useRouter();
     console.log(router);
 
+    const { loading, userInfo, error } = useSelector(state => state.userAuth);
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        if (userInfo) {
+            console.log("url redirect");
+        }
+    }, [userInfo]);
 
     const togglePasswordVisiblity = () => {
         setPasswordShown(passwordShown ? false : true);
@@ -21,6 +32,7 @@ const login = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        dispatch(userSignIn(mobile, password));
     }
 
     return (
@@ -55,7 +67,7 @@ const login = () => {
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Please enter your password"
                                 />
-                                <i onClick={togglePasswordVisiblity} style={{ position: 'absolute', right: '1rem', top: '3rem', cursor: 'pointer' }}>
+                                <i onClick={togglePasswordVisiblity} style={{ position: 'absolute', right: '1rem', top: '3.3rem', cursor: 'pointer' }}>
                                     {passwordShown ? (<EyeOff />) : (<Eye />)}
                                 </i>
                             </div>
