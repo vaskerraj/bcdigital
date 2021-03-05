@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node ./server/index.js",
+    "dev": "nodemon -w server -w package.json server/index.js",
     "build": "next build",
     "start": "cross-env NODE_ENV=production node server.js"
   },
