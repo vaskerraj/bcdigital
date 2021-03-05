@@ -1,8 +1,13 @@
-import mongoose from 'mongoose'
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 const { ObjectId } = mongoose.Schema;
 
 const userSchema = new mongoose.Schema({
     name: String,
+    username: {
+        type: String,
+        unique: true,
+    },
     mobile: {
         type: String,
         required: true,
@@ -59,5 +64,5 @@ userSchema.methods.comparePassword = function (userPassword) {
     });
 }
 
-export default mongoose.models.Users || mongoose.model('Users', userSchema)
+mongoose.models.Users || mongoose.model('Users', userSchema)
 
