@@ -11,6 +11,8 @@
     "antd": "^4.12.3",
     "axios": "^0.21.1",
     "bootstrap": "^5.0.0-alpha1",
+    "cross-env": "^7.0.3",
+    "express": "^4.17.1",
     "firebase": "^8.2.9",
     "firebase-admin": "^9.5.0",
     "mongoose": "^5.11.18",
