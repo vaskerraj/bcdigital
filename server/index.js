@@ -6,7 +6,19 @@ const dev = process.env.NODE_ENV !== 'production'
 const app = next({ dev })
 const handle = app.getRequestHandler()
 
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useUnifiedTopology: true
+});
 
+mongoose.connection.on('connected', err => {
+    console.log('Connected to mongo instace')
+});
+
+mongoose.connection.on('error', err => {
+    console.log('Error on Connected to mongo instace')
+});
 
 app.prepare().then(() => {
     const server = express()
