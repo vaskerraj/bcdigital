@@ -1,3 +1,5 @@
+import productApi from '../../helpers/api';
+import firebase from '../../firebase/firebaseClient';
 import {
     USER_SIGIN_RESPONSE,
     USER_SIGIN_SUCCESS,
@@ -10,6 +12,11 @@ export const userSignIn = (mobile, password) => async (dispatch) => {
     dispatch({ type: USER_SIGIN_RESPONSE, payload: { mobile, password } });
 
     try {
+        const { data } = await productApi.post("api/login", { mobile, password });
+        const result = await firebase.auth().signInWithCustomToken(data.token);
+
+        const { user } = result;
+        dispatch({ type: USER_SIGIN_SUCCESS, payload: user });
 
     } catch (error) {
         dispatch({ type: USER_SIGIN_ERROR, payload: error.message });
