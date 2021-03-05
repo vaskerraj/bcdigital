@@ -28,6 +28,13 @@ app.prepare().then(() => {
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));
 
+    // Allows for cross origin domain request:
+    server.use(function (req, res, next) {
+        res.header("Access-Control-Allow-Origin", "*");
+        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        next();
+    });
+
     server.all('*', (req, res) => {
         return handle(req, res)
     })
