@@ -22,5 +22,42 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 
+// we use function to use this not es6 arrow function
+userSchema.pre('save', function (next) {
+    const user = this;
+    // to prevet Random Table Attack
+    bcrypt.genSalt(10, (err, salt) => {
+        if (err) {
+            return next(err);
+        }
+        bcrypt.hash(user.password, salt, (err, hash) => {
+            if (err) {
+                return next(err);
+            }
+            user.password = hash;
+            next();
+        });
+    });
+
+});
+
+
+userSchema.methods.comparePassword = function (userPassword) {
+    const user = this;
+    // to use async need to use promise
+    return new Promise((reslove, reject) => {
+        bcrypt.compare(userPassword, user.password, (err, isMatch) => {
+            if (err) {
+                return reject(err);
+            }
+            if (!isMatch) {
+                return reject(false);
+            }
+
+            reslove(true);
+        });
+    });
+}
+
 export default mongoose.models.Users || mongoose.model('Users', userSchema)
 
