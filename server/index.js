@@ -2,6 +2,7 @@ const express = require('express')
 const next = require('next')
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const glob = require('glob');
 
 const port = parseInt(process.env.PORT, 10) || 3000
 const dev = process.env.NODE_ENV !== 'production'
@@ -25,6 +26,7 @@ mongoose.connection.on('error', err => {
 app.prepare().then(() => {
     const server = express();
 
+    // middlewares
     server.use(bodyParser.json());
     server.use(bodyParser.urlencoded({ extended: true }));
 
@@ -34,6 +36,10 @@ app.prepare().then(() => {
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
         next();
     });
+
+    // routes
+    const rootPath = require('path').normalize(__dirname + '/..');
+    glob.sync(rootPath + '/server/routes/*.js').forEach(controllerPath => require(controllerPath)(server));
 
     server.all('*', (req, res) => {
         return handle(req, res)

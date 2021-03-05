@@ -2,6 +2,7 @@
   "name": "bcdigital",
   "version": "0.1.0",
   "private": true,
+  "author": "Dharma Raj Bhandari",
   "scripts": {
     "dev": "nodemon -w server -w package.json server/index.js",
     "build": "next build",
@@ -15,6 +16,7 @@
     "express": "^4.17.1",
     "firebase": "^8.2.9",
     "firebase-admin": "^9.5.0",
+    "glob": "^7.1.6",
     "mongoose": "^5.11.18",
     "next": "10.0.7",
     "next-redux-wrapper": "^6.0.2",
