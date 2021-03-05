@@ -25,13 +25,17 @@ export const userSignIn = (mobile, password) => async (dispatch) => {
 export const userGoogleLogin = () => async (dispatch) => {
     dispatch({ type: USER_SIGIN_RESPONSE, payload: '' });
     try {
-        const { user } = await firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
+        const results = await firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
+        const { user } = results;
 
         dispatch({ type: USER_SIGIN_SUCCESS, payload: user });
 
         const token = await user.getIdToken(true);
-        // console.log(token)
-        await axiosApi.post('/api/social', {},
+
+        // get user is new or existing
+        const isNewUserOrNot = results.additionalUserInfo.isNewUser;
+
+        await axiosApi.post('/api/social', { isNewUser: isNewUserOrNot },
             {
                 headers: {
                     token
