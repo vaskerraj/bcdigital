@@ -5,13 +5,27 @@ import { Eye, EyeOff, Facebook } from 'react-feather';
 import { Divider } from 'antd';
 import GoogleIcon from '../../components/GoogleIcon';
 
+import { useSelector, useDispatch } from 'react-redux';
+import { userGoogleLogin, userSignIn } from '../../redux/actions/userAction';
+
 const login = () => {
     const [mobile, setMobile] = useState('');
     const [password, setPassword] = useState('');
     const [passwordShown, setPasswordShown] = useState(false);
 
     const router = useRouter();
-    console.log(router)
+    //console.log(router);
+
+    const { loading, userInfo, error } = useSelector(state => state.userAuth);
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        if (userInfo) {
+            console.log("url redirect");
+        }
+    }, [userInfo]);
+
+    console.log(userInfo);
 
     const togglePasswordVisiblity = () => {
         setPasswordShown(passwordShown ? false : true);
@@ -19,6 +33,11 @@ const login = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        dispatch(userSignIn(mobile, password));
+    }
+
+    const googleLogin = () => {
+        dispatch(userGoogleLogin());
     }
 
     return (
@@ -65,15 +84,15 @@ const login = () => {
                             </div>
                             <Divider>OR</Divider>
                             <div className="d-block">
-                                <button type="submit" className="btn btn-primary btn-lg btn-block font16">
-                                    <Facebook />
-                                    Facebook
-                                </button>
-                                <button type="submit" className="btn btn-danger btn-lg btn-block font16" style={{ marginTop: '1.5rem' }}>
+                                <button type="button" onClick={googleLogin} className="btn btn-danger btn-lg btn-block font16" style={{ marginTop: '1.5rem' }}>
                                     <GoogleIcon />
                                     <span className="ml-1">
                                         Google
                                     </span>
+                                </button>
+                                <button type="submit" className="btn btn-primary btn-lg btn-block font16" style={{ marginTop: '1.5rem' }}>
+                                    <Facebook />
+                                    Facebook
                                 </button>
                             </div>
                         </form>

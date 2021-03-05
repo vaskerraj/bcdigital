@@ -68,16 +68,17 @@ const register = () => {
                             </div>
                             <Divider>OR</Divider>
                             <div className="d-block">
-                                <button type="submit" className="btn btn-primary btn-lg btn-block font16">
-                                    <Facebook />
-                                    Facebook
-                                </button>
                                 <button type="submit" className="btn btn-danger btn-lg btn-block font16" style={{ marginTop: '1.5rem' }}>
                                     <GoogleIcon />
                                     <span className="ml-1">
                                         Google
                                     </span>
                                 </button>
+                                <button type="submit" className="btn btn-primary btn-lg btn-block font16" style={{ marginTop: '1.5rem' }}>
+                                    <Facebook />
+                                    Facebook
+                                </button>
+
                             </div>
                         </form>
                     </div>

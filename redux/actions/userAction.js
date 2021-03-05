@@ -22,6 +22,19 @@ export const userSignIn = (mobile, password) => async (dispatch) => {
         dispatch({ type: USER_SIGIN_ERROR, payload: error.message });
     }
 }
+export const userGoogleLogin = () => async (dispatch) => {
+    dispatch({ type: USER_SIGIN_RESPONSE, payload: '' });
+    try {
+        await firebase
+            .auth()
+            .signInWithPopup(new firebase.auth.GoogleAuthProvider())
+            .then((user) => {
+                dispatch({ type: USER_SIGIN_SUCCESS, payload: user });
+            });
+    } catch (error) {
+        dispatch({ type: USER_SIGIN_ERROR, payload: error.message });
+    }
+}
 
 export const userSignOut = () => async (dispatch) => {
     dispatch({ type: USER_SIGNOUT });
