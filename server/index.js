@@ -1,9 +1,11 @@
 const express = require('express')
 const next = require('next')
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
 
 const port = parseInt(process.env.PORT, 10) || 3000
 const dev = process.env.NODE_ENV !== 'production'
-const app = next({ dev })
+const app = next({ dev });
 const handle = app.getRequestHandler()
 
 mongoose.connect(process.env.MONGO_URI, {
@@ -23,8 +25,8 @@ mongoose.connection.on('error', err => {
 app.prepare().then(() => {
     const server = express();
 
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({ extended: true }));
+    server.use(bodyParser.json());
+    server.use(bodyParser.urlencoded({ extended: true }));
 
     server.all('*', (req, res) => {
         return handle(req, res)
