@@ -6,6 +6,8 @@ import { Menu, Dropdown } from 'antd';
 import { UserOutlined, ShoppingOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { Search, ShoppingCart, User as UserIcon, ChevronDown, LogOut } from 'react-feather';
 
+import { userSignOut } from '../../redux/actions/userAction';
+
 // css
 import styles from '../../styles/Header.module.css';
 
@@ -37,7 +39,7 @@ const MainHeadSection = () => {
                 </a>
             </Menu.Item >
             <Menu.Item className="pl-5 pr-5">
-                <a target="_blank" rel="noopener noreferrer">
+                <a onClick={signOutHandler} target="_blank" rel="noopener noreferrer">
                     <LogOut style={{ marginRight: '1.6rem' }} />
                     Logout
                 </a>
