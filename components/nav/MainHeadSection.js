@@ -1,11 +1,49 @@
 import React from 'react';
 import Link from 'next/link';
-import { Search, ShoppingCart, User as UserIcon, ChevronDown } from 'react-feather';
+import { useSelector, useDispatch } from 'react-redux';
+
+import { Menu, Dropdown } from 'antd';
+import { UserOutlined, ShoppingOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { Search, ShoppingCart, User as UserIcon, ChevronDown, LogOut } from 'react-feather';
 
 // css
 import styles from '../../styles/Header.module.css';
 
 const MainHeadSection = () => {
+    const { userInfo } = useSelector(state => state.userAuth);
+    const dispatch = useDispatch();
+
+    const signOutHandler = () => {
+        dispatch(userSignOut());
+    }
+    const menu = (
+        <Menu style={{ fontSize: '1.6rem' }}>
+            <Menu.Item className="pl-5 pr-5">
+                <a target="_blank" rel="noopener noreferrer">
+                    <UserOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
+                    Manage Account
+                </a>
+            </Menu.Item>
+            <Menu.Item className="pl-5 pr-5">
+                <a target="_blank" rel="noopener noreferrer">
+                    <ShoppingOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
+                    Oders
+                </a>
+            </Menu.Item>
+            <Menu.Item className="pl-5 pr-5">
+                <a target="_blank" rel="noopener noreferrer" >
+                    <CloseCircleOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
+                    Returns & Cancel Order
+                </a>
+            </Menu.Item >
+            <Menu.Item className="pl-5 pr-5">
+                <a target="_blank" rel="noopener noreferrer">
+                    <LogOut style={{ marginRight: '1.6rem' }} />
+                    Logout
+                </a>
+            </Menu.Item>
+        </Menu>
+    );
     return (
         <div className="container-fluid" style={{ backgroundColor: '#fff' }}>
             <div className="container">
@@ -34,23 +72,37 @@ const MainHeadSection = () => {
                             <div className="d-block d-sm-none mr-4">
                                 <Search />
                             </div>
-                            <div className="d-inline-block text-right text-dark">
-                                <span className="d-none d-md-block">
-                                    <Link href="../auth/login" as="/login">
-                                        <a className="text-dark mr-4">
-                                            Hello, Login
-                                            <ChevronDown size={14} />
+                            {
+                                userInfo ? (<>
+                                    <Dropdown overlay={menu} trigger={['click']} placement="bottomRight" arrow>
+                                        <a className="ant-dropdown-link text-dark mr-4" onClick={e => e.preventDefault()}>
+                                            Hello, User
+                                            <ChevronDown />
                                         </a>
-                                    </Link>
-                                </span>
-                                <span className="d-block d-md-none">
-                                    <Link href="/signin">
-                                        <a className="text-dark mr-4">
-                                            <UserIcon />
-                                        </a>
-                                    </Link>
-                                </span>
-                            </div>
+                                    </Dropdown>
+                                </>) :
+                                    (<>
+                                        <div className="d-inline-block text-right text-dark">
+                                            <span className="d-none d-md-block">
+                                                <Link href="../auth/login" as="/login">
+                                                    <a className="text-dark mr-4">
+                                                        Hello, Login
+                                                        <ChevronDown size={14} />
+                                                    </a>
+                                                </Link>
+                                            </span>
+                                            <span className="d-block d-md-none">
+                                                <Link href="/signin">
+                                                    <a className="text-dark mr-4">
+                                                        <UserIcon />
+                                                    </a>
+                                                </Link>
+                                            </span>
+                                        </div>
+                                    </>
+                                    )
+                            }
+
                             <Link href="/cart">
                                 <a className="text-dark position-relative">
                                     <ShoppingCart />
