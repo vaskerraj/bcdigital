@@ -8,10 +8,12 @@ module.exports = function (server) {
             const user = new Users({ mobile, password });
             await user.save();
 
-            return res.status(200).json({ msg: 'user created' });
+            return res.status(200).json(user);
 
         } catch (error) {
-            return res.status(422).json({ msg: error.messsage });
+            return res.status(422).json({
+                error: error.code === 11000 ? 'User already exists' : error.message
+            });
         }
     });
 
