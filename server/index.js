@@ -21,8 +21,10 @@ mongoose.connection.on('error', err => {
 });
 
 app.prepare().then(() => {
-    const server = express()
+    const server = express();
 
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({ extended: true }));
 
     server.all('*', (req, res) => {
         return handle(req, res)
