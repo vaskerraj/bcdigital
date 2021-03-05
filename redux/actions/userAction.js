@@ -23,7 +23,7 @@ export const userSignIn = (mobile, password) => async (dispatch) => {
     }
 }
 
-export const userSignOut = () => (dispatch) => {
+export const userSignOut = () => async (dispatch) => {
     dispatch({ type: USER_SIGNOUT });
     await firebase.auth().signOut();
 }
