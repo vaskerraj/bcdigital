@@ -7,6 +7,7 @@ import GoogleIcon from '../../components/GoogleIcon';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { userGoogleLogin, userSignIn, userFacebookLogin } from '../../redux/actions/userAction';
+import Loading from '../../components/Loading';
 
 const login = () => {
     const [mobile, setMobile] = useState('');
@@ -18,6 +19,7 @@ const login = () => {
 
     const { loading, userInfo, error } = useSelector(state => state.userAuth);
     const dispatch = useDispatch();
+
 
     useEffect(() => {
         if (userInfo) {
@@ -84,7 +86,10 @@ const login = () => {
                                 <Link href="">Forget Password?</Link>
                             </div>
                             <div className="d-block">
-                                <button type="submit" className="btn btn-success btn-lg btn-block font16 mt-4">LOGIN IN</button>
+                                <button type="submit" className="btn btn-success btn-lg btn-block font16 mt-4 position-relative">
+                                    {loading ? <Loading color="#fff" style={{ padding: '1.2rem' }} /> : ('LOGIN IN')}
+
+                                </button>
                             </div>
                             <Divider>OR</Divider>
                             <div className="d-block">
