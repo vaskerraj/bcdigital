@@ -6,7 +6,7 @@ import { Divider } from 'antd';
 import GoogleIcon from '../../components/GoogleIcon';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { userGoogleLogin, userSignIn } from '../../redux/actions/userAction';
+import { userGoogleLogin, userSignIn, userFacebookLogin } from '../../redux/actions/userAction';
 
 const login = () => {
     const [mobile, setMobile] = useState('');
@@ -38,6 +38,10 @@ const login = () => {
 
     const googleLogin = () => {
         dispatch(userGoogleLogin());
+    }
+
+    const facebookLogin = () => {
+        dispatch(userFacebookLogin());
     }
 
     return (
@@ -90,7 +94,7 @@ const login = () => {
                                         Google
                                     </span>
                                 </button>
-                                <button type="submit" className="btn btn-primary btn-lg btn-block font16" style={{ marginTop: '1.5rem' }}>
+                                <button onClick={facebookLogin} type="submit" className="btn btn-primary btn-lg btn-block font16" style={{ marginTop: '1.5rem' }}>
                                     <Facebook />
                                     Facebook
                                 </button>
