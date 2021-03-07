@@ -3,9 +3,9 @@ const Users = mongoose.model('Users');
 module.exports = function (server) {
 
     server.post('/api/signup', async (req, res) => {
-        const { mobile, password } = req.body;
+        const { name, mobile, password } = req.body;
         try {
-            const user = new Users({ mobile, password });
+            const user = new Users({ name, username: mobile, mobile, password, method: 'mobile' });
             await user.save();
 
             return res.status(200).json(user);

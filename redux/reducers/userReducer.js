@@ -6,7 +6,13 @@ import {
 }
     from '../types/userType';
 
-export const signinReducer = (state = {}, action) => {
+const initialState = {
+    userInfo: null,
+    loading: false,
+    error: null
+}
+
+export const signinReducer = (state = initialState, action) => {
     switch (action.type) {
         case USER_SIGIN_RESPONSE:
             return {

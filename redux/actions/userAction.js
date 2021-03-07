@@ -13,6 +13,7 @@ export const userSignIn = (mobile, password) => async (dispatch) => {
 
     try {
         const { data } = await axiosApi.post("api/login", { mobile, password });
+        console.log(data);
         const result = await firebase.auth().signInWithCustomToken(data.token);
 
         const { user } = result;
@@ -35,7 +36,9 @@ export const userGoogleLogin = () => async (dispatch) => {
         // get user is new or existing
         const isNewUserOrNot = results.additionalUserInfo.isNewUser;
 
-        await axiosApi.post('/api/social', { isNewUser: isNewUserOrNot },
+        const phoneNumber = null;
+
+        await axiosApi.post('/api/social', { isNewUser: isNewUserOrNot, phoneNumber },
             {
                 headers: {
                     token
@@ -45,6 +48,36 @@ export const userGoogleLogin = () => async (dispatch) => {
     } catch (error) {
         dispatch({ type: USER_SIGIN_ERROR, payload: error.message });
     }
+}
+
+export const userFacebookLogin = () => async (dispatch) => {
+    dispatch({ type: USER_SIGIN_RESPONSE, payload: '' });
+    try {
+        const results = await firebase.auth().signInWithPopup(new firebase.auth.FacebookAuthProvider());
+        console.log(results);
+        const { user } = results;
+
+        const token = await user.getIdToken(true);
+
+        dispatch({ type: USER_SIGIN_SUCCESS, payload: user });
+
+
+        // get user is new or existing
+        const isNewUserOrNot = results.additionalUserInfo.isNewUser;
+
+        //set for fb account by mobile number
+        const phoneNumber = results.user.phoneNumber;
+        await axiosApi.post('/api/social', { isNewUser: isNewUserOrNot, phoneNumber },
+            {
+                headers: {
+                    token
+                }
+            }
+        )
+    } catch (error) {
+        dispatch({ type: USER_SIGIN_ERROR, payload: error.message });
+    }
+
 }
 
 export const userSignOut = () => async (dispatch) => {

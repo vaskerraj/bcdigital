@@ -11,7 +11,7 @@ module.exports = function (server) {
             res.status(422).json({ error: 'Provide both mobile number and password' });
         }
 
-        const user = await User.findOne({ mobile });
+        const user = await User.findOne({ username: mobile, method: 'mobile' });
         if (!user) {
             return res.status(422).json({ error: 'Invalid mobile number or password.' });
         }

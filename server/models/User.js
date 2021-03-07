@@ -3,17 +3,26 @@ const bcrypt = require('bcrypt');
 const { ObjectId } = mongoose.Schema;
 
 const userSchema = new mongoose.Schema({
-    name: String,
-    username: {
+    name: {
         type: String,
+        trim: true,
+        requred: true
     },
-    mobile: {
+    username: {
         type: String,
         unique: true,
         required: true,
         index: true
     },
+    email: String,
+    mobile: String,
     password: String,
+    picture: String,
+    method: {
+        type: String,
+        defailt: 'mobile'
+    },
+    fireuid: String,
     role: {
         type: String,
         default: 'subscriber'
@@ -26,6 +35,12 @@ const userSchema = new mongoose.Schema({
     // wishlist: [{ type: ObjectId, ref: 'Products' }]
 }, { timestamps: true });
 
+function isMobileRequired() {
+    if (levelsEligibleForOffice.indexOf(this.level) > -1) {  //"this" contains the employee document at the time of required validation
+        return true;
+    }
+    return false;
+}
 
 // we use function to use this not es6 arrow function
 userSchema.pre('save', function (next) {
