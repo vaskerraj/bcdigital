@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Eye, EyeOff, Facebook } from 'react-feather';
+import { Eye, EyeOff } from 'react-feather';
 import { Divider } from 'antd';
-import GoogleIcon from '../../components/GoogleIcon';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { userGoogleLogin, userSignIn, userFacebookLogin } from '../../redux/actions/userAction';
 import Loading from '../../components/Loading';
+import SocialAuthButtons from '../../components/SocialAuthButtons';
 
 const login = () => {
     const [mobile, setMobile] = useState('');
@@ -93,16 +93,7 @@ const login = () => {
                             </div>
                             <Divider>OR</Divider>
                             <div className="d-block">
-                                <button type="button" onClick={googleLogin} className="btn btn-danger btn-lg btn-block font16" style={{ marginTop: '1.5rem' }}>
-                                    <GoogleIcon />
-                                    <span className="ml-1">
-                                        Google
-                                    </span>
-                                </button>
-                                <button onClick={facebookLogin} type="submit" className="btn btn-primary btn-lg btn-block font16" style={{ marginTop: '1.5rem' }}>
-                                    <Facebook />
-                                    Facebook
-                                </button>
+                                <SocialAuthButtons googleHandler={googleLogin} facebookHandler={facebookLogin} />
                             </div>
                         </form>
                     </div>

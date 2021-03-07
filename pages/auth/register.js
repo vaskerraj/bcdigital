@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
-import { Eye, EyeOff, Facebook } from 'react-feather';
+import { Eye, EyeOff } from 'react-feather';
 import { Divider } from 'antd';
-import GoogleIcon from '../../components/GoogleIcon';
+
+import { useSelector, useDispatch } from 'react-redux';
+import { userGoogleLogin, userFacebookLogin } from '../../redux/actions/userAction';
+
+import SocialAuthButtons from '../../components/SocialAuthButtons';
 
 const register = () => {
     const [fullname, setFullname] = useState('');
@@ -14,8 +18,19 @@ const register = () => {
     const togglePasswordVisiblity = () => {
         setPasswordShown(passwordShown ? false : true);
     };
+
+    const dispatch = useDispatch();
+
     const handleSubmit = (e) => {
         e.preventDefault();
+    }
+
+    const googleLogin = () => {
+        dispatch(userGoogleLogin());
+    }
+
+    const facebookLogin = () => {
+        dispatch(userFacebookLogin());
     }
 
     return (
@@ -68,17 +83,7 @@ const register = () => {
                             </div>
                             <Divider>OR</Divider>
                             <div className="d-block">
-                                <button type="submit" className="btn btn-danger btn-lg btn-block font16" style={{ marginTop: '1.5rem' }}>
-                                    <GoogleIcon />
-                                    <span className="ml-1">
-                                        Google
-                                    </span>
-                                </button>
-                                <button type="submit" className="btn btn-primary btn-lg btn-block font16" style={{ marginTop: '1.5rem' }}>
-                                    <Facebook />
-                                    Facebook
-                                </button>
-
+                                <SocialAuthButtons googleHandler={googleLogin} facebookHandler={facebookLogin} />
                             </div>
                         </form>
                     </div>
