@@ -8,26 +8,28 @@ import Wrapper from '../components/Wrapper';
 
 import 'bootstrap/dist/css/bootstrap.css';
 import '../styles/globals.css'
+import FirebaseAuthState from '../components/FirebaseAuthState';
 
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
 
   return (
     <Provider store={store}>
-      {
-        (router.asPath.indexOf("admin") === 1)
-          ?
-          (
-            <Component {...pageProps} />
-          )
-          :
-          (
-            <Wrapper>
+      <FirebaseAuthState>
+        {
+          (router.asPath.indexOf("admin") === 1)
+            ?
+            (
               <Component {...pageProps} />
-            </Wrapper>
-          )
-      }
-
+            )
+            :
+            (
+              <Wrapper>
+                <Component {...pageProps} />
+              </Wrapper>
+            )
+        }
+      </FirebaseAuthState>
     </Provider>
   )
 }
