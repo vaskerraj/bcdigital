@@ -13,6 +13,7 @@ import styles from '../../styles/Header.module.css';
 
 const MainHeadSection = () => {
     const { userInfo } = useSelector(state => state.userAuth);
+
     const dispatch = useDispatch();
 
     const signOutHandler = () => {
@@ -78,7 +79,7 @@ const MainHeadSection = () => {
                                 userInfo ? (<>
                                     <Dropdown overlay={menu} trigger={['click']} placement="bottomRight" arrow>
                                         <a className="ant-dropdown-link text-dark mr-4" onClick={e => e.preventDefault()}>
-                                            Hello, User
+                                            Hello, {userInfo.user ? userInfo.user.split(" ")[0] : userInfo.user}
                                             <ChevronDown />
                                         </a>
                                     </Dropdown>
