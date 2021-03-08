@@ -37,7 +37,7 @@ module.exports = function (server) {
                 });
 
         } catch (err) {
-            return res.status(422).json({ error: 'Invalid email or password.' });
+            return res.status(422).json({ error: 'Invalid mobile number or password.' });
         }
     });
 
