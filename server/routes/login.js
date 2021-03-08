@@ -28,6 +28,7 @@ module.exports = function (server) {
             await admin.auth().createCustomToken(uid)
                 .then(function (token) {
                     return res.json({
+                        name: user.name,
                         token
                     });
                 })

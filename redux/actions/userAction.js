@@ -13,10 +13,18 @@ export const userSignIn = (mobile, password) => async (dispatch) => {
 
     try {
         const { data } = await axiosApi.post("api/login", { mobile, password });
-        console.log(data);
         const result = await firebase.auth().signInWithCustomToken(data.token);
 
         const { user } = result;
+        // set full name of auth at firebase displayName
+        user.updateProfile({
+            displayName: data.name,
+        });
+        const token = await user.getIdToken(true);
+        const dispatchData = {
+            user: data.name,
+            token
+        }
         dispatch({ type: USER_SIGIN_SUCCESS, payload: user });
 
     } catch (error) {
@@ -29,9 +37,15 @@ export const userGoogleLogin = () => async (dispatch) => {
         const results = await firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
         const { user } = results;
 
-        dispatch({ type: USER_SIGIN_SUCCESS, payload: user });
 
         const token = await user.getIdToken(true);
+
+        const dispatchData = {
+            user: data.name,
+            token
+        }
+
+        dispatch({ type: USER_SIGIN_SUCCESS, payload: dispatchData });
 
         // get user is new or existing
         const isNewUserOrNot = results.additionalUserInfo.isNewUser;
@@ -59,8 +73,11 @@ export const userFacebookLogin = () => async (dispatch) => {
 
         const token = await user.getIdToken(true);
 
-        dispatch({ type: USER_SIGIN_SUCCESS, payload: user });
-
+        const dispatchData = {
+            user: data.name,
+            token
+        }
+        dispatch({ type: USER_SIGIN_SUCCESS, payload: dispatchData });
 
         // get user is new or existing
         const isNewUserOrNot = results.additionalUserInfo.isNewUser;
