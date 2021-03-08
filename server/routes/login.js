@@ -8,7 +8,7 @@ module.exports = function (server) {
     server.post('/api/login', async (req, res) => {
         const { mobile, password } = req.body;
         if (!mobile || !password) {
-            res.status(422).json({ error: 'Provide both mobile number and password' });
+            return res.status(422).json({ error: 'Provide both mobile number and password' });
         }
 
         const user = await User.findOne({ username: mobile, method: 'mobile' });
