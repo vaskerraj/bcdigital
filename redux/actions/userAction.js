@@ -25,7 +25,7 @@ export const userSignIn = (mobile, password) => async (dispatch) => {
             user: data.name,
             token
         }
-        dispatch({ type: USER_SIGIN_SUCCESS, payload: user });
+        dispatch({ type: USER_SIGIN_SUCCESS, payload: dispatchData });
 
     } catch (error) {
         dispatch({ type: USER_SIGIN_ERROR, payload: error.message });
