@@ -15,19 +15,19 @@ const login = () => {
     const [passwordShown, setPasswordShown] = useState(false);
 
     const router = useRouter();
-    //console.log(router);
 
     const { loading, userInfo, error } = useSelector(state => state.userAuth);
     const dispatch = useDispatch();
 
-
     useEffect(() => {
-        if (userInfo) {
-            console.log("url redirect");
+        if (userInfo != undefined || userInfo != null) {
+            if (document.referrer.match(/\/\/.*?\/(.*?)\/?(\?.*)?$/)[1] === 'register') {
+                router.push('/');
+            } else {
+                router.back();
+            }
         }
     }, [userInfo]);
-
-    console.log(userInfo);
 
     const togglePasswordVisiblity = () => {
         setPasswordShown(passwordShown ? false : true);
