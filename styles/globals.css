@@ -47,3 +47,14 @@ a {
   padding : 0 3.5rem 0 1rem;
   font-size: 1.4rem;
 }
+
+/* ant message */
+.message-warning .ant-message-notice-content{
+  background-color: #fff3cd;
+  border-color: #ffeeba;
+
+}
+.ant-message-warning{
+  display:flex  !important;
+  text-align: left !important;
+}

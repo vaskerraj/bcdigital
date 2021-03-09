@@ -28,6 +28,7 @@ const login = () => {
     useEffect(() => {
         if (userInfo != undefined || userInfo != null) {
             const documentRef = document.referrer.replace(/^[^:]+:\/\/[^/]+/, '').replace(/#.*/, '');
+            console.log(documentRef);
             if (documentRef === 'register' || documentRef === 'login') {
                 router.push('/');
             } else {
@@ -63,6 +64,18 @@ const login = () => {
         dispatch(userFacebookLogin());
     }
 
+    const showErrorMessage = (err) => {
+        message.warning({
+            content: (
+                <div>
+                    <div className="font-weight-bold">Error</div>
+                    {err}
+                </div>
+            ),
+            className: 'message-warning',
+        })
+    }
+
     return (
         <div className="p-4">
             <div className="row">
@@ -78,23 +91,7 @@ const login = () => {
                         </div>
                     </div>
                     <div className="d-block bg-white p-5 mt-5">
-                        {error
-                            ?
-                            message.warning({
-                                content: (
-                                    <div>
-                                        <div className="font-weight-bold">Error</div>
-                                        {error.error}
-                                    </div>
-                                ),
-                                className: 'message-warning',
-                                maxCount: 1
-                            })
-                            :
-                            (
-                                <></>
-                            )
-                        }
+                        {error ? showErrorMessage(error.error) : null}
                         <form onSubmit={handleSubmit}>
                             <div className="d-block">
                                 <label>Mobile number</label>
@@ -115,6 +112,7 @@ const login = () => {
                                     value={password}
                                     onChange={handleChangeInput}
                                     placeholder="Please enter your password"
+                                    autoComplete="off"
                                 />
                                 <i onClick={togglePasswordVisiblity} style={{ position: 'absolute', right: '1rem', top: '3.3rem', cursor: 'pointer' }}>
                                     {passwordShown ? (<EyeOff />) : (<Eye />)}
