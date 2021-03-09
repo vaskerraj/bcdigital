@@ -2,12 +2,18 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Eye, EyeOff } from 'react-feather';
-import { Divider } from 'antd';
+import { Divider, message } from 'antd';
 
 import { useSelector, useDispatch } from 'react-redux';
 import { userGoogleLogin, userSignIn, userFacebookLogin } from '../../redux/actions/userAction';
 import Loading from '../../components/Loading';
 import SocialAuthButtons from '../../components/SocialAuthButtons';
+
+// config
+message.config({
+    top: '19vh',
+    maxCount: 1,
+});
 
 const login = () => {
     const [mobile, setMobile] = useState('');
@@ -50,7 +56,7 @@ const login = () => {
         <div className="p-4">
             <div className="row">
                 <div className="mx-auto my-4" style={{ maxWidth: '450px' }}>
-                    <div class="d-flex justify-content-between">
+                    <div className="d-flex justify-content-between">
                         <h3>Welcome Again, Please Login In</h3>
                         <div className="mt-1" style={{ fontSize: '1.2rem' }}>
                             New Member?
@@ -61,10 +67,29 @@ const login = () => {
                         </div>
                     </div>
                     <div className="d-block bg-white p-5 mt-5">
+                        {error
+                            ?
+                            message.warning({
+                                content: (
+                                    <div>
+                                        <div className="font-weight-bold">Error</div>
+                                        {error.error}
+                                    </div>
+                                ),
+                                className: 'message-warning',
+                                maxCount: 1
+                            })
+                            :
+                            (
+                                <></>
+                            )
+                        }
                         <form onSubmit={handleSubmit}>
                             <div className="d-block">
                                 <label>Mobile number</label>
-                                <input type="text" className="form-control mt-1"
+                                <input type="text"
+                                    name="mobile"
+                                    className="form-control mt-1"
                                     value={mobile}
                                     onChange={(e) => setMobile(e.target.value)}
                                     autoComplete="off"
@@ -73,7 +98,9 @@ const login = () => {
                             </div>
                             <div className="d-block position-relative mt-4 pt-1">
                                 <label>Password</label>
-                                <input type={passwordShown ? "text" : "password"} className="form-control mt-1"
+                                <input type={passwordShown ? "text" : "password"}
+                                    name="password"
+                                    className="form-control mt-1"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Please enter your password"
