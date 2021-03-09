@@ -5,7 +5,7 @@ import { Eye, EyeOff } from 'react-feather';
 import { Divider, message } from 'antd';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { userGoogleLogin, userSignIn, userFacebookLogin } from '../../redux/actions/userAction';
+import { userGoogleLogin, userSignIn, userFacebookLogin, userSignInOnChange } from '../../redux/actions/userAction';
 import Loading from '../../components/Loading';
 import SocialAuthButtons from '../../components/SocialAuthButtons';
 
@@ -27,7 +27,8 @@ const login = () => {
 
     useEffect(() => {
         if (userInfo != undefined || userInfo != null) {
-            if (document.referrer.match(/\/\/.*?\/(.*?)\/?(\?.*)?$/)[1] === 'register') {
+            var documentRef = document.referrer.match(/\/\/.*?\/(.*?)\/?(\?.*)?$/)[1];
+            if (documentRef === 'register' || documentRef === 'login') {
                 router.push('/');
             } else {
                 router.back();
@@ -38,6 +39,16 @@ const login = () => {
     const togglePasswordVisiblity = () => {
         setPasswordShown(passwordShown ? false : true);
     };
+
+    const handleChangeInput = e => {
+        const { name, value } = e.target
+        if (name === 'mobile') {
+            setMobile(value)
+        } else if (name === 'password') {
+            setPassword(value);
+        }
+        dispatch(userSignInOnChange());
+    }
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -91,7 +102,7 @@ const login = () => {
                                     name="mobile"
                                     className="form-control mt-1"
                                     value={mobile}
-                                    onChange={(e) => setMobile(e.target.value)}
+                                    onChange={handleChangeInput}
                                     autoComplete="off"
                                     placeholder="Please enter your mobile number"
                                 />
@@ -102,7 +113,7 @@ const login = () => {
                                     name="password"
                                     className="form-control mt-1"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={handleChangeInput}
                                     placeholder="Please enter your password"
                                 />
                                 <i onClick={togglePasswordVisiblity} style={{ position: 'absolute', right: '1rem', top: '3.3rem', cursor: 'pointer' }}>

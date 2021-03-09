@@ -8,6 +8,10 @@ import {
 }
     from '../types/userType'
 
+export const userSignInOnChange = () => async (dispatch) => {
+    dispatch({ type: USER_SIGIN_ERROR, payload: null });
+}
+
 export const userSignIn = (mobile, password) => async (dispatch) => {
     dispatch({ type: USER_SIGIN_RESPONSE, payload: { mobile, password } });
 
@@ -28,7 +32,7 @@ export const userSignIn = (mobile, password) => async (dispatch) => {
         dispatch({ type: USER_SIGIN_SUCCESS, payload: dispatchData });
 
     } catch (error) {
-        dispatch({ type: USER_SIGIN_ERROR, payload: error.message });
+        dispatch({ type: USER_SIGIN_ERROR, payload: error.response.data });
     }
 }
 export const userGoogleLogin = () => async (dispatch) => {
@@ -60,7 +64,7 @@ export const userGoogleLogin = () => async (dispatch) => {
             }
         )
     } catch (error) {
-        dispatch({ type: USER_SIGIN_ERROR, payload: error.message });
+        dispatch({ type: USER_SIGIN_ERROR, payload: error.response.data });
     }
 }
 
@@ -92,7 +96,7 @@ export const userFacebookLogin = () => async (dispatch) => {
             }
         )
     } catch (error) {
-        dispatch({ type: USER_SIGIN_ERROR, payload: error.message });
+        dispatch({ type: USER_SIGIN_ERROR, payload: error.response.data });
     }
 
 }
