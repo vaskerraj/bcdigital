@@ -64,7 +64,7 @@ export const userGoogleLogin = () => async (dispatch) => {
             }
         )
     } catch (error) {
-        dispatch({ type: USER_SIGIN_ERROR, payload: error.response.data });
+        dispatch({ type: USER_SIGIN_ERROR, payload: error.message });
     }
 }
 
@@ -96,7 +96,7 @@ export const userFacebookLogin = () => async (dispatch) => {
             }
         )
     } catch (error) {
-        dispatch({ type: USER_SIGIN_ERROR, payload: error.response.data });
+        dispatch({ type: USER_SIGIN_ERROR, payload: error.message });
     }
 
 }
