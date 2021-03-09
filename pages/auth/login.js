@@ -27,7 +27,7 @@ const login = () => {
 
     useEffect(() => {
         if (userInfo != undefined || userInfo != null) {
-            var documentRef = document.referrer.match(/\/\/.*?\/(.*?)\/?(\?.*)?$/)[1];
+            const documentRef = document.referrer.replace(/^[^:]+:\/\/[^/]+/, '').replace(/#.*/, '');
             if (documentRef === 'register' || documentRef === 'login') {
                 router.push('/');
             } else {
