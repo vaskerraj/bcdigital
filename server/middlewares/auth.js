@@ -15,7 +15,8 @@ module.exports = async (req, res, next) => {
         // custom = mobile
         if (method === 'custom') {
             // Check if user exists with refresh token
-            const currentUser = await User.findById(firebaseUser.id);
+            const currentUser = await User.findById(firebaseUser.uid);
+
             if (!currentUser) {
                 return res.status(401).json({ error: 'Invalid Authentication' });
             }
@@ -25,7 +26,7 @@ module.exports = async (req, res, next) => {
 
         } else {
             // Check if user exists with refresh token
-            const currentUser = await User.findOne({ fireuid: firebaseUser.id });
+            const currentUser = await User.findOne({ fireuid: firebaseUser.uid });
             if (!currentUser) {
                 return res.status(401).json({ error: 'Invalid Authentication' });
             }
