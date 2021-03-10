@@ -87,7 +87,7 @@ const MainHeadSection = () => {
                                     (<>
                                         <div className="d-inline-block text-right text-dark">
                                             <span className="d-none d-md-block">
-                                                <Link href="../auth/login" as="/login">
+                                                <Link href="/login">
                                                     <a className="text-dark mr-4">
                                                         Hello, Login
                                                         <ChevronDown size={14} />

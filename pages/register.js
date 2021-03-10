@@ -5,9 +5,9 @@ import { Eye, EyeOff } from 'react-feather';
 import { Divider } from 'antd';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { userGoogleLogin, userFacebookLogin } from '../../redux/actions/userAction';
+import { userGoogleLogin, userFacebookLogin } from '../redux/actions/userAction';
 
-import SocialAuthButtons from '../../components/SocialAuthButtons';
+import SocialAuthButtons from '../components/SocialAuthButtons';
 
 const register = () => {
     const [fullname, setFullname] = useState('');
@@ -41,7 +41,7 @@ const register = () => {
                         <h3>Create Your Account</h3>
                         <div className="mt-1" style={{ fontSize: '1.2rem' }}>
                             Already Member?
-                            <Link href="/auth/login" as="/login">
+                            <Link href="/login">
                                 <a className="text-info mr-1 ml-1">Login</a>
                             </Link>
                             here

@@ -5,9 +5,9 @@ import { Eye, EyeOff } from 'react-feather';
 import { Divider, message } from 'antd';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { userGoogleLogin, userSignIn, userFacebookLogin, userSignInOnChange } from '../../redux/actions/userAction';
-import Loading from '../../components/Loading';
-import SocialAuthButtons from '../../components/SocialAuthButtons';
+import { userGoogleLogin, userSignIn, userFacebookLogin, userSignInOnChange } from '../redux/actions/userAction';
+import Loading from '../components/Loading';
+import SocialAuthButtons from '../components/SocialAuthButtons';
 
 // config
 message.config({
@@ -84,7 +84,7 @@ const login = () => {
                         <h3>Welcome Again, Please Login In</h3>
                         <div className="mt-1" style={{ fontSize: '1.2rem' }}>
                             New Member?
-                            <Link href="/auth/register" as="/register">
+                            <Link href="/register">
                                 <a className="text-info mr-1 ml-1">Register</a>
                             </Link>
                             here

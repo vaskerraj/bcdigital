@@ -30,7 +30,7 @@ export async function getServerSideProps(context) {
     } catch (err) {
         return {
             redirect: {
-                source: `/login?redirect=checkout`,
+                source: '/login',
                 destination: '/login',
                 permanent: false,
             },
