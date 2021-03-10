@@ -3,7 +3,7 @@ const User = mongoose.model('Users');
 
 const admin = require('../../firebase/firebaseAdmin');
 
-module.exports = async (req, res, next) => {
+const requiredAuth = async (req, res, next) => {
 
     try {
         const token = req.headers.token;
@@ -39,4 +39,14 @@ module.exports = async (req, res, next) => {
         return res.status(401).json({ error: 'Session expired. Please login again' });
     }
 
+}
+
+const checkRole = roles => (req, res, next) =>
+    !roles.includes(req.user.role)
+        ? res.status(401).json("Invalid Authentication")
+        : next();
+
+module.exports = {
+    requiredAuth,
+    checkRole,
 }
