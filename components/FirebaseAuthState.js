@@ -1,5 +1,6 @@
 
 import React, { useEffect } from "react";
+import Router from 'next/router';
 import { useDispatch } from 'react-redux';
 import { setCookie, destroyCookie } from 'nookies';
 import firebase from "../firebase/firebaseClient";
@@ -17,7 +18,7 @@ const FirebaseAuthState = ({ children }) => {
 
                 // dispatch logout
                 await firebase.auth().signOut().then(() => {
-                    //router.push("/");
+                    Router.push("/");
                 });
             } else {
                 const token = await user.getIdToken();
