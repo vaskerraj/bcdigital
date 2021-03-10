@@ -6,7 +6,7 @@ const admin = require('../../firebase/firebaseAdmin');
 module.exports = async (req, res, next) => {
 
     try {
-        const token = req.headers.authorization;
+        const token = req.headers.token;
         if (!token) return res.status(400).json({ error: 'Invalid Authentication' })
 
         const firebaseUser = await admin.auth().verifyIdToken(req.headers.token);
