@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
     picture: String,
     method: {
         type: String,
-        defailt: 'mobile'
+        default: 'custom'
     },
     fireuid: String,
     role: {
@@ -35,12 +35,6 @@ const userSchema = new mongoose.Schema({
     // wishlist: [{ type: ObjectId, ref: 'Products' }]
 }, { timestamps: true });
 
-function isMobileRequired() {
-    if (levelsEligibleForOffice.indexOf(this.level) > -1) {  //"this" contains the employee document at the time of required validation
-        return true;
-    }
-    return false;
-}
 
 // we use function to use this not es6 arrow function
 userSchema.pre('save', function (next) {
