@@ -21,6 +21,7 @@
     "mongoose": "^5.11.18",
     "next": "10.0.7",
     "next-redux-wrapper": "^6.0.2",
+    "nookies": "^2.5.2",
     "react": "17.0.1",
     "react-dom": "17.0.1",
     "react-feather": "^2.0.9",
