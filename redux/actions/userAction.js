@@ -1,3 +1,4 @@
+import Router from 'next/router';
 import axiosApi from '../../helpers/api';
 import firebase from '../../firebase/firebaseClient';
 import {
@@ -103,5 +104,7 @@ export const userFacebookLogin = () => async (dispatch) => {
 
 export const userSignOut = () => async (dispatch) => {
     dispatch({ type: USER_SIGNOUT });
-    await firebase.auth().signOut();
+    await firebase.auth().signOut().then(
+        Router.push('/')
+    );
 }
