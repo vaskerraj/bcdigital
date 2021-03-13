@@ -1,47 +1,39 @@
 import {
-    USER_SIGIN_RESPONSE,
-    USER_SIGIN_SUCCESS,
-    USER_SIGIN_ERROR,
-    USER_SIGNOUT,
-    USER_SIGNUP_RESPONSE,
-    USER_SIGNUP_SUCCESS,
-    USER_SIGNUP_ERROR,
     ADMIN_SIGIN_RESPONSE,
     ADMIN_SIGIN_SUCCESS,
     ADMIN_SIGIN_ERROR,
     ADMIN_SIGNOUT
 
 }
-    from '../types/userType';
+    from '../types/adminAuthType';
 
 const initialState = {
-    userInfo: null,
-    adminInfo: null,
+    adminAuth: null,
     loading: false,
     error: null
 }
 
-export const signinReducer = (state = initialState, action) => {
+export const adminAuthReducer = (state = initialState, action) => {
     switch (action.type) {
-        case USER_SIGIN_RESPONSE:
+        case ADMIN_SIGIN_RESPONSE:
             return {
                 loading: true,
-                userInfo: null,
+                adminAuth: null,
                 error: null
             }
-        case USER_SIGIN_SUCCESS:
+        case ADMIN_SIGIN_SUCCESS:
             return {
                 loading: false,
-                userInfo: action.payload,
+                adminAuth: action.payload,
                 error: null
             }
-        case USER_SIGIN_ERROR:
+        case ADMIN_SIGIN_ERROR:
             return {
                 loading: false,
-                userInfo: null,
+                adminAuth: null,
                 error: action.payload
             }
-        case USER_SIGNOUT:
+        case ADMIN_SIGNOUT:
             return {};
         default: return state;
     }

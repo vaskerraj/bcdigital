@@ -108,3 +108,39 @@ export const userSignOut = () => async (dispatch) => {
         Router.push('/')
     );
 }
+
+///////// admin /////////////
+export const adminSignIn = (email, password) => async (dispatch) => {
+    dispatch({ type: ADMIN_SIGIN_RESPONSE, payload: { email, password } });
+
+    try {
+        const { data } = await axiosApi.post("api/alogin", { email, password });
+        const result = await firebase.auth().signInWithCustomToken(data.token);
+
+        const { user } = result;
+
+        // set full name of auth at firebase displayName
+        user.updateProfile({
+            displayName: data.name,
+            email: email
+        });
+
+        const token = await user.getIdToken(true);
+        const dispatchData = {
+            user: data.name,
+            token
+        }
+        dispatch({ type: ADMIN_SIGIN_SUCCESS, payload: dispatchData });
+
+    } catch (error) {
+        dispatch({ type: ADMIN_SIGIN_ERROR, payload: error.response.data });
+    }
+}
+
+export const adminSignOut = () => async (dispatch) => {
+    dispatch({ type: ADMIN_SIGNOUT });
+    console.log("singout ");
+    await firebase.auth().signOut().then(
+        Router.push('/admin/login')
+    );
+}
