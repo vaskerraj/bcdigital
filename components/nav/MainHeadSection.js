@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Menu, Dropdown } from 'antd';
@@ -19,6 +20,7 @@ const MainHeadSection = () => {
     const signOutHandler = () => {
         dispatch(userSignOut());
     }
+    const router = useRouter();
     const menu = (
         <Menu style={{ fontSize: '1.6rem' }}>
             <Menu.Item className="pl-5 pr-5">
@@ -87,7 +89,10 @@ const MainHeadSection = () => {
                                     (<>
                                         <div className="d-inline-block text-right text-dark">
                                             <span className="d-none d-md-block">
-                                                <Link href="/login">
+                                                <Link href={{
+                                                    pathname: '/login',
+                                                    query: { redirect: router.pathname },
+                                                }}>
                                                     <a className="text-dark mr-4">
                                                         Hello, Login
                                                         <ChevronDown size={14} />

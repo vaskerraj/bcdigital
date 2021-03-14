@@ -27,12 +27,10 @@ const login = () => {
 
     useEffect(() => {
         if (userInfo != undefined || userInfo != null) {
-            const documentRef = document.referrer.replace(/^[^:]+:\/\/[^/]+/, '').replace(/#.*/, '');
-            console.log(documentRef);
-            if (documentRef === 'register' || documentRef === 'login') {
-                router.push('/');
+            if (router.query && router.query.redirect) {
+                router.push(router.query.redirect);
             } else {
-                router.back();
+                router.push('/');
             }
         }
     }, [userInfo]);
