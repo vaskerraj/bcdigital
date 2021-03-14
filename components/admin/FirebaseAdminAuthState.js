@@ -13,7 +13,9 @@ const FirebaseAdminAuthState = ({ children }) => {
 
                 // cookies
                 destroyCookie(null, "ad_token");
-                setCookie(null, "ad_token", "", {});
+                setCookie(null, "ad_token", "", {
+                    path: '/'
+                });
 
                 // dispatch logout
                 console.log('sing out at firebase auth state');
@@ -21,10 +23,11 @@ const FirebaseAdminAuthState = ({ children }) => {
             } else {
                 const token = await user.getIdToken();
 
-                console.log(`token cookies====>${token}`);
                 // set token to cookie
                 destroyCookie(null, "ad_token");
-                setCookie(null, "ad_token", token, {});
+                setCookie(null, "ad_token", token, {
+                    path: '/'
+                });
 
                 // dispatch login
                 const dispatchData = {
