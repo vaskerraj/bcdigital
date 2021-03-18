@@ -10,13 +10,17 @@ const verifySms = async (mobile, code, method) => {
                 msg: "verify",
                 data: sms
             }
+        } else {
+            return {
+                msg: 'notverified',
+                data: null
+            }
         }
     } catch (error) {
         return {
             msg: "error",
             data: error.message
         }
-        return;
     }
 }
 module.exports = verifySms
