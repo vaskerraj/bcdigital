@@ -6,9 +6,15 @@ import {
     USER_SIGIN_SUCCESS,
     USER_SIGIN_ERROR,
     USER_SIGNOUT,
+    USER_SIGNUP_RESPONSE,
+    USER_SIGNUP_SUCCESS,
+    USER_SIGNUP_ERROR,
     SMS_SEND_RESPONSE,
     SMS_SEND_SUCCESS,
     SMS_SEND_ERROR,
+    SMS_VERIFY_RESPONSE,
+    SMS_VERIFY_SUCCESS,
+    SMS_VERIFY_ERROR
 }
     from '../types/userType'
 
@@ -123,5 +129,17 @@ export const sendSMS = (mobile) => async (dispatch) => {
     } catch (error) {
         const d_error = error.response.data ? error.response.data : error.message;
         dispatch({ type: SMS_SEND_ERROR, payload: d_error });
+    }
+}
+
+export const userSignUp = (fullname, mobile, verificationCode, password) => async (dispatch) => {
+    dispatch({ type: USER_SIGNUP_RESPONSE, payload: { mobile } });
+
+    try {
+        const { data } = await axiosApi.post("api/signup", { fullname, mobile, verificationCode, password });
+        dispatch({ type: USER_SIGIN_SUCCESS, payload: data });
+
+    } catch (error) {
+        dispatch({ type: USER_SIGIN_ERROR, payload: error.message });
     }
 }

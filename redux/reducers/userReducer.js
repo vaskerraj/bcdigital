@@ -69,3 +69,27 @@ export const smsSendReducer = (state = initialState, action) => {
         default: return state;
     }
 }
+
+export const signupReducer = (state = initialState, action) => {
+    switch (action.type) {
+        case USER_SIGNUP_RESPONSE:
+            return {
+                loading: true,
+                regUserInfo: null,
+                error: null
+            }
+        case USER_SIGNUP_SUCCESS:
+            return {
+                loading: false,
+                regUserInfo: action.payload,
+                error: null
+            }
+        case USER_SIGNUP_ERROR:
+            return {
+                loading: false,
+                regUserInfo: null,
+                error: action.payload
+            }
+        default: return state;
+    }
+}
