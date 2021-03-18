@@ -6,21 +6,20 @@ import {
     USER_SIGNUP_RESPONSE,
     USER_SIGNUP_SUCCESS,
     USER_SIGNUP_ERROR,
-    ADMIN_SIGIN_RESPONSE,
-    ADMIN_SIGIN_SUCCESS,
-    ADMIN_SIGIN_ERROR,
-    ADMIN_SIGNOUT
+    SMS_SEND_RESPONSE,
+    SMS_SEND_SUCCESS,
+    SMS_SEND_ERROR
 
 }
     from '../types/userType';
 
 const initialState = {
     userInfo: null,
-    adminInfo: null,
+    smsSendInfo: null,
+    regUserInfo: null,
     loading: false,
     error: null
 }
-
 export const signinReducer = (state = initialState, action) => {
     switch (action.type) {
         case USER_SIGIN_RESPONSE:
@@ -43,6 +42,30 @@ export const signinReducer = (state = initialState, action) => {
             }
         case USER_SIGNOUT:
             return {};
+        default: return state;
+    }
+}
+
+export const smsSendReducer = (state = initialState, action) => {
+    switch (action.type) {
+        case SMS_SEND_RESPONSE:
+            return {
+                loading: true,
+                smsSendInfo: null,
+                error: null
+            }
+        case SMS_SEND_SUCCESS:
+            return {
+                loading: false,
+                smsSendInfo: action.payload,
+                error: null
+            }
+        case SMS_SEND_ERROR:
+            return {
+                loading: false,
+                smsSendInfo: null,
+                error: action.payload
+            }
         default: return state;
     }
 }

@@ -5,7 +5,10 @@ import {
     USER_SIGIN_RESPONSE,
     USER_SIGIN_SUCCESS,
     USER_SIGIN_ERROR,
-    USER_SIGNOUT
+    USER_SIGNOUT,
+    SMS_SEND_RESPONSE,
+    SMS_SEND_SUCCESS,
+    SMS_SEND_ERROR,
 }
     from '../types/userType'
 
@@ -107,4 +110,18 @@ export const userSignOut = () => async (dispatch) => {
     await firebase.auth().signOut().then(
         Router.push('/')
     );
+}
+
+
+// signup flow
+export const sendSMS = (mobile) => async (dispatch) => {
+    dispatch({ type: SMS_SEND_RESPONSE, payload: { mobile } });
+    try {
+        const { data } = await axiosApi.post('api/smscode', { mobile, method: 'registration' });
+        dispatch({ type: SMS_SEND_SUCCESS, payload: data });
+
+    } catch (error) {
+        const d_error = error.response.data ? error.response.data : error.message;
+        dispatch({ type: SMS_SEND_ERROR, payload: d_error });
+    }
 }
