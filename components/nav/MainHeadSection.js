@@ -82,8 +82,13 @@ const MainHeadSection = () => {
                                     userInfo ? (<>
                                         <Dropdown overlay={menu} trigger={['click']} placement="bottomRight" arrow>
                                             <a className="ant-dropdown-link text-dark mr-4" onClick={e => e.preventDefault()}>
-                                                Hello, {userInfo.user ? userInfo.user.split(" ")[0] : userInfo.user}
-                                                <ChevronDown />
+                                                <span className="d-none d-md-block">
+                                                    Hello, {userInfo.user ? userInfo.user.split(" ")[0] : userInfo.user}
+                                                </span>
+                                                <span className="d-block d-md-none">
+                                                    <UserIcon />
+                                                </span>
+                                                <ChevronDown size={14} />
                                             </a>
                                         </Dropdown>
                                     </>) :
@@ -92,16 +97,27 @@ const MainHeadSection = () => {
                                                 <span className="d-none d-md-block">
                                                     <Link href={{
                                                         pathname: '/login',
-                                                        query: { redirect: router.pathname },
+                                                        query:
+                                                            (router.pathname !== '/login' && router.pathname !== '/register')
+                                                                ?
+                                                                { redirect: router.pathname }
+                                                                : null
                                                     }}>
                                                         <a className="text-dark mr-4">
                                                             Hello, Login
-                                                        <ChevronDown size={14} />
+                                                <ChevronDown size={14} />
                                                         </a>
                                                     </Link>
                                                 </span>
                                                 <span className="d-block d-md-none">
-                                                    <Link href="/signin">
+                                                    <Link href={{
+                                                        pathname: '/login',
+                                                        query:
+                                                            (router.pathname !== '/login' && router.pathname !== '/register')
+                                                                ?
+                                                                { redirect: router.pathname }
+                                                                : null
+                                                    }}>
                                                         <a className="text-dark mr-4">
                                                             <UserIcon />
                                                         </a>
@@ -132,7 +148,7 @@ const MainHeadSection = () => {
                     </div>
                 </div>
             </div>
-        </Affix>
+        </Affix >
     );
 }
 
