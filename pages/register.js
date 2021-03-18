@@ -88,7 +88,9 @@ const register = () => {
                 </div>
             ),
             className: 'message-warning',
-        })
+        });
+        // auth error set not null after error display
+        dispatch(userSignUpOnChange());
     }
 
     return (

@@ -72,6 +72,8 @@ const login = () => {
             ),
             className: 'message-warning',
         })
+        // auth error set not null after error display
+        dispatch(userSignInOnChange());
     }
 
     return (
