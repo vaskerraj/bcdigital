@@ -132,14 +132,20 @@ export const sendSMS = (mobile) => async (dispatch) => {
     }
 }
 
+
+export const userSignUpOnChange = () => async (dispatch) => {
+    dispatch({ type: USER_SIGNUP_ERROR, payload: null });
+}
+
 export const userSignUp = (fullname, mobile, verificationCode, password) => async (dispatch) => {
     dispatch({ type: USER_SIGNUP_RESPONSE, payload: { mobile } });
 
     try {
         const { data } = await axiosApi.post("api/signup", { fullname, mobile, verificationCode, password });
-        dispatch({ type: USER_SIGIN_SUCCESS, payload: data });
+        dispatch({ type: USER_SIGNUP_SUCCESS, payload: data });
 
     } catch (error) {
-        dispatch({ type: USER_SIGIN_ERROR, payload: error.message });
+        const d_error = error.response.data ? error.response.data : error.message;
+        dispatch({ type: USER_SIGNUP_ERROR, payload: d_error });
     }
 }
