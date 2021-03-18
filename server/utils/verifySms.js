@@ -1,11 +1,22 @@
+const mongoose = require('mongoose');
+const SMS = mongoose.model('Sms');
+
 const verifySms = async (mobile, code, method) => {
-    // check date also
     try {
-        const sms = await User.findOne({ mobile, code, method, status: 'active' }, null, { sort: { createdAt: -1 } }, { limit: 1 });
-        return sms;
+        // check date also
+        const sms = await SMS.findOne({ mobile, code, method, status: 'active' }, null, { sort: { createdAt: -1 } });
+        if (sms) {
+            return {
+                msg: "verify",
+                data: sms
+            }
+        }
     } catch (error) {
-        return error.message;
+        return {
+            msg: "error",
+            data: error.message
+        }
+        return;
     }
 }
-
 module.exports = verifySms
