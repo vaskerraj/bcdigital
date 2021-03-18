@@ -14,7 +14,11 @@ module.exports = function (server) {
 
             const registerSMSText = code + process.env.SMS_REGISTER_TEMP
             const { msg } = await smsGetway(mobile, registerSMSText);
-            return res.status(200).json(sms);
+            if (msg === 'done') {
+                return res.status(200).json(sms);
+            } else {
+                return res.status(422).json({ error: "Some error. Please try again later" });
+            }
 
         } catch (error) {
             return res.status(422).json({
