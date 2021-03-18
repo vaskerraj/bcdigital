@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 
 import { Eye, EyeOff } from 'react-feather';
 import { Divider, message } from 'antd';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { userGoogleLogin, userFacebookLogin, sendSMS } from '../redux/actions/userAction';
+import { userSignUpOnChange, userGoogleLogin, userFacebookLogin, sendSMS, userSignUp } from '../redux/actions/userAction';
 
 import SocialAuthButtons from '../components/SocialAuthButtons';
 import Loading from '../components/Loading';
@@ -31,8 +32,34 @@ const register = () => {
 
     const { loading: smsSendLoading, smsSendInfo, error: smsSendError } = useSelector(state => state.smsSender);
 
+    const { loading, regUserInfo, error } = useSelector(state => state.userRegister);
+
+    //definde router
+    const router = useRouter();
+    useEffect(() => {
+        if (regUserInfo) {
+            //    router redirect/push
+        }
+    }, [regUserInfo]);
+
+    const handleChangeInput = e => {
+        const { name, value } = e.target
+        if (name === 'fullname') {
+            setFullname(value)
+        }
+        else if (name === 'mobile') {
+            setMobile(value)
+        } else if (name === 'password') {
+            setPassword(value);
+        } else if (name === 'verificationCode') {
+            setVerificationCode(value);
+        }
+        dispatch(userSignUpOnChange());
+    }
+
     const handleSubmit = (e) => {
         e.preventDefault();
+        dispatch(userSignUp(fullname, mobile, verificationCode, password));
     }
 
     const smsCodeHandler = () => {
@@ -42,6 +69,7 @@ const register = () => {
     useEffect(() => {
         if (smsSendError) setSendSMSDisable(false);
     }, [smsSendError]);
+
 
     const googleLogin = () => {
         dispatch(userGoogleLogin());
@@ -79,12 +107,14 @@ const register = () => {
                     </div>
                     <div className="d-block bg-white p-5 mt-5">
                         {smsSendError ? showErrorMessage(smsSendError.error) : null}
+                        {error ? showErrorMessage(error.error) : null}
                         <form autoComplete="new password" onSubmit={handleSubmit}>
                             <div className="d-block">
                                 <label>Full Name</label>
                                 <input type="text" className="form-control mt-1"
+                                    name="fullname"
                                     value={fullname}
-                                    onChange={(e) => setFullname(e.target.value)}
+                                    onChange={handleChangeInput}
                                     autoComplete="off"
                                     autoCorrect="off"
                                     placeholder="Please enter your full name"
@@ -93,8 +123,9 @@ const register = () => {
                             <div className="d-block mt-4">
                                 <label>Mobile number</label>
                                 <input type="text" className="form-control mt-1"
+                                    name="mobile"
                                     value={mobile}
-                                    onChange={(e) => setMobile(e.target.value)}
+                                    onChange={handleChangeInput}
                                     autoComplete="off"
                                     placeholder="Please enter you mobile number"
                                 />
@@ -124,24 +155,32 @@ const register = () => {
                                             <div className="d-block mt-4">
                                                 <label>Verification code</label>
                                                 <input type="text" className="form-control mt-1"
+                                                    name="verificationCode"
                                                     value={verificationCode}
-                                                    onChange={(e) => setVerificationCode(e.target.value)}
+                                                    onChange={handleChangeInput}
                                                     autoComplete="off"
                                                     placeholder="SMS Verfication Code"
                                                 />
                                             </div>
                                             <div className="d-block position-relative mt-4">
                                                 <label>Password</label>
-                                                <input type={passwordShown ? "text" : "password"} className="form-control mt-1"
+                                                <input
+                                                    type={passwordShown ? "text" : "password"}
+                                                    className="form-control mt-1"
+                                                    name="password"
                                                     value={password}
-                                                    onChange={(e) => setPassword(e.target.value)}
+                                                    onChange={handleChangeInput}
                                                 />
                                                 <i onClick={togglePasswordVisiblity} style={{ position: 'absolute', right: '1rem', top: '3rem', cursor: 'pointer' }}>
                                                     {passwordShown ? (<EyeOff />) : (<Eye />)}
                                                 </i>
                                             </div>
                                             <div className="d-block mt-4">
-                                                <button type="submit" className="btn btn-success btn-lg btn-block font16 mt-4">SIGN UP</button>
+                                                <button type="submit"
+                                                    className="btn btn-success btn-lg btn-block font16 mt-4 position-relative"
+                                                >
+                                                    {loading ? <Loading color="#fff" style={{ padding: '1.2rem' }} /> : ('SIGN UP')}
+                                                </button>
                                             </div>
                                         </>
                                     ) :
