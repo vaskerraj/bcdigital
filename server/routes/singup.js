@@ -7,12 +7,10 @@ module.exports = function (server) {
         const { fullname, mobile, verificationCode, password } = req.body;
         try {
             // Note: checked mobile number at while sending sms so not check mobile number
-            const smsData = verifySms(mobile, verificationCode, method = 'registration');
-            if (!smsData) {
-                return res.status(401).json({ error: 'Invalid SMS Verification Code' });
+            const { msg } = await verifySms(mobile, verificationCode, method = 'registration');
+            if (msg !== 'verify') {
+                return res.status(422).json({ error: 'Invalid SMS Verification Code' });
             }
-            console.log(smsData);
-
             const user = new Users({ name: fullname, username: mobile, mobile, password, method: 'custom' });
             await user.save();
 
