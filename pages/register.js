@@ -99,7 +99,10 @@ const register = () => {
                         <h3>Create Your Account</h3>
                         <div className="mt-1" style={{ fontSize: '1.2rem' }}>
                             Already Member?
-                            <Link href="/login">
+                            <Link href={{
+                                pathname: '/login',
+                                query: router.query,
+                            }}>
                                 <a className="text-info mr-1 ml-1">Login</a>
                             </Link>
                             here

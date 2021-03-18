@@ -82,7 +82,10 @@ const login = () => {
                         <h3>Welcome Again, Please Login In</h3>
                         <div className="mt-1" style={{ fontSize: '1.2rem' }}>
                             New Member?
-                            <Link href="/register">
+                            <Link href={{
+                                pathname: '/register',
+                                query: router.query,
+                            }}>
                                 <a className="text-info mr-1 ml-1">Register</a>
                             </Link>
                             here
