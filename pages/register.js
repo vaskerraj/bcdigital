@@ -244,4 +244,28 @@ const register = () => {
     );
 }
 
+export async function getServerSideProps(context) {
+    try {
+        const { req } = context;
+        const cookies = parseCookies(context);
+        const { data } = await axios.get(`${process.env.api}/api/isuser`, {
+            headers: {
+                token: cookies.token,
+            },
+        });
+        const redirectUrl = (req && req.query['redirect']) ? decodeURIComponent(req.query['redirect']) : '/'
+        return {
+            redirect: {
+                destination: redirectUrl,
+                permanent: false,
+            },
+            props: {}
+        }
+    } catch (err) {
+        return {
+            props: {},
+        };
+    }
+}
+
 export default register;
