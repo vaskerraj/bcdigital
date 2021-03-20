@@ -14,6 +14,8 @@ import styles from '../../styles/Header.module.css';
 
 const MainHeadSection = () => {
     const { userInfo } = useSelector(state => state.userAuth);
+    const { regUserInfo } = useSelector(state => state.userRegister);
+    const loginUser = regUserInfo ? regUserInfo : userInfo;
 
     const dispatch = useDispatch();
 
@@ -24,10 +26,12 @@ const MainHeadSection = () => {
     const menu = (
         <Menu style={{ fontSize: '1.6rem' }}>
             <Menu.Item className="pl-5 pr-5">
-                <a target="_blank" rel="noopener noreferrer">
-                    <UserOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
-                    Manage Account
-                </a>
+                <Link href="user/profile">
+                    <a target="_blank" rel="noopener noreferrer">
+                        <UserOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
+                        Manage Account
+                    </a>
+                </Link>
             </Menu.Item>
             <Menu.Item className="pl-5 pr-5">
                 <a target="_blank" rel="noopener noreferrer">
@@ -79,16 +83,17 @@ const MainHeadSection = () => {
                                     <Search />
                                 </div>
                                 {
-                                    userInfo ? (<>
+                                    loginUser ? (<>
                                         <Dropdown overlay={menu} trigger={['click']} placement="bottomRight" arrow>
                                             <a className="ant-dropdown-link text-dark mr-4" onClick={e => e.preventDefault()}>
                                                 <span className="d-none d-md-block">
-                                                    Hello, {userInfo.user ? userInfo.user.split(" ")[0] : userInfo.user}
+                                                    Hello, {loginUser.user ? loginUser.user.split(" ")[0] : loginUser.user}
+                                                    <ChevronDown size={14} />
                                                 </span>
                                                 <span className="d-block d-md-none">
                                                     <UserIcon />
+                                                    <ChevronDown size={14} />
                                                 </span>
-                                                <ChevronDown size={14} />
                                             </a>
                                         </Dropdown>
                                     </>) :
@@ -105,7 +110,7 @@ const MainHeadSection = () => {
                                                     }}>
                                                         <a className="text-dark mr-4">
                                                             Hello, Login
-                                                <ChevronDown size={14} />
+                                                            <ChevronDown size={14} />
                                                         </a>
                                                     </Link>
                                                 </span>
