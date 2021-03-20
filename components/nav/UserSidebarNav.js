@@ -9,9 +9,20 @@ import {
 const { Sider } = Layout;
 const { SubMenu } = Menu;
 
+import useWindowDimensions from '../../helpers/useWindowDimensions';
+
 const UserSidebarNav = ({ onActive }) => {
     var onActivePage = onActive.toString();
+    const { height, width } = useWindowDimensions();
+    const [collapsed, setCollapsed] = useState(false);
 
+    useEffect(() => {
+        if (width <= 768) {
+            setCollapsed(true);
+        } else {
+            setCollapsed(false);
+        }
+    }, [width]);
     return (
         <Card className="account-menu position-relative">
             <Sider trigger={null} collapsible collapsed={collapsed} style={{ backgroundColor: '#fff' }}>
