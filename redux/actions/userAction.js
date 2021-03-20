@@ -11,10 +11,7 @@ import {
     USER_SIGNUP_ERROR,
     SMS_SEND_RESPONSE,
     SMS_SEND_SUCCESS,
-    SMS_SEND_ERROR,
-    SMS_VERIFY_RESPONSE,
-    SMS_VERIFY_SUCCESS,
-    SMS_VERIFY_ERROR
+    SMS_SEND_ERROR
 }
     from '../types/userType'
 
@@ -135,6 +132,7 @@ export const sendSMS = (mobile) => async (dispatch) => {
 
 export const userSignUpOnChange = () => async (dispatch) => {
     dispatch({ type: USER_SIGNUP_ERROR, payload: null });
+    dispatch({ type: SMS_SEND_ERROR, payload: null });
 }
 
 export const userSignUp = (fullname, mobile, verificationCode, password) => async (dispatch) => {
