@@ -47,6 +47,16 @@ a {
   padding : 0 3.5rem 0 1rem;
   font-size: 1.4rem;
 }
+/* custom buttons */
+
+.btn.c-btn-primary{
+  padding: 0.7rem 2rem;
+  font-size: 1.4rem;
+  font-weight: bold;
+  border: 0.2rem solid #43b2b8;
+  color: #43b2b8;
+}
+
 
 /* form error message */
 .errorMsg{
@@ -65,4 +75,49 @@ a {
 .ant-message-warning{
   display:flex  !important;
   text-align: left !important;
+}
+
+/* manage account */
+.account-menu .ant-card-body{
+  padding: 0;
+}
+.main-menu{
+  position: absolute !important;
+  top:-1px !important;
+}
+.main-menu a {
+  color: transparent !important;
+}
+
+@media screen and (max-width: 768px) {
+  .main-menu{
+    position: relative !important;
+  }
+  .main-menu a {
+    color: inherit !important;
+  }
+}
+
+.ant-menu-item-selected.main-menu{
+  background:transparent !important;
+}
+.ant-menu-item .ant-menu-item-icon, .ant-menu-submenu-title .ant-menu-item-icon, .ant-menu-item .anticon, .ant-menu-submenu-title .anticon
+{
+  font-size: 2rem;
+}
+.ant-menu-submenu-open.ant-menu-submenu-inline > .ant-menu-submenu-title > .ant-menu-submenu-arrow{
+  z-index: 5;
+}
+
+.page-header{
+  border-bottom: 2px solid #dee2e6;
+}
+.profile-chnage_psd{
+  border-left: 1px solid #dee2e6;
+}
+
+@media screen and (max-width: 576px) {
+  .profile-chnage_psd{
+    border-left: none;
+  }
 }

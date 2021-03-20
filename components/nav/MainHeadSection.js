@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Affix, Menu, Dropdown } from 'antd';
-import { UserOutlined, ShoppingOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { UserOutlined, ShoppingOutlined, CloseCircleOutlined, StarOutlined } from '@ant-design/icons';
 import { Search, ShoppingCart, User as UserIcon, ChevronDown, LogOut } from 'react-feather';
 
 import { userSignOut } from '../../redux/actions/userAction';
@@ -43,6 +43,12 @@ const MainHeadSection = () => {
                 <a target="_blank" rel="noopener noreferrer" >
                     <CloseCircleOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
                     Returns & Cancel Order
+                </a>
+            </Menu.Item >
+            <Menu.Item className="pl-5 pr-5">
+                <a target="_blank" rel="noopener noreferrer" >
+                    <StarOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
+                   Review
                 </a>
             </Menu.Item >
             <Menu.Item className="pl-5 pr-5">
