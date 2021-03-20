@@ -4,6 +4,9 @@ import Link from 'next/link';
 
 import { useForm } from "react-hook-form";
 
+import { parseCookies } from 'nookies';
+import axios from 'axios';
+
 import { Eye, EyeOff } from 'react-feather';
 import { Divider, message } from 'antd';
 
@@ -262,6 +265,7 @@ export async function getServerSideProps(context) {
             props: {}
         }
     } catch (err) {
+        console.log(err);
         return {
             props: {},
         };
