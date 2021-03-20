@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 
+import { useForm } from "react-hook-form";
+
 import { Eye, EyeOff } from 'react-feather';
 import { Divider, message } from 'antd';
 
@@ -18,58 +20,48 @@ message.config({
 });
 
 const register = () => {
-    const [fullname, setFullname] = useState('');
-    const [mobile, setMobile] = useState('');
-    const [password, setPassword] = useState('');
-    const [verificationCode, setVerificationCode] = useState('');
     const [passwordShown, setPasswordShown] = useState(false);
     const [sendSMSDisable, setSendSMSDisable] = useState(false);
 
     const togglePasswordVisiblity = () => {
         setPasswordShown(passwordShown ? false : true);
     };
-    const dispatch = useDispatch();
+
+    const { register, handleSubmit, errors } = useForm();
 
     const { loading: smsSendLoading, smsSendInfo, error: smsSendError } = useSelector(state => state.smsSender);
 
     const { loading, regUserInfo, error } = useSelector(state => state.userRegister);
 
-    //definde router
+    // casue of ant message useEffect not working, so implement here
+    if (smsSendError) setSendSMSDisable(false);
+
+    const dispatch = useDispatch();
+
+    //define router
     const router = useRouter();
     useEffect(() => {
-        if (regUserInfo) {
-            //    router redirect/push
+        if (regUserInfo != undefined || regUserInfo != null) {
+            router.push('/user/');
         }
     }, [regUserInfo]);
 
-    const handleChangeInput = e => {
-        const { name, value } = e.target
-        if (name === 'fullname') {
-            setFullname(value)
-        }
-        else if (name === 'mobile') {
-            setMobile(value)
-        } else if (name === 'password') {
-            setPassword(value);
-        } else if (name === 'verificationCode') {
-            setVerificationCode(value);
-        }
-        dispatch(userSignUpOnChange());
-    }
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        dispatch(userSignUp(fullname, mobile, verificationCode, password));
-    }
-
-    const smsCodeHandler = () => {
-        setSendSMSDisable(true);
+    const smsCodeHandler = (mobile) => {
         dispatch(sendSMS(mobile));
+        setSendSMSDisable(true);
     }
+
+    const onSubmit = data => {
+        if (!data.verificationCode) {
+            smsCodeHandler(data.mobile);
+        } else {
+            dispatch(userSignUp(data.fullname, data.mobile, data.verificationCode, data.password));
+        }
+    }
+
     useEffect(() => {
         if (smsSendError) setSendSMSDisable(false);
     }, [smsSendError]);
-
 
     const googleLogin = () => {
         dispatch(userGoogleLogin());
@@ -113,83 +105,111 @@ const register = () => {
                     <div className="d-block bg-white p-5 mt-5">
                         {smsSendError ? showErrorMessage(smsSendError.error) : null}
                         {error ? showErrorMessage(error.error) : null}
-                        <form autoComplete="new password" onSubmit={handleSubmit}>
+                        <form autoComplete="new password" onSubmit={handleSubmit(onSubmit)}>
                             <div className="d-block">
                                 <label>Full Name</label>
                                 <input type="text" className="form-control mt-1"
                                     name="fullname"
-                                    value={fullname}
-                                    onChange={handleChangeInput}
                                     autoComplete="off"
                                     autoCorrect="off"
                                     placeholder="Please enter your full name"
+                                    ref={register({
+                                        required: true
+                                    })}
                                 />
+                                {errors.fullname && errors.fullname.type === "required" && (
+                                    <p className="errorMsg">Please enter your full name</p>
+                                )}
                             </div>
                             <div className="d-block mt-4">
                                 <label>Mobile number</label>
                                 <input type="text" className="form-control mt-1"
                                     name="mobile"
-                                    value={mobile}
-                                    onChange={handleChangeInput}
                                     autoComplete="off"
-                                    placeholder="Please enter you mobile number"
+                                    placeholder="Please enter your mobile number"
+                                    ref={register({
+                                        required: true,
+                                        minLength: 10,
+                                        maxLength: 10
+                                    })}
                                 />
+                                {errors.mobile && errors.mobile.type === "required" && (
+                                    <p className="errorMsg">Please enter your mobile number</p>
+                                )}
+                                {errors.mobile && errors.mobile.type === "minLength" && errors.mobile.type === "maxLength" && (
+                                    <p className="errorMsg">
+                                        Invalid mobile number
+                                    </p>
+                                )}
                             </div>
                             {
-                                !smsSendInfo
-                                    ?
-                                    (
-                                        <div className="d-block mt-4">
-                                            <button type="button"
-                                                onClick={smsCodeHandler}
-                                                disabled={sendSMSDisable}
-                                                className="btn btn-info btn-lg btn-block font16 position-relative"
-                                            >
-                                                {smsSendLoading ? <Loading color="#fff" style={{ padding: '1.2rem' }} /> : ('Send SMS Code & Sign Up')}
-                                            </button>
-                                        </div>
-                                    )
-                                    :
-                                    null
+                                !smsSendInfo &&
+                                <div className="d-block mt-4">
+                                    <button type="submit"
+                                        disabled={sendSMSDisable}
+                                        className="btn btn-info btn-lg btn-block font16 position-relative"
+                                    >
+                                        {smsSendLoading ? <Loading color="#fff" style={{ padding: '1.2rem' }} /> : ('Send SMS Code & Sign Up')}
+                                    </button>
+                                </div>
+
                             }
                             {
-                                smsSendInfo
-                                    ?
-                                    (
-                                        <>
-                                            <div className="d-block mt-4">
-                                                <label>Verification code</label>
-                                                <input type="text" className="form-control mt-1"
-                                                    name="verificationCode"
-                                                    value={verificationCode}
-                                                    onChange={handleChangeInput}
-                                                    autoComplete="off"
-                                                    placeholder="SMS Verfication Code"
-                                                />
-                                            </div>
-                                            <div className="d-block position-relative mt-4">
-                                                <label>Password</label>
-                                                <input
-                                                    type={passwordShown ? "text" : "password"}
-                                                    className="form-control mt-1"
-                                                    name="password"
-                                                    value={password}
-                                                    onChange={handleChangeInput}
-                                                />
-                                                <i onClick={togglePasswordVisiblity} style={{ position: 'absolute', right: '1rem', top: '3rem', cursor: 'pointer' }}>
-                                                    {passwordShown ? (<EyeOff />) : (<Eye />)}
-                                                </i>
-                                            </div>
-                                            <div className="d-block mt-4">
-                                                <button type="submit"
-                                                    className="btn btn-success btn-lg btn-block font16 mt-4 position-relative"
-                                                >
-                                                    {loading ? <Loading color="#fff" style={{ padding: '1.2rem' }} /> : ('SIGN UP')}
-                                                </button>
-                                            </div>
-                                        </>
-                                    ) :
-                                    null
+                                smsSendInfo &&
+                                <>
+                                    <div className="d-block mt-4">
+                                        <label>Verification code</label>
+                                        <input type="text" className="form-control mt-1"
+                                            name="verificationCode"
+                                            autoComplete="off"
+                                            placeholder="SMS Verfication Code"
+                                            ref={register({
+                                                required: true
+                                            })}
+                                        />
+                                        {errors.verificationCode && errors.verificationCode.type === "required" && (
+                                            <p className="errorMsg">Provide SMS Verfication code</p>
+                                        )}
+                                    </div>
+                                    <div className="d-block position-relative mt-4">
+                                        <label>Password</label>
+                                        <input
+                                            type={passwordShown ? "text" : "password"}
+                                            className="form-control mt-1"
+                                            name="password"
+                                            ref={register({
+                                                required: true,
+                                                pattern: /^(?=.*\d)(?=.*[a-z])(?=.*[a-zA-Z]).{5,}$/i,
+                                                minLength: 5
+                                            })}
+                                        />
+                                        <i onClick={togglePasswordVisiblity} style={{ position: 'absolute', right: '1rem', top: '3rem', cursor: 'pointer' }}>
+                                            {passwordShown ? (<EyeOff />) : (<Eye />)}
+                                        </i>
+
+                                        {errors.password && errors.password.type === "required" && (
+                                            <p className="errorMsg">Provide password</p>
+                                        )}
+                                        {errors.password && errors.password.type === "minLength" && (
+                                            <p className="errorMsg">
+                                                Password must be atleast 5 characters
+                                            </p>
+                                        )}
+                                        {errors.password && errors.password.type === "pattern" && (
+                                            <p className="errorMsg">
+                                                Password should contain letter and number
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="d-block mt-4">
+                                        <button type="submit"
+                                            className="btn btn-success btn-lg btn-block font16 mt-4 position-relative"
+                                        >
+                                            {loading ? <Loading color="#fff" style={{ padding: '1.2rem' }} /> : ('SIGN UP')}
+                                        </button>
+                                    </div>
+                                </>
+
                             }
                             <Divider>OR</Divider>
                             <div className="d-block">

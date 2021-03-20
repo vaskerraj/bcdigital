@@ -48,6 +48,14 @@ a {
   font-size: 1.4rem;
 }
 
+/* form error message */
+.errorMsg{
+  font-size: 11px;
+    color: #dd4b39;
+    font-weight: 700;
+    display: inherit;
+}
+
 /* ant message */
 .message-warning .ant-message-notice-content{
   background-color: #fff3cd;
