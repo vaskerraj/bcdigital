@@ -44,6 +44,7 @@ app.prepare().then(() => {
     // routes
     const rootPath = require('path').normalize(__dirname + '/..');
     glob.sync(rootPath + '/server/routes/*.js').forEach(controllerPath => require(controllerPath)(server));
+    glob.sync(rootPath + '/server/routes/user/*.js').forEach(controllerPath => require(controllerPath)(server));
     glob.sync(rootPath + '/server/routes/admin/*.js').forEach(controllerPath => require(controllerPath)(server));
     glob.sync(rootPath + '/server/routes/seller/*.js').forEach(controllerPath => require(controllerPath)(server));
 
