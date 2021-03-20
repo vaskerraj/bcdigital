@@ -6,6 +6,7 @@ import {
     USER_SIGNUP_RESPONSE,
     USER_SIGNUP_SUCCESS,
     USER_SIGNUP_ERROR,
+    USER_SIGNUP_SIGNOUT,
     SMS_SEND_RESPONSE,
     SMS_SEND_SUCCESS,
     SMS_SEND_ERROR
@@ -90,6 +91,8 @@ export const signupReducer = (state = initialState, action) => {
                 regUserInfo: null,
                 error: action.payload
             }
+        case USER_SIGNUP_SIGNOUT:
+            return {}
         default: return state;
     }
 }

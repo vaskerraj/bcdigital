@@ -9,6 +9,7 @@ import {
     USER_SIGNUP_RESPONSE,
     USER_SIGNUP_SUCCESS,
     USER_SIGNUP_ERROR,
+    USER_SIGNUP_SIGNOUT,
     SMS_SEND_RESPONSE,
     SMS_SEND_SUCCESS,
     SMS_SEND_ERROR
@@ -27,10 +28,7 @@ export const userSignIn = (mobile, password) => async (dispatch) => {
         const result = await firebase.auth().signInWithCustomToken(data.token);
 
         const { user } = result;
-        // set full name of auth at firebase displayName
-        user.updateProfile({
-            displayName: data.name,
-        });
+
         const token = await user.getIdToken(true);
         const dispatchData = {
             user: data.name,
@@ -39,7 +37,8 @@ export const userSignIn = (mobile, password) => async (dispatch) => {
         dispatch({ type: USER_SIGIN_SUCCESS, payload: dispatchData });
 
     } catch (error) {
-        dispatch({ type: USER_SIGIN_ERROR, payload: error.response.data });
+        const d_error = error.response.data ? error.response.data : error.message;
+        dispatch({ type: USER_SIGIN_ERROR, payload: d_error });
     }
 }
 export const userGoogleLogin = () => async (dispatch) => {
@@ -110,6 +109,7 @@ export const userFacebookLogin = () => async (dispatch) => {
 
 export const userSignOut = () => async (dispatch) => {
     dispatch({ type: USER_SIGNOUT });
+    dispatch({ type: USER_SIGNUP_SIGNOUT });
     await firebase.auth().signOut().then(
         Router.push('/')
     );
@@ -140,7 +140,23 @@ export const userSignUp = (fullname, mobile, verificationCode, password) => asyn
 
     try {
         const { data } = await axiosApi.post("api/signup", { fullname, mobile, verificationCode, password });
-        dispatch({ type: USER_SIGNUP_SUCCESS, payload: data });
+
+        const result = await firebase.auth().signInWithCustomToken(data.token);
+
+        const { user } = result;
+        // set full name of auth at firebase displayName
+        user.updateProfile({
+            displayName: data.name,
+        });
+        const token = await user.getIdToken(true);
+        const dispatchData = {
+            user: data.name,
+            token
+        }
+        // auto sign in after sign up
+        dispatch({ type: USER_SIGIN_SUCCESS, payload: dispatchData });
+
+        dispatch({ type: USER_SIGNUP_SUCCESS, payload: dispatchData });
 
     } catch (error) {
         const d_error = error.response.data ? error.response.data : error.message;

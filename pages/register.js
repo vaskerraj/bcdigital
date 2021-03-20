@@ -42,7 +42,11 @@ const register = () => {
     const router = useRouter();
     useEffect(() => {
         if (regUserInfo != undefined || regUserInfo != null) {
-            router.push('/user/');
+            if (router.query && router.query.redirect) {
+                router.push(router.query.redirect);
+            } else {
+                router.push('/user/');
+            }
         }
     }, [regUserInfo]);
 
