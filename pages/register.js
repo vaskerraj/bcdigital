@@ -75,19 +75,38 @@ const register = () => {
         dispatch(userFacebookLogin());
     }
 
-    const showErrorMessage = (err) => {
-        message.warning({
-            content: (
-                <div>
-                    <div className="font-weight-bold">Error</div>
-                    {err}
-                </div>
-            ),
-            className: 'message-warning',
-        });
-        // auth error set not null after error display
-        dispatch(userSignUpOnChange());
-    }
+    useEffect(() => {
+        if (smsSendError) {
+            setSendSMSDisable(false);
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {smsSendError.error}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+            // auth error set not null after error display
+            dispatch(userSignUpOnChange());
+        }
+
+        if (error) {
+            setSendSMSDisable(false);
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.error}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+            // auth error set not null after error display
+            dispatch(userSignUpOnChange());
+        }
+
+    }, [smsSendError, error]);
 
     return (
         <div className="p-4">
@@ -107,8 +126,6 @@ const register = () => {
                         </div>
                     </div>
                     <div className="d-block bg-white p-5 mt-5">
-                        {smsSendError ? showErrorMessage(smsSendError.error) : null}
-                        {error ? showErrorMessage(error.error) : null}
                         <form autoComplete="new password" onSubmit={handleSubmit(onSubmit)}>
                             <div className="d-block">
                                 <label>Full Name</label>

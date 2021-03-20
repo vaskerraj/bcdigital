@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+
+import { useForm } from "react-hook-form";
+
+import { parseCookies } from 'nookies';
+import axios from 'axios';
 import { Eye, EyeOff } from 'react-feather';
 import { Divider, message } from 'antd';
 
@@ -16,9 +21,9 @@ message.config({
 });
 
 const login = () => {
-    const [mobile, setMobile] = useState('');
-    const [password, setPassword] = useState('');
     const [passwordShown, setPasswordShown] = useState(false);
+
+    const { register, handleSubmit, errors } = useForm();
 
     const router = useRouter();
 
@@ -39,19 +44,8 @@ const login = () => {
         setPasswordShown(passwordShown ? false : true);
     };
 
-    const handleChangeInput = e => {
-        const { name, value } = e.target
-        if (name === 'mobile') {
-            setMobile(value)
-        } else if (name === 'password') {
-            setPassword(value);
-        }
-        dispatch(userSignInOnChange());
-    }
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        dispatch(userSignIn(mobile, password));
+    const onSubmit = data => {
+        dispatch(userSignIn(data.mobile, data.password));
     }
 
     const googleLogin = () => {
@@ -61,20 +55,22 @@ const login = () => {
     const facebookLogin = () => {
         dispatch(userFacebookLogin());
     }
+    useEffect(() => {
+        if (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.error}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+            // auth error set not null after error display
+            dispatch(userSignInOnChange());
+        }
 
-    const showErrorMessage = (err) => {
-        message.warning({
-            content: (
-                <div>
-                    <div className="font-weight-bold">Error</div>
-                    {err}
-                </div>
-            ),
-            className: 'message-warning',
-        })
-        // auth error set not null after error display
-        dispatch(userSignInOnChange());
-    }
+    }, [error]);
 
     return (
         <div className="p-4">
@@ -94,32 +90,46 @@ const login = () => {
                         </div>
                     </div>
                     <div className="d-block bg-white p-5 mt-5">
-                        {error ? showErrorMessage(error.error) : null}
-                        <form onSubmit={handleSubmit}>
+                        <form onSubmit={handleSubmit(onSubmit)}>
                             <div className="d-block">
                                 <label>Mobile number</label>
                                 <input type="text"
                                     name="mobile"
                                     className="form-control mt-1"
-                                    value={mobile}
-                                    onChange={handleChangeInput}
                                     autoComplete="off"
                                     placeholder="Please enter your mobile number"
+                                    ref={register({
+                                        required: true,
+                                        minLength: 10,
+                                        maxLength: 10
+                                    })}
                                 />
+                                {errors.mobile && errors.mobile.type === "required" && (
+                                    <p className="errorMsg">Please enter your mobile number</p>
+                                )}
+                                {errors.mobile && errors.mobile.type === "minLength" && errors.mobile.type === "maxLength" && (
+                                    <p className="errorMsg">
+                                        Invalid mobile number
+                                    </p>
+                                )}
                             </div>
                             <div className="d-block position-relative mt-4 pt-1">
                                 <label>Password</label>
                                 <input type={passwordShown ? "text" : "password"}
                                     name="password"
                                     className="form-control mt-1"
-                                    value={password}
-                                    onChange={handleChangeInput}
                                     placeholder="Please enter your password"
                                     autoComplete="off"
+                                    ref={register({
+                                        required: true
+                                    })}
                                 />
                                 <i onClick={togglePasswordVisiblity} style={{ position: 'absolute', right: '1rem', top: '3.3rem', cursor: 'pointer' }}>
                                     {passwordShown ? (<EyeOff />) : (<Eye />)}
                                 </i>
+                                {errors.password && errors.password.type === "required" && (
+                                    <p className="errorMsg">Provide password</p>
+                                )}
                             </div>
                             <div className="d-block mb-3 text-info fR">
                                 <Link href="">Forget Password?</Link>
@@ -140,6 +150,29 @@ const login = () => {
             </div>
         </div >
     );
+}
+
+export async function getServerSideProps(context) {
+    try {
+        const cookies = parseCookies(context);
+        const { data } = await axios.get(`${process.env.api}/api/verifytoken`, {
+            headers: {
+                token: cookies.token,
+            },
+        });
+        return {
+            redirect: {
+                destination: '/',
+                permanent: false,
+            },
+            props: {}
+        }
+    } catch (err) {
+        console.log(err);
+        return {
+            props: {},
+        };
+    }
 }
 
 export default login;
