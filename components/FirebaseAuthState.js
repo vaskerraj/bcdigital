@@ -13,7 +13,9 @@ const FirebaseAuthState = ({ children }) => {
 
                 // cookies
                 destroyCookie(null, "token");
-                setCookie(null, "token", "", {});
+                setCookie(null, "token", "", {
+                    path: '/'
+                });
 
                 // dispatch logout
                 await firebase.auth().signOut();
@@ -22,7 +24,9 @@ const FirebaseAuthState = ({ children }) => {
 
                 // set token to cookie
                 destroyCookie(null, "token");
-                setCookie(null, "token", token, {});
+                setCookie(null, "token", token, {
+                    path: '/'
+                });
 
                 // dispatch login
                 const dispatchData = {
