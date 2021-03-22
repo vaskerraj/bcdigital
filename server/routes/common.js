@@ -9,11 +9,11 @@ module.exports = function (server) {
         const { current, password, method, role } = req.body;
         try {
             const user = await Users.findOne({ _id: req.user._id, method, role });
-            const comparePwd = await user.comparePassword(current);
+            await user.comparePassword(current);
 
-            await Users.findByIdAndUpdate({ _id: req.user._id }, { password }, {
-                new: true
-            });
+            user.password = password;
+            await user.save();
+
             return res.status(200).json({ msg: "success" });
         } catch (error) {
             return res.status(422).json({ error: 'Current password doesnt match.' });
