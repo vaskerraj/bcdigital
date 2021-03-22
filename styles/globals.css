@@ -32,6 +32,12 @@ a {
 .font16{
   font-size: 1.6rem;
 }
+.font15{
+  font-size:  1.5rem;
+}
+.font14{
+  font-size: 1.4rem;
+}
 .font13{
   font-size:1.3rem;
 }
@@ -67,14 +73,19 @@ a {
 }
 
 /* ant message */
+.ant-message-warning, .ant-message-success{
+  display:flex  !important;
+  text-align: left !important;
+}
+
 .message-warning .ant-message-notice-content{
   background-color: #fff3cd;
   border-color: #ffeeba;
-
 }
-.ant-message-warning{
-  display:flex  !important;
-  text-align: left !important;
+
+.message-success .ant-message-notice-content{
+  background-color: #d4edda;
+  border-color: #d4edda;
 }
 
 /* manage account */

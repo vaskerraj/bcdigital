@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { useSelector } from 'react-redux';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
+import axiosApi from '../../helpers/api';
 
 import { useForm } from 'react-hook-form';
 
@@ -26,13 +28,54 @@ const changePassword = () => {
         setPasswordMatchShown(passwordMatchShown ? false : true);
     };
 
-    const { register, handleSubmit, errors, watch } = useForm();
+    const router = useRouter();
+
+    const { register, handleSubmit, errors, watch } = useForm({
+        reValidateMode: 'onChange'
+    });
     // password match
     const password = useRef();
     password.current = watch("newpassword", "");
 
-    const onSubmit = data => {
+    const { userInfo } = useSelector(state => state.userAuth);
 
+    const onSubmit = async (inputdata) => {
+        try {
+            const { data } = await axiosApi.post('/api/changePwd', {
+                current: inputdata.currentpassword,
+                password: inputdata.password,
+                method: 'custom',
+                role: 'subscriber'
+            }, {
+                headers: {
+                    token: userInfo.token
+                }
+            });
+            if (data.msg === 'success') {
+                message.success({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">Success</div>
+                            Password succesffuly changed
+                        </div>
+                    ),
+                    className: 'message-success',
+                });
+                setTimeout(() => {
+                    router.push('/user/profile');
+                }, 2000);
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response.data ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
     }
     return (
         <div>
