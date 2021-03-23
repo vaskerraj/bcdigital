@@ -1,4 +1,3 @@
-const { ListContext } = require('antd/lib/list');
 const mongoose = require('mongoose');
 const Users = mongoose.model('Users');
 
@@ -41,9 +40,17 @@ module.exports = function (server) {
             }
 
         } catch (error) {
-            const d_error = error.response ? error.response.data : error.message;
-            return res.status(422).json({ error: d_error })
+            return res.status(422).json({ error: "Some error occur. Please try again later." })
         }
 
+    });
+
+    server.get('/api/addresses', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        try {
+            const user = await Users.findById(req.user._id);
+            return res.status(200).json(user.addresses);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." })
+        }
     });
 };
