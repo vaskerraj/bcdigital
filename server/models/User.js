@@ -2,6 +2,20 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const { ObjectId } = mongoose.Schema;
 
+const addressSchema = mongoose.Schema({
+    label: String,
+    name: String,
+    mobile: String,
+    region: String,
+    city: String,
+    area: String,
+    street: String,
+    isDefault: {
+        type: String,
+        default: false
+    }
+}, { timestamps: true })
+
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -31,7 +45,7 @@ const userSchema = new mongoose.Schema({
         type: Array,
         default: []
     },
-    address: String,
+    addresses: [addressSchema],
     // wishlist: [{ type: ObjectId, ref: 'Products' }]
 }, { timestamps: true });
 
