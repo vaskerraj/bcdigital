@@ -47,24 +47,37 @@ a {
 .fL {
   float: left;
 }
-
+.cp{
+  cursor: pointer;
+}
 .form-control{
   height: 3.7rem;
   padding : 0 3.5rem 0 1rem;
   font-size: 1.4rem;
 }
-/* custom buttons */
 
-.btn.c-btn-primary{
-  padding: 0.7rem 2rem;
+/* custom buttons */
+.btn.c-btn-light,
+.btn.btn.c-btn-primary{
+  padding: 0.7rem 2.5rem;
   font-size: 1.4rem;
   font-weight: bold;
+}
+.btn.c-btn-primary{
   border: 0.2rem solid #43b2b8;
   color: #43b2b8;
 }
 
+.btn.c-btn-light{
+  background-color: #e4e5e5;
+  border: 0.2rem solid #bbbdbe;
+}
+
 
 /* form error message */
+.error-continer{
+  height: 1.7rem;
+}
 .errorMsg{
   font-size: 11px;
     color: #dd4b39;
@@ -121,14 +134,25 @@ a {
 }
 
 .page-header{
-  border-bottom: 2px solid #dee2e6;
+  border-bottom: 0.2rem solid #dee2e6;
 }
 .profile-chnage_psd{
-  border-left: 1px solid #dee2e6;
+  border-left: 0.1rem solid #dee2e6;
 }
 
 @media screen and (max-width: 576px) {
   .profile-chnage_psd{
     border-left: none;
   }
+}
+
+.address-container{
+  -webkit-box-shadow: 1px 1px 0.5rem 0px rgba(0,0,0,0.45);
+  -moz-box-shadow: 1px 1px 0.5rem 0px rgba(0,0,0,0.45);
+  box-shadow: 1px 1px 0.5rem 0px rgba(0,0,0,0.45);
+}
+
+.address-container .default-address{
+  background-color: #d4edda;
+  padding: 0.1rem 0.5rem;
 }

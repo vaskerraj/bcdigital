@@ -39,7 +39,7 @@ const UserSidebarNav = ({ onActive }) => {
                             <Link href="/user/profile">Profile</Link>
                         </Menu.Item>
                         <Menu.Item key="addresses">
-                            <Link href="/user/profile">Addresses</Link>
+                            <Link href="/user/addresses">Addresses</Link>
                         </Menu.Item>
                     </SubMenu>
                     <SubMenu key="sub2" className="position-relative" icon={<ShoppingOutlined />} title="Orders" >
