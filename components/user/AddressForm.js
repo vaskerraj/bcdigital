@@ -1,7 +1,7 @@
 import React from 'react';
 
-const AddAddress = ({ formRegister, handleSubmit, errors, onCancel }) => {
-    console.log(errors)
+const AddressForm = ({ formRegister, handleSubmit, errors, onCancel }) => {
+    // console.log(errors)
     return (
         <div className="d-block text-left">
             <form onSubmit={handleSubmit}>
@@ -134,4 +134,4 @@ const AddAddress = ({ formRegister, handleSubmit, errors, onCancel }) => {
     );
 }
 
-export default AddAddress;
+export default AddressForm;
