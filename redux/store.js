@@ -1,5 +1,6 @@
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import ThunkMiddleware from 'redux-thunk';
+import { addressReducer } from './reducers/addressReducer';
 import { productListReducer } from './reducers/productListReducer';
 import { signinReducer, signupReducer, smsSendReducer } from './reducers/userReducer';
 
@@ -11,7 +12,8 @@ const reducer = combineReducers({
     productList: productListReducer,
     userAuth: signinReducer,
     smsSender: smsSendReducer,
-    userRegister: signupReducer
+    userRegister: signupReducer,
+    addresses: addressReducer
 });
 
 const store = createStore(reducer, initalState, applyMiddleware(ThunkMiddleware));
