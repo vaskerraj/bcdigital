@@ -56,7 +56,6 @@ module.exports = function (server) {
     server.post('/api/addresses', requiredAuth, checkRole(['subscriber']), async (req, res) => {
         const { name, mobile, label, region, city, street } = req.body;
         try {
-            const user = await Users.findById(req.user._id);
             const userAddress = await Users.aggregate([
                 { $match: { _id: req.user._id } },
                 { $project: { addresses: { $size: '$addresses' } } }
@@ -69,8 +68,9 @@ module.exports = function (server) {
             }
 
             const addresses = { name, mobile, label, region, city, street, isDefault }
-            await user.addresses.push(addresses);
-            await user.save();
+            const user = await Users.findByIdAndUpdate({ _id: req.user.id }, { addresses: addresses }, {
+                new: true
+            });
             return res.status(200).json(user.addresses);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." })
