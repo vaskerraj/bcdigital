@@ -1,19 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
 
 import { useForm } from 'react-hook-form';
 
-import axiosApi from '../../helpers/api';
-
 import { Layout, Card, message } from 'antd';
 const { Content } = Layout;
-import UserSidebarNav from '../../components/nav/UserSidebarNav';
-import AddAddress from '../../components/user/AddAddress';
-import AddressList from '../../components/user/AddressList';
+import UserSidebarNav from '../../../components/nav/UserSidebarNav';
+import AddressForm from '../../../components/user/AddressForm';
+import AddressList from '../../../components/user/AddressList';
+import { addAddress } from '../../../redux/actions/addressAction';
 
 const Addresses = ({ addresses }) => {
     const [addAddressBlock, setAddAddressBlock] = useState(false);
@@ -22,14 +21,60 @@ const Addresses = ({ addresses }) => {
 
     const router = useRouter();
 
+    const { adrInfo, error } = useSelector(state => state.addresses);
+
+    useEffect(() => {
+        if (adrInfo) {
+            message.success({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Success</div>
+                        Address Added
+                    </div>
+                ),
+                className: 'message-success',
+            });
+            setTimeout(() => {
+                router.push(router.asPath);
+                setAddAddressBlock(false);
+            }, 2000);
+        }
+        if (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.error}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
+    }, [adrInfo, error]);
+
+    const dispatch = useDispatch();
     const onSubmit = (inputdata) => {
-        console.log(inputdata.fullname);
+        dispatch(addAddress(
+            inputdata.fullname,
+            inputdata.mobile,
+            inputdata.addLabel,
+            inputdata.region,
+            inputdata.city,
+            inputdata.address
+        ))
     }
 
     const onCancel = () => {
         setAddAddressBlock(false);
     }
-    const onDefaultAddress = () => {
+    const onDefaultAddress = (id) => {
+
+    }
+
+    const onAddressEdit = (id) => {
+        router.push(`/user/addresses/${id}`);
+    }
+    const onAddressDelete = (id) => {
 
     }
 
@@ -64,11 +109,22 @@ const Addresses = ({ addresses }) => {
                                                 onCancel={onCancel}
                                             />
                                         }
-                                        {!addAddressBlock && addresses.length ?
-                                            <AddressList
-                                                data={addresses.addresses}
-                                                makeDefault={onDefaultAddress}
-                                            /> : null}
+                                        {!addAddressBlock && addresses.length ? (
+                                            <div>
+                                                <AddressList
+                                                    data={addresses}
+                                                    makeDefault={onDefaultAddress}
+                                                    onAddressEdit={onAddressEdit}
+                                                    onAddressDelete={onAddressDelete}
+                                                />
+                                                <div className="d-block mt-5 text-center">
+                                                    <button type="button" onClick={() => setAddAddressBlock(true)} className="btn btn-lg c-btn-primary font16">
+                                                        Add New Address
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )
+                                            : null}
 
                                         {
                                             !addAddressBlock && !addresses.length ?
@@ -78,7 +134,7 @@ const Addresses = ({ addresses }) => {
                                                             No addresses. Add new address for shipping.
                                                         </div>
                                                         <div className="d-block mt-5">
-                                                            <button type="button" onClick={() => setAddAddressBlock(true)} class="btn btn-lg c-btn-primary font16">
+                                                            <button type="button" onClick={() => setAddAddressBlock(true)} className="btn btn-lg c-btn-primary font16">
                                                                 Add New Address
                                                             </button>
                                                         </div>
