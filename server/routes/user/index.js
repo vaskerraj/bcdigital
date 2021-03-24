@@ -68,7 +68,12 @@ module.exports = function (server) {
             }
 
             const addresses = { name, mobile, label, region, city, street, isDefault }
-            const user = await Users.findByIdAndUpdate({ _id: req.user.id }, { addresses: addresses }, {
+            const user = await Users.findByIdAndUpdate(req.user.id,
+                {
+                    $push: {
+                        addresses: addresses
+                    }
+                }, {
                 new: true
             });
             return res.status(200).json(user.addresses);
