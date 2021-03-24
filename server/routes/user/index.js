@@ -53,4 +53,27 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." })
         }
     });
+    server.post('/api/addresses', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        const { name, mobile, label, region, city, street } = req.body;
+        try {
+            const user = await Users.findById(req.user._id);
+            const userAddress = await Users.aggregate([
+                { $match: { _id: req.user._id } },
+                { $project: { addresses: { $size: '$addresses' } } }
+            ]);
+
+            // check address and make first address as default address
+            var isDefault = false;
+            if (userAddress[0].addresses === 0) {
+                isDefault = true;
+            }
+
+            const addresses = { name, mobile, label, region, city, street, isDefault }
+            await user.addresses.push(addresses);
+            await user.save();
+            return res.status(200).json(user.addresses);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." })
+        }
+    });
 };
