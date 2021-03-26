@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 import { Checkbox } from 'antd';
 import { Trash, Edit2, User, Smartphone, Book } from 'react-feather';
@@ -20,6 +21,7 @@ const AddressList = ({ data, onAddressEdit, onAddressDelete, makeDefault }) => {
                                         size={18}
                                         className="mr-3 cp"
                                     />
+
                                     <Edit2
                                         onClick={() => onAddressEdit(address._id)}
                                         size={18}
@@ -35,8 +37,12 @@ const AddressList = ({ data, onAddressEdit, onAddressDelete, makeDefault }) => {
                                 </div>
                                 <div className="d-block mt-3">
                                     <div className="d-flex">
-                                        <Book size={18} className="text-muted mt-2" />
-                                        <div className="ml-2">{address.street + ',' + address.city + ',' + address.region} </div>
+                                        <div style={{ width: '1.6rem' }}>
+                                            <Book size={16} className="text-muted mt-2" />
+                                        </div>
+                                        <div className=" ml-2">
+                                            {address.street + ',' + address.city + ',' + address.region}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="d-block mt-3">
@@ -44,13 +50,14 @@ const AddressList = ({ data, onAddressEdit, onAddressDelete, makeDefault }) => {
                                     {address.mobile}
                                 </div>
                                 <div className="d-block text-center mt-5 mb-3">
-                                    <Checkbox
-                                        defaultChecked={address.isDefault === 'true' ? true : false} onChange={() => makeDefault(address._id)}
+                                    <input
+                                        type="checkbox"
+                                        id={`makedefault_${address._id}`}
+                                        onChange={(e) => makeDefault(e, address._id)}
+                                        disabled={address.isDefault === 'true' ? true : false}
                                         className="make-default-checkbox"
-                                        style={{ height: '2.5rem' }}
-                                    >
-                                        Make default address
-                                    </Checkbox>
+                                    />
+                                    <label htmlFor={`makedefault_${address._id}`}>Make default address</label>
                                 </div>
                             </div>
                         </div>

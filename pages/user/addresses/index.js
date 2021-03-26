@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
+import axiosApi from '../../../helpers/api';
 
 import { useForm } from 'react-hook-form';
 
@@ -21,8 +22,8 @@ const Addresses = ({ addresses }) => {
 
     const router = useRouter();
 
+    const { userInfo } = useSelector(state => state.userAuth);
     const { adrInfo, error } = useSelector(state => state.addresses);
-
     useEffect(() => {
         if (adrInfo) {
             message.success({
@@ -67,15 +68,65 @@ const Addresses = ({ addresses }) => {
     const onCancel = () => {
         setAddAddressBlock(false);
     }
-    const onDefaultAddress = (id) => {
-
+    const onDefaultAddress = async (_this, id) => {
+        _this.target.checked = true;
+        try {
+            const { data } = await axiosApi.get(`/api/defaultaddress/${id}`, {
+                headers: {
+                    token: userInfo.token
+                }
+            });
+            if (data) {
+                router.push(router.asPath);
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
     }
 
     const onAddressEdit = (id) => {
-        router.push(`/user/addresses/${id}`);
-    }
-    const onAddressDelete = (id) => {
-
+        router.push('/user/addresses/[id]', `/user/addresses/${id}`);
+    };
+    const onAddressDelete = async (id) => {
+        try {
+            const { data } = await axiosApi.delete(`/api/address/${id}`, {
+                headers: {
+                    token: userInfo.token
+                }
+            });
+            if (data) {
+                message.success({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">Success</div>
+                            Address successfully deleted.
+                        </div>
+                    ),
+                    className: 'message-success',
+                });
+                setTimeout(() => {
+                    router.push(router.asPath);
+                }, 2000);
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
     }
 
     return (
@@ -102,7 +153,7 @@ const Addresses = ({ addresses }) => {
                                     </div>
                                     <div className="d-block mt-5">
                                         {addAddressBlock &&
-                                            <AddAddress
+                                            <AddressForm
                                                 formRegister={register}
                                                 handleSubmit={handleSubmit(onSubmit)}
                                                 errors={errors}

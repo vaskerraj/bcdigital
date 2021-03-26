@@ -73,6 +73,68 @@ a {
   border: 0.2rem solid #bbbdbe;
 }
 
+/* custom checkbox */
+input[type=checkbox] {
+  padding: 0;
+  height: initial;
+  width: initial;
+  margin-bottom: 0;
+  display: none;
+  cursor: pointer;
+}
+
+input[type=checkbox] + label {
+  position: relative;
+  cursor: pointer;
+}
+
+input[type=checkbox] + label:before {
+  content:'';
+  -webkit-appearance: none;
+  background-color: transparent;
+  border: 2px solid #0079bf;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), inset 0px -15px 10px -12px rgba(0, 0, 0, 0.05);
+  padding: 8px;
+  display: inline-block;
+  position: relative;
+  vertical-align: middle;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+input[type=checkbox]:checked + label:after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 4px;
+  left: 7px;
+  width: 6px;
+  height: 12px;
+  border: solid #0079bf;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+input[type=checkbox]:disabled + label{
+  pointer-events: none;
+}
+
+input[type=checkbox]:disabled + label:after{
+  content: '';
+  display: block;
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  width: 6px;
+  height: 12px;
+  border: solid #bbbdbe;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+input[type=checkbox]:disabled + label:before
+{
+  border: solid #bbbdbe;
+}
 
 /* form error message */
 .error-continer{
