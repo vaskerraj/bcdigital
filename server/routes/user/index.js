@@ -81,4 +81,42 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." })
         }
     });
+
+    server.get('/api/address/:id', requiredAuth, checkRole('subscriber'), async (req, res) => {
+        try {
+            const user = await Users.findOne({ 'addresses._id': req.params.id });
+            const address = user.addresses.id(req.params.id);
+            return res.status(200).json(address);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." })
+        }
+    });
+
+    server.delete('/api/address/:id', requiredAuth, checkRole('subscriber'), async (req, res) => {
+        const addressId = req.params.id;
+        try {
+            await Users.findByIdAndUpdate(req.user.id,
+                {
+                    $pull: {
+                        addresses: { _id: mongoose.Types.ObjectId(addressId) }
+                    }
+                }).exec();
+            return res.status(200).json({ msg: 'success' });
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." })
+        }
+    });
+
+    server.put('/api/address', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        const { id, name, mobile, label, region, city, street } = req.body;
+
+        var update = { name, mobile, label, region, city, street };
+        await Users.findOneAndUpdate({ 'addresses._id': id },
+            {
+                '$set': { 'addresses.$': update },
+            }, { upsert: true }
+        );
+        return res.status(200).json({ msg: "success" });
+
+    });
 };

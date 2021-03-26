@@ -14,7 +14,7 @@ const addressSchema = mongoose.Schema({
         type: String,
         default: false
     }
-}, { timestamps: true })
+});
 
 const userSchema = new mongoose.Schema({
     name: {
