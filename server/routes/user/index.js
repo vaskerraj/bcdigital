@@ -109,14 +109,35 @@ module.exports = function (server) {
 
     server.put('/api/address', requiredAuth, checkRole(['subscriber']), async (req, res) => {
         const { id, name, mobile, label, region, city, street } = req.body;
+        try {
+            var update = { name, mobile, label, region, city, street };
+            await Users.findOneAndUpdate({ 'addresses._id': id },
+                {
+                    '$set': { 'addresses.$': update },
+                }, { upsert: true }
+            );
+            return res.status(200).json({ msg: "success" });
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
 
-        var update = { name, mobile, label, region, city, street };
-        await Users.findOneAndUpdate({ 'addresses._id': id },
-            {
-                '$set': { 'addresses.$': update },
-            }, { upsert: true }
-        );
-        return res.status(200).json({ msg: "success" });
-
+    server.get('/api/defaultaddress/:id', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        const addressId = req.params.id;
+        try {
+            await Users.findOneAndUpdate({ "_id": req.user.id, 'addresses.isDefault': 'true' },
+                {
+                    '$set': { "addresses.$.isDefault": "false" }
+                }
+            );
+            await Users.findOneAndUpdate({ 'addresses._id': addressId },
+                {
+                    '$set': { 'addresses.$.isDefault': "true" },
+                }, { upsert: "true" }
+            );
+            return res.status(200).json({ msg: "success" });
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
     });
 };
