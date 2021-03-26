@@ -209,6 +209,7 @@ input[type=checkbox]:disabled + label:before
 }
 
 .address-container{
+  min-height: 28rem;
   -webkit-box-shadow: 1px 1px 0.5rem 0px rgba(0,0,0,0.45);
   -moz-box-shadow: 1px 1px 0.5rem 0px rgba(0,0,0,0.45);
   box-shadow: 1px 1px 0.5rem 0px rgba(0,0,0,0.45);

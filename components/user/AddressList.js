@@ -9,7 +9,7 @@ const AddressList = ({ data, onAddressEdit, onAddressDelete, makeDefault }) => {
         <div className="d-block">
             <div className="row">
                 {data.map(address => (
-                    <div key={address._id} className="col-sm-4 col-md-3 mt-2">
+                    <div key={address._id} className="col-sm-4 col-md-3 mt-3">
                         <div className="address-container">
                             <div className="d-flex justify-content-between">
                                 <span className={`default-address ${address.isDefault === 'true' ? 'show' : 'hide'} `}>
@@ -41,7 +41,7 @@ const AddressList = ({ data, onAddressEdit, onAddressDelete, makeDefault }) => {
                                             <Book size={16} className="text-muted mt-2" />
                                         </div>
                                         <div className=" ml-2">
-                                            {address.street + ',' + address.city + ',' + address.region}
+                                            {address.street + ', ' + address.city + ', ' + address.region}
                                         </div>
                                     </div>
                                 </div>
