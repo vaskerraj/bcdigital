@@ -37,7 +37,7 @@ export const userSignIn = (mobile, password) => async (dispatch) => {
         dispatch({ type: USER_SIGIN_SUCCESS, payload: dispatchData });
 
     } catch (error) {
-        const d_error = error.response.data ? error.response.data : error.message;
+        const d_error = error.response ? error.response.data : error.message;
         dispatch({ type: USER_SIGIN_ERROR, payload: d_error });
     }
 }
@@ -47,15 +47,7 @@ export const userGoogleLogin = () => async (dispatch) => {
         const results = await firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
         const { user } = results;
 
-
         const token = await user.getIdToken(true);
-
-        const dispatchData = {
-            user: data.name,
-            token
-        }
-
-        dispatch({ type: USER_SIGIN_SUCCESS, payload: dispatchData });
 
         // get user is new or existing
         const isNewUserOrNot = results.additionalUserInfo.isNewUser;
@@ -69,6 +61,13 @@ export const userGoogleLogin = () => async (dispatch) => {
                 }
             }
         )
+        const dispatchData = {
+            user: data.name,
+            token
+        }
+        dispatch({ type: USER_SIGIN_SUCCESS, payload: dispatchData });
+
+
     } catch (error) {
         dispatch({ type: USER_SIGIN_ERROR, payload: error.message });
     }
@@ -83,12 +82,6 @@ export const userFacebookLogin = () => async (dispatch) => {
 
         const token = await user.getIdToken(true);
 
-        const dispatchData = {
-            user: data.name,
-            token
-        }
-        dispatch({ type: USER_SIGIN_SUCCESS, payload: dispatchData });
-
         // get user is new or existing
         const isNewUserOrNot = results.additionalUserInfo.isNewUser;
 
@@ -101,6 +94,11 @@ export const userFacebookLogin = () => async (dispatch) => {
                 }
             }
         )
+        const dispatchData = {
+            user: data.name,
+            token
+        }
+        dispatch({ type: USER_SIGIN_SUCCESS, payload: dispatchData });
     } catch (error) {
         dispatch({ type: USER_SIGIN_ERROR, payload: error.message });
     }
