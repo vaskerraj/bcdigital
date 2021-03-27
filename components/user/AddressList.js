@@ -1,10 +1,9 @@
 import React from 'react';
-import Link from 'next/link';
 
-import { Checkbox } from 'antd';
+import { Popconfirm } from 'antd';
 import { Trash, Edit2, User, Smartphone, Book } from 'react-feather';
 
-const AddressList = ({ data, onAddressEdit, onAddressDelete, makeDefault }) => {
+const AddressList = ({ data, onAddressEdit, makeDefault, popConfirm }) => {
     return (
         <div className="d-block">
             <div className="row">
@@ -16,12 +15,17 @@ const AddressList = ({ data, onAddressEdit, onAddressDelete, makeDefault }) => {
                                     DEFAULT
                                     </span>
                                 <div className="address-action mt-2">
-                                    <Trash
-                                        onClick={() => onAddressDelete(address._id)}
-                                        size={18}
-                                        className="mr-3 cp"
-                                    />
-
+                                    <Popconfirm
+                                        title="Are you sure to delete this address?"
+                                        onConfirm={() => popConfirm(address._id)}
+                                        okText="Yes"
+                                        cancelText="No"
+                                    >
+                                        <Trash
+                                            size={18}
+                                            className="mr-3 cp"
+                                        />
+                                    </Popconfirm>
                                     <Edit2
                                         onClick={() => onAddressEdit(address._id)}
                                         size={18}

@@ -92,9 +92,6 @@ const Addresses = ({ addresses }) => {
         }
     }
 
-    const onAddressEdit = (id) => {
-        router.push('/user/addresses/[id]', `/user/addresses/${id}`);
-    };
     const onAddressDelete = async (id) => {
         try {
             const { data } = await axiosApi.delete(`/api/address/${id}`, {
@@ -128,6 +125,13 @@ const Addresses = ({ addresses }) => {
             });
         }
     }
+
+    const popConfirm = (id) => {
+        onAddressDelete(id)
+    }
+    const onAddressEdit = (id) => {
+        router.push('/user/addresses/[id]', `/user/addresses/${id}`);
+    };
 
     return (
         <div>
@@ -165,8 +169,8 @@ const Addresses = ({ addresses }) => {
                                                 <AddressList
                                                     data={addresses}
                                                     makeDefault={onDefaultAddress}
+                                                    popConfirm={popConfirm}
                                                     onAddressEdit={onAddressEdit}
-                                                    onAddressDelete={onAddressDelete}
                                                 />
                                                 <div className="d-block mt-5 text-center">
                                                     <button type="button" onClick={() => setAddAddressBlock(true)} className="btn btn-lg c-btn-primary font16">
