@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
-import axiosApi from '../../../helpers/api';
 
 import { useForm } from 'react-hook-form';
 
@@ -12,8 +11,10 @@ import { Layout, Card, message } from 'antd';
 const { Content } = Layout;
 import UserSidebarNav from '../../../components/nav/UserSidebarNav';
 import AddressForm from '../../../components/user/AddressForm';
+import { updateAddress } from '../../../redux/actions/addressAction';
 
 const editaddress = ({ address }) => {
+    const [onSubmitTrigger, setOnSubmitTrigger] = useState(false);
     const router = useRouter();
     // init default value at edit address
     const defaultValues = {
@@ -28,10 +29,49 @@ const editaddress = ({ address }) => {
         defaultValues: defaultValues,
     });
 
+    const { updAdrInfo, error } = useSelector(state => state.addresses);
+    console.log(updAdrInfo)
+    useEffect(() => {
+        if (updAdrInfo && onSubmitTrigger) {
+            message.success({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Success</div>
+                        Address successfully updated
+                    </div>
+                ),
+                className: 'message-success',
+            });
+            setTimeout(() => {
+                router.push('/user/addresses');
+            }, 2000);
+        }
+        if (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.error}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
+    }, [onSubmitTrigger, updAdrInfo, error]);
+
     const dispatch = useDispatch();
 
-    const onSubmit = async (inputdata) => {
-
+    const onSubmit = (inputdata) => {
+        dispatch(updateAddress(
+            address._id,
+            inputdata.fullname,
+            inputdata.mobile,
+            inputdata.addLabel,
+            inputdata.region,
+            inputdata.city,
+            inputdata.address
+        ));
+        setOnSubmitTrigger(true);
     }
     const onCancel = () => {
         return router.back();
@@ -78,7 +118,6 @@ const editaddress = ({ address }) => {
 export async function getServerSideProps(context) {
     try {
         const cookies = parseCookies(context);
-        const { req } = context;
         const { id } = context.params;
         const { data } = await axios.get(`${process.env.api}/api/address/${id}`, {
             headers: {

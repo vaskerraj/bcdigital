@@ -1,3 +1,7 @@
-export const ADR_ADD_RESPONSE = 'ADR_ADD_RESPONSE'
-export const ADR_ADD_SUCCESS = 'ADR_ADD_SUCCESS'
-export const ADR_ADD_ERROR = 'ADR_ADD_ERROR'
+export const ADR_ADD_RESPONSE = 'ADR_ADD_RESPONSE';
+export const ADR_ADD_SUCCESS = 'ADR_ADD_SUCCESS';
+export const ADR_ADD_ERROR = 'ADR_ADD_ERROR';
+
+export const ADR_UPD_RESPONSE = 'ADR_UPD_RESPONSE';
+export const ADR_UPD_SUCCESS = 'ADR_UPD_SUCCESS';
+export const ADR_UPD_ERROR = 'ADR_UPD_ERROR';
