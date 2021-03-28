@@ -30,7 +30,7 @@ const editaddress = ({ address }) => {
     });
 
     const { updAdrInfo, error } = useSelector(state => state.addresses);
-    console.log(updAdrInfo)
+
     useEffect(() => {
         if (updAdrInfo && onSubmitTrigger) {
             message.success({
