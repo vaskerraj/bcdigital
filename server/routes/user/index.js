@@ -45,6 +45,22 @@ module.exports = function (server) {
 
     });
 
+
+    server.post('/api/updContact', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        const { updateField, updateValue } = req.body;
+        try {
+            if (updateField === 'mobile') {
+                await Users.findByIdAndUpdate(req.user.id, { mobile: updateValue });
+            } else if (updateField === 'email') {
+                await Users.findByIdAndUpdate(req.user.id, { email: updateValue });
+            }
+            return res.status(200).json({ msg: "success" });
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." })
+        }
+
+    });
+
     server.get('/api/addresses', requiredAuth, checkRole(['subscriber']), async (req, res) => {
         try {
             const user = await Users.findById(req.user._id);

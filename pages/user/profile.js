@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Head from 'next/head';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
@@ -12,14 +12,19 @@ import axiosApi from '../../helpers/api';
 import { Layout, Card, message } from 'antd';
 const { Content } = Layout;
 import UserSidebarNav from '../../components/nav/UserSidebarNav';
+import ProfileModal from '../../components/user/ProfileModal';
 
 const Profile = ({ profile }) => {
     const [editProfile, setEditProfile] = useState(false);
+    const [modalTitle, setModalTitle] = useState('');
+    const [visible, setVisible] = useState(false);
 
     const router = useRouter();
 
     const initInputValue = {
-        fullname: profile.name
+        fullname: profile.name,
+        mobile: profile.mobile,
+        email: profile.email
     }
     const { register, handleSubmit, errors } = useForm({
         defaultValues: initInputValue
@@ -29,7 +34,7 @@ const Profile = ({ profile }) => {
         setEditProfile(true);
     }
 
-    const { loading, userInfo, error } = useSelector(state => state.userAuth);
+    const { userInfo } = useSelector(state => state.userAuth);
 
     const onSubmit = async (inputdata) => {
         try {
@@ -45,13 +50,67 @@ const Profile = ({ profile }) => {
                 content: (
                     <div>
                         <div className="font-weight-bold">Error</div>
-                        {error.error}
+                        {error.response.data ? error.response.data.error : error.message}
                     </div>
                 ),
                 className: 'message-warning',
             });
         }
     }
+
+    const onClickHandler = (title) => {
+        setModalTitle(title);
+        setVisible(true);
+    };
+
+    const handleCancel = () => {
+        setVisible(false);
+    };
+
+    const onModalSubmit = async (modaldata) => {
+        var updateField = null
+        if (modaldata.mobile) {
+            updateField = 'mobile';
+        } else {
+            updateField = 'email';
+        }
+        try {
+            const { data } = await axiosApi.post('/api/updContact', {
+                updateField: updateField === 'mobile' ? 'mobile' : 'email',
+                updateValue: updateField === 'mobile' ? modaldata.mobile : modaldata.email
+            }, {
+                headers: {
+                    token: userInfo.token
+                }
+            });
+            if (data.msg === 'success') {
+                setVisible(false);
+                message.success({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">Success</div>
+                            Changed succesffuly saved.
+                        </div>
+                    ),
+                    className: 'message-success',
+                });
+                setTimeout(() => {
+                    router.reload();
+                }, 2000);
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response.data ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
+
+    };
     return (
         <div>
             <Head>
@@ -59,6 +118,14 @@ const Profile = ({ profile }) => {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
             <div className="container mt-5">
+                <ProfileModal
+                    title={modalTitle}
+                    visible={visible}
+                    handleCancel={handleCancel}
+                    formRegister={register}
+                    handleSubmit={handleSubmit(onModalSubmit)}
+                    errors={errors}
+                />
                 <Layout className="mt-5">
                     <UserSidebarNav onActive="profile" />
                     <Layout className="site-layout">
@@ -82,14 +149,24 @@ const Profile = ({ profile }) => {
                                             <div className="row profile">
                                                 <div className="col-12 col-sm-6">
                                                     <div className="d-block">
-                                                        <strong className="font16">Full name</strong>
+                                                        <strong className="font14">Full name</strong>
                                                         <div>
                                                             {profile.name}
                                                         </div>
                                                     </div>
                                                     <div className="d-block mt-3">
                                                         <div className="d-block">
-                                                            <strong className="font16">Mobile Number</strong>
+                                                            <strong className="font14">Mobile Number</strong>
+                                                            {profile.method !== 'custom' &&
+                                                                <span className="ml-2">|
+                                                                <span className="text-info ml-1 cp">
+                                                                        {profile.mobile ?
+                                                                            <span onClick={() => onClickHandler('Edit Mobile Number')}>Edit</span>
+                                                                            : <span onClick={() => onClickHandler('Add Mobile Number')}>Add</span>
+                                                                        }
+                                                                    </span>
+                                                                </span>
+                                                            }
                                                         </div>
                                                         <div>
                                                             {profile.mobile}
@@ -97,12 +174,17 @@ const Profile = ({ profile }) => {
                                                     </div>
                                                     <div className="d-block mt-3">
                                                         <div className="d-block">
-                                                            <strong className="font16">Email Id</strong>
-                                                            <span className="ml-2">|
-                                                            <span className="text-info ml-1">
-                                                                    {profile.email ? 'Change' : 'Add'}
+                                                            <strong className="font14">Email Id</strong>
+                                                            {profile.method === 'custom' &&
+                                                                <span className="ml-2">|
+                                                                <span className="text-info ml-1 cp">
+                                                                        {profile.email ?
+                                                                            <span onClick={() => onClickHandler('Edit Email Address')}>Edit</span>
+                                                                            : <span onClick={() => onClickHandler('Add Email Address')}>Add</span>
+                                                                        }
+                                                                    </span>
                                                                 </span>
-                                                            </span>
+                                                            }
                                                         </div>
                                                         <div>
                                                             {profile.email}
@@ -110,17 +192,18 @@ const Profile = ({ profile }) => {
                                                     </div>
                                                 </div>
                                                 {/* /.col */}
-                                                <div className="profile-chnage_psd col-12 col-sm-6 pl-sm-4 pl-1 mt-sm-0 mt-5">
-                                                    <div className="font-weight-bold font13">
-                                                        Want to change your password?
-                                                </div>
-                                                    <div className="d-block mt-3">
-                                                        <button type="button" onClick={() => router.push('/user/change-password')} className="btn btn-lg c-btn-primary font16">
-                                                            CHANGE PASSWORD
-                                                    </button>
+                                                {profile.method === 'custom' &&
+                                                    <div className="profile-chnage_psd col-12 col-sm-6 pl-sm-4 pl-1 mt-sm-0 mt-5">
+                                                        <div className="font-weight-bold font13">
+                                                            Want to change your password?
+                                                        </div>
+                                                        <div className="d-block mt-3">
+                                                            <button type="button" onClick={() => router.push('/user/change-password')} className="btn btn-lg c-btn-primary font16">
+                                                                CHANGE PASSWORD
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                {/* /.col */}
+                                                }
                                             </div>
                                         }
                                         {editProfile &&
@@ -143,6 +226,16 @@ const Profile = ({ profile }) => {
                                                     <div className="d-block mt-4">
                                                         <div className="d-block">
                                                             <strong className="font16">Mobile Number</strong>
+                                                            {profile.method !== 'custom' &&
+                                                                <span className="ml-2">|
+                                                                <span className="text-info ml-1 cp">
+                                                                        {profile.mobile ?
+                                                                            <span onClick={() => onClickHandler('Edit Mobile Number')}>Edit</span>
+                                                                            : <span onClick={() => onClickHandler('Add Mobile Number')}>Add</span>
+                                                                        }
+                                                                    </span>
+                                                                </span>
+                                                            }
                                                         </div>
                                                         <div>
                                                             {profile.mobile}
@@ -151,11 +244,16 @@ const Profile = ({ profile }) => {
                                                     <div className="d-block mt-3 mb-5">
                                                         <div className="d-block">
                                                             <strong className="font16">Email Id</strong>
-                                                            <span className="ml-2">|
-                                                            <span className="text-info">
-                                                                    {profile.email ? 'Change' : 'Add'}
+                                                            {profile.method === 'custom' &&
+                                                                <span className="ml-2">|
+                                                                <span className="text-info ml-1 cp">
+                                                                        {profile.email ?
+                                                                            <span onClick={() => onClickHandler('Edit Email Address')}>Edit</span>
+                                                                            : <span onClick={() => onClickHandler('Add Email Address')}>Add</span>
+                                                                        }
+                                                                    </span>
                                                                 </span>
-                                                            </span>
+                                                            }
                                                         </div>
                                                         <div>
                                                             {profile.email}
