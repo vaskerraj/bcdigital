@@ -2,7 +2,8 @@ import { createStore, combineReducers, applyMiddleware } from 'redux';
 import ThunkMiddleware from 'redux-thunk';
 import { addressReducer } from './reducers/addressReducer';
 import { productListReducer } from './reducers/productListReducer';
-import { signinReducer, signupReducer, smsSendReducer } from './reducers/userReducer';
+import { signinReducer, signupReducer } from './reducers/userReducer';
+import { smsSendReducer } from './reducers/smsReducer';
 
 
 // signInUser : { userInfo } => have to use `userInfo` while use useSelector from other component

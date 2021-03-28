@@ -10,11 +10,9 @@ import {
     USER_SIGNUP_SUCCESS,
     USER_SIGNUP_ERROR,
     USER_SIGNUP_SIGNOUT,
-    SMS_SEND_RESPONSE,
-    SMS_SEND_SUCCESS,
-    SMS_SEND_ERROR
 }
-    from '../types/userType'
+    from '../types/userType';
+import { SMS_SEND_ERROR } from '../types/smsType';
 
 export const userSignInOnChange = () => async (dispatch) => {
     dispatch({ type: USER_SIGIN_ERROR, payload: null });
@@ -112,21 +110,6 @@ export const userSignOut = () => async (dispatch) => {
         Router.push('/')
     );
 }
-
-
-// signup flow
-export const sendSMS = (mobile) => async (dispatch) => {
-    dispatch({ type: SMS_SEND_RESPONSE, payload: { mobile } });
-    try {
-        const { data } = await axiosApi.post('api/smscode', { mobile, method: 'registration' });
-        dispatch({ type: SMS_SEND_SUCCESS, payload: data });
-
-    } catch (error) {
-        const d_error = error.response.data ? error.response.data : error.message;
-        dispatch({ type: SMS_SEND_ERROR, payload: d_error });
-    }
-}
-
 
 export const userSignUpOnChange = () => async (dispatch) => {
     dispatch({ type: USER_SIGNUP_ERROR, payload: null });
