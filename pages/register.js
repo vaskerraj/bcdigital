@@ -11,7 +11,8 @@ import { Eye, EyeOff } from 'react-feather';
 import { Divider, message } from 'antd';
 
 import { useSelector, useDispatch } from 'react-redux';
-import { userSignUpOnChange, userGoogleLogin, userFacebookLogin, sendSMS, userSignUp } from '../redux/actions/userAction';
+import { userSignUpOnChange, userGoogleLogin, userFacebookLogin, userSignUp } from '../redux/actions/userAction';
+import { sendSMS } from '../redux/actions/smsAction';
 
 import SocialAuthButtons from '../components/SocialAuthButtons';
 import Loading from '../components/Loading';
@@ -52,7 +53,7 @@ const register = () => {
     }, [regUserInfo]);
 
     const smsCodeHandler = (mobile) => {
-        dispatch(sendSMS(mobile));
+        dispatch(sendSMS(mobile, 'registration')); //mobile number & method
         setSendSMSDisable(true);
     }
 
@@ -78,7 +79,7 @@ const register = () => {
 
     useEffect(() => {
         if (smsSendError) {
-            setSendSMSDisable(true);
+            setSendSMSDisable(false);
             message.warning({
                 content: (
                     <div>
