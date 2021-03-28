@@ -137,7 +137,7 @@ const login = () => {
                                 )}
                             </div>
                             <div className="d-block mb-3 text-info fR">
-                                <Link href="">Forget Password?</Link>
+                                <Link href="/user/forget-password">Forget Password?</Link>
                             </div>
                             <div className="d-block">
                                 <button type="submit" className="btn btn-success btn-lg btn-block font16 mt-4 position-relative">
