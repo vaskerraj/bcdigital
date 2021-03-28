@@ -93,7 +93,7 @@ const login = () => {
                         <form onSubmit={handleSubmit(onSubmit)}>
                             <div className="d-block">
                                 <label>Mobile number</label>
-                                <input type="text"
+                                <input type="number"
                                     name="mobile"
                                     className="form-control mt-1"
                                     autoComplete="off"
@@ -107,7 +107,12 @@ const login = () => {
                                 {errors.mobile && errors.mobile.type === "required" && (
                                     <p className="errorMsg">Please enter your mobile number</p>
                                 )}
-                                {errors.mobile && errors.mobile.type === "minLength" && errors.mobile.type === "maxLength" && (
+                                {errors.mobile && errors.mobile.type === "minLength" && (
+                                    <p className="errorMsg">
+                                        Invalid mobile number
+                                    </p>
+                                )}
+                                {errors.mobile && errors.mobile.type === "maxLength" && (
                                     <p className="errorMsg">
                                         Invalid mobile number
                                     </p>

@@ -25,6 +25,7 @@ message.config({
 const register = () => {
     const [passwordShown, setPasswordShown] = useState(false);
     const [sendSMSDisable, setSendSMSDisable] = useState(false);
+    const [smsSend, setSmsSend] = useState(false);
 
     const togglePasswordVisiblity = () => {
         setPasswordShown(passwordShown ? false : true);
@@ -35,9 +36,6 @@ const register = () => {
     const { loading: smsSendLoading, smsSendInfo, error: smsSendError } = useSelector(state => state.smsSender);
 
     const { loading, regUserInfo, error } = useSelector(state => state.userRegister);
-
-    // casue of ant message useEffect not working, so implement here
-    if (smsSendError) setSendSMSDisable(false);
 
     const dispatch = useDispatch();
 
@@ -67,8 +65,8 @@ const register = () => {
     }
 
     useEffect(() => {
-        if (smsSendError) setSendSMSDisable(false);
-    }, [smsSendError]);
+        if (smsSendInfo) setSmsSend(true);
+    }, [smsSendInfo]);
 
     const googleLogin = () => {
         dispatch(userGoogleLogin());
@@ -80,7 +78,7 @@ const register = () => {
 
     useEffect(() => {
         if (smsSendError) {
-            setSendSMSDisable(false);
+            setSendSMSDisable(true);
             message.warning({
                 content: (
                     <div>
@@ -110,7 +108,6 @@ const register = () => {
         }
 
     }, [smsSendError, error]);
-
     return (
         <div className="p-4">
             <div className="row">
@@ -147,7 +144,7 @@ const register = () => {
                             </div>
                             <div className="d-block mt-4">
                                 <label>Mobile number</label>
-                                <input type="text" className="form-control mt-1"
+                                <input type="number" className="form-control mt-1"
                                     name="mobile"
                                     autoComplete="off"
                                     placeholder="Please enter your mobile number"
@@ -160,14 +157,19 @@ const register = () => {
                                 {errors.mobile && errors.mobile.type === "required" && (
                                     <p className="errorMsg">Please enter your mobile number</p>
                                 )}
-                                {errors.mobile && errors.mobile.type === "minLength" && errors.mobile.type === "maxLength" && (
+                                {errors.mobile && errors.mobile.type === "minLength" && (
+                                    <p className="errorMsg">
+                                        Invalid mobile number
+                                    </p>
+                                )}
+                                {errors.mobile && errors.mobile.type === "maxLength" && (
                                     <p className="errorMsg">
                                         Invalid mobile number
                                     </p>
                                 )}
                             </div>
                             {
-                                !smsSendInfo &&
+                                !smsSend &&
                                 <div className="d-block mt-4">
                                     <button type="submit"
                                         disabled={sendSMSDisable}
@@ -179,7 +181,7 @@ const register = () => {
 
                             }
                             {
-                                smsSendInfo &&
+                                smsSend &&
                                 <>
                                     <div className="d-block mt-4">
                                         <label>Verification code</label>
@@ -265,7 +267,6 @@ export async function getServerSideProps(context) {
             props: {}
         }
     } catch (err) {
-        console.log(err);
         return {
             props: {},
         };

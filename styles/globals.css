@@ -147,6 +147,17 @@ input[type=checkbox]:disabled + label:before
     display: inherit;
 }
 
+/* hide number increment */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
 /* ant message */
 .ant-message-warning, .ant-message-success{
   display:flex  !important;
