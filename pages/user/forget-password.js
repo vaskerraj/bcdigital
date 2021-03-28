@@ -74,7 +74,11 @@ const forgetPassword = () => {
     }
 
     const onSubmit = data => {
-        // new password logic
+        if (!data.verificationCode) {
+            smsCodeHandler(data.mobile);
+        } else {
+            // new password logic
+        }
     }
     return (
         <div>
