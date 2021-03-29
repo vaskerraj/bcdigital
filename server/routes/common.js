@@ -31,7 +31,6 @@ module.exports = function (server) {
             }
 
             const user = await Users.findOne({ username: mobile, method: 'custom', role });
-            console.log(user);
             user.password = password;
             await user.save();
 
