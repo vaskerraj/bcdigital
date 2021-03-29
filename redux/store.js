@@ -4,6 +4,7 @@ import { addressReducer } from './reducers/addressReducer';
 import { productListReducer } from './reducers/productListReducer';
 import { signinReducer, signupReducer } from './reducers/userReducer';
 import { smsSendReducer } from './reducers/smsReducer';
+import { recoverPsdReducer } from './reducers/authPsdReducer';
 
 
 // signInUser : { userInfo } => have to use `userInfo` while use useSelector from other component
@@ -14,7 +15,8 @@ const reducer = combineReducers({
     userAuth: signinReducer,
     smsSender: smsSendReducer,
     userRegister: signupReducer,
-    addresses: addressReducer
+    addresses: addressReducer,
+    recoverPsd: recoverPsdReducer,
 });
 
 const store = createStore(reducer, initalState, applyMiddleware(ThunkMiddleware));
