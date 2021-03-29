@@ -9,12 +9,14 @@ import { Eye, EyeOff } from 'react-feather';
 import { message } from 'antd';
 
 import { sendSMS } from '../../redux/actions/smsAction';
+import { recoverPassword } from '../../redux/actions/authPsdAction';
 import Loading from '../../components/Loading';
 
 // config antdesign message
 message.config({
     top: '19vh',
     maxCount: 1,
+    duration: 4,
 });
 
 const forgetPassword = () => {
@@ -32,16 +34,29 @@ const forgetPassword = () => {
 
     const router = useRouter();
 
-    const { register, handleSubmit, errors, watch } = useForm({
-        reValidateMode: 'onChange'
-    });
-    // password match
-    const password = useRef();
-    password.current = watch("password", "");
+    const { register, handleSubmit, errors, watch } = useForm();
+
 
     const dispatch = useDispatch();
 
     const { loading: smsSendLoading, smsSendInfo, error: smsSendError } = useSelector(state => state.smsSender);
+    const { loading, recoverPsd, error } = useSelector(state => state.recoverPsd);
+    useEffect(() => {
+        if (recoverPsd != undefined || recoverPsd != null) {
+            message.success({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Success</div>
+                        Password succesffuly recovered. Please use new password and login.
+                    </div>
+                ),
+                className: 'message-success',
+            });
+            setTimeout(() => {
+                router.push('/login');
+            }, 3000);
+        }
+    }, [recoverPsd]);
 
     useEffect(() => {
         if (smsSendInfo) setSmsSend(true);
@@ -60,8 +75,20 @@ const forgetPassword = () => {
                 className: 'message-warning',
             });
         }
+        if (error) {
+            setSendSMSDisable(false);
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.error}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
 
-    }, [smsSendError]);
+    }, [smsSendError, error]);
 
     const smsCodeHandler = (mobile) => {
         dispatch(sendSMS(mobile, 'password_recover')); // mobile number & method
@@ -77,20 +104,22 @@ const forgetPassword = () => {
         if (!data.verificationCode) {
             smsCodeHandler(data.mobile);
         } else {
-            // new password logic
+            dispatch(recoverPassword(data.mobile, data.verificationCode, data.password, 'password_recover', 'subscriber'));
+            // mobile: username , verification code, new password, method(to check sms) & role(to update password base on role)
+            // Note : same mobile number can be use as seller and subscriber so have to pass role
         }
     }
     return (
         <div>
             <Head>
-                <title>Forget Password?</title>
+                <title>Forget Password ?</title>
                 <link rel="icon" href="/favicon.ico" />
             </Head>
             <div className="p-4">
                 <div className="row">
                     <div className="mx-auto my-4" style={{ maxWidth: '450px' }}>
                         <div className="d-flex justify-content-between">
-                            <h3>Forget Password?</h3>
+                            <h3>Forget Password ?</h3>
                         </div>
                         <div className="d-block bg-white p-5 mt-5">
                             <form autoComplete="new password" onSubmit={handleSubmit(onSubmit)}>
@@ -98,13 +127,19 @@ const forgetPassword = () => {
                                     <label>Mobile number</label>
                                     <input
                                         name="mobile"
-                                        className="form-control"
+                                        type="number"
+                                        className={`form-control ${smsSend ? 'disabled' : null}`}
                                         placeholder="Please enter your mobile number"
-                                        disabled={smsSend ? true : false}
                                         ref={register({
-                                            required: true,
-                                            minLength: 10,
-                                            maxLength: 10
+                                            required: "Please enter your mobile number",
+                                            minLength: {
+                                                value: 10,
+                                                message: "Invalid mobile number"
+                                            },
+                                            maxLength: {
+                                                value: 10,
+                                                message: "Invalid mobile number"
+                                            }
                                         })}
                                     />
                                     {smsSend &&
@@ -119,19 +154,8 @@ const forgetPassword = () => {
                                             CHANGE
                                         </span>
                                     }
-                                    {errors.mobile && errors.mobile.type === "required" && (
-                                        <p className="errorMsg">Please enter your mobile number</p>
-                                    )}
-                                    {errors.mobile && errors.mobile.type === "minLength" && (
-                                        <p className="errorMsg">
-                                            Invalid mobile number
-                                        </p>
-                                    )}
-                                    {errors.mobile && errors.mobile.type === "maxLength" && (
-                                        <p className="errorMsg">
-                                            Invalid mobile number
-                                        </p>
-                                    )}
+
+                                    {errors.mobile && <p className="errorMsg">{errors.mobile.message}</p>}
                                 </div>
                                 {
                                     !smsSend &&
@@ -167,41 +191,33 @@ const forgetPassword = () => {
                                             <input
                                                 type={passwordShown ? "text" : "password"}
                                                 className="form-control mt-1"
-                                                name="password"
+                                                name="newpassword"
                                                 ref={register({
-                                                    required: true,
-                                                    pattern: /^(?=.*\d)(?=.*[a-z])(?=.*[a-zA-Z]).{5,}$/i,
-                                                    minLength: 5
+                                                    required: "Provide password",
+                                                    pattern: {
+                                                        value: /^(?=.*\d)(?=.*[a-z])(?=.*[a-zA-Z]).{5,}$/i,
+                                                        message: "Password should contain letter and number"
+                                                    },
+                                                    minLength: {
+                                                        value: 5,
+                                                        message: "Password must be atleast 5 characters"
+                                                    }
                                                 })}
                                             />
                                             <i onClick={togglePasswordVisiblity} style={{ position: 'absolute', right: '1rem', top: '3rem', cursor: 'pointer' }}>
                                                 {passwordShown ? (<EyeOff />) : (<Eye />)}
                                             </i>
-
-                                            {errors.password && errors.password.type === "required" && (
-                                                <p className="errorMsg">Provide password</p>
-                                            )}
-                                            {errors.password && errors.password.type === "minLength" && (
-                                                <p className="errorMsg">
-                                                    Password must be atleast 5 characters
-                                                </p>
-                                            )}
-                                            {errors.password && errors.password.type === "pattern" && (
-                                                <p className="errorMsg">
-                                                    Password should contain letter and number
-                                                </p>
-                                            )}
+                                            {errors.newpassword && <p className="errorMsg">{errors.newpassword.message}</p>}
                                         </div>
                                         <div className="d-block position-relative mt-4 mb-5">
-                                            <lable>Confirm New Password</lable>
+                                            <label>Confirm New Password</label>
                                             <input
                                                 type={passwordMatchShown ? "text" : "password"}
                                                 name="password"
                                                 className="form-control"
                                                 ref={register({
                                                     required: 'Provide password',
-                                                    validate: value =>
-                                                        value === password.current || "The passwords do not match"
+                                                    validate: (value) => value === watch('newpassword') || "The passwords do not match"
                                                 })}
                                             />
                                             <i onClick={togglePasswordMatchVisiblity} style={{ position: 'absolute', right: '1rem', top: '3rem', cursor: 'pointer' }}>
@@ -213,8 +229,7 @@ const forgetPassword = () => {
                                             <button type="submit"
                                                 className="btn btn-success btn-lg btn-block font16 mt-4 position-relative"
                                             >
-                                                REST PASSWORD
-                                                {/* {loading ? <Loading color="#fff" style={{ padding: '1.2rem' }} /> : ('REST PASSWORD')} */}
+                                                {loading ? <Loading color="#fff" style={{ padding: '1.2rem' }} /> : ('REST PASSWORD')}
                                             </button>
                                         </div>
                                     </>
