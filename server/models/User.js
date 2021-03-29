@@ -41,6 +41,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: 'subscriber'
     },
+    adminRole: {
+        type: String
+    },
     cart: {
         type: Array,
         default: []
