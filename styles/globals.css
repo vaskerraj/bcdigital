@@ -239,3 +239,32 @@ input[type=number] {
   background-color: transparent;
   visibility: hidden;
 }
+
+/* admin pannel */
+.admin-wrapper .ant-layout-header{
+  line-height: unset;
+}
+.admin-wrapper .trigger {
+  padding: 0 2.4rem;
+  font-size: 1.8rem;
+  line-height: 5.2rem;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.admin-wrapper .trigger:hover {
+  color: #1890ff;
+}
+
+.admin-wrapper .logo {
+  color:#fff;
+  font-size: 1.8rem;
+  font-weight: bold;
+  text-align: center;
+  height: 3.2rem;
+  margin: 1.6rem;
+}
+
+.admin-wrapper .site-layout .site-layout-background {
+  background: #fff;
+}

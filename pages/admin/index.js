@@ -2,15 +2,16 @@ import React from 'react';
 import { useDispatch } from 'react-redux';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
-import { signout } from '../../redux/actions/adminAuthAction';
+import Wrapper from '../../components/admin/Wrapper';
 
 const AdminIndex = () => {
     const dispatch = useDispatch();
     return (
-        <div>
-            Admin pannel
-            <button className="fR" onClick={() => dispatch(signout())}>logout</button>
-        </div>
+        <Wrapper onActive="index" breadcrumb={["Dashboard"]}>
+            <div className="d-block">
+                Dashboard page
+            </div>
+        </Wrapper>
     );
 }
 export async function getServerSideProps(context) {

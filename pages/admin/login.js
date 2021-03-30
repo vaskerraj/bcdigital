@@ -24,12 +24,9 @@ const AdminLogin = () => {
     const { loading, adminAuth, error } = useSelector(state => state.adminAuth);
     const dispatch = useDispatch();
 
-    console.log(adminAuth);
-
     useEffect(() => {
         if (adminAuth != undefined || adminAuth != null) {
             router.push('/admin/');
-            // dispatch(userSignOut());
         }
     }, [adminAuth]);
 
