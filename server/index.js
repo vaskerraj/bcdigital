@@ -7,6 +7,7 @@ const glob = require('glob');
 // init models
 require('./models/User.js');
 require('./models/SMS.js');
+require('./models/Category.js');
 
 const port = parseInt(process.env.PORT, 10) || 3000
 const dev = process.env.NODE_ENV !== 'production'
