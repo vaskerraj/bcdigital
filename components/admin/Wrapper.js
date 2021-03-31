@@ -20,7 +20,7 @@ const MainSlider = ({ onActive, breadcrumb, children }) => {
     };
 
     const { adminAuth } = useSelector(state => state.adminAuth);
-    console.log(adminAuth)
+
     const dispatch = useDispatch();
     const signOutHandler = () => {
         dispatch(signout());
