@@ -61,6 +61,10 @@ const Categories = ({ categories }) => {
     const deleteCategoriesHandler = (category) => {
     }
 
+    const handleCancel = () => {
+        setVisible(false);
+    }
+
     const subCategoryClickHandler = (e) => {
         e.target.classList.add("active");
     }
