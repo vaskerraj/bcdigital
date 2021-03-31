@@ -268,3 +268,48 @@ input[type=number] {
 .admin-wrapper .site-layout .site-layout-background {
   background: #fff;
 }
+
+.category-block{
+  width: 30rem;
+  margin-right: 1.5rem;
+  border: 1px solid #d4d4d4;
+  border-radius: 0.3rem;
+}
+
+.category-block ul li{
+  padding: 12px 15px;
+  cursor: pointer;
+}
+.category-block ul li.active{
+  background-color: #d4d4d4;
+  border-right: 3px solid #1890ff;
+}
+
+.category-block ul li.non-clickable,
+.category-block ul li ul.sub-cat li.non-clickable
+{
+  cursor: inherit;
+  pointer-events: none;
+}
+.category-block ul li.non-clickable .editcategory,
+.category-block ul li.non-clickable .deletecategory{
+  pointer-events: auto;
+}
+
+.category-block.subs .category-block.subs .addcategory{
+  display: none;
+}
+.category-block.subs .editcategory{
+  cursor: pointer !important;
+}
+
+.category-block.subs ul.sub-cat{
+  position: absolute;
+  left: 29.5rem;
+  top: 0px;
+  display: none;
+}
+
+.category-block.subs li.active ul.sub-cat{
+  display: block;
+}

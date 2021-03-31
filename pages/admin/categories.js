@@ -7,8 +7,10 @@ import axios from 'axios';
 
 import Wrapper from '../../components/admin/Wrapper';
 import CategoryBlock from '../../components/admin/CategoryBlock';
+import SubCategoryBlock from '../../components/admin/SubCategoryBlock';
 
 const Categories = ({ categories }) => {
+    const [subCategories, setSubCategories] = useState('');
     const [activeCat, setActiveCat] = useState();
 
     const dispatch = useDispatch();
@@ -31,6 +33,17 @@ const Categories = ({ categories }) => {
 
     const subCategoryHandler = (category, categoriesChild) => {
         setActiveCat(category._id)
+        setSubCategories(
+            <SubCategoryBlock
+                category={category}
+                categoriesChild={categoriesChild}
+                subCategoryClickHandler={subCategoryClickHandler}
+                editHandler={editCategoriesHandler}
+                deleteHandler={deleteCategoriesHandler}
+                addCategoryHandler={addCategoryHandler}
+                activeCat={activeCat}
+            />
+        );
     }
 
     return (
@@ -54,6 +67,7 @@ const Categories = ({ categories }) => {
                     subCategoryHandler={subCategoryHandler}
                     activeCat={activeCat}
                 />
+                {subCategories}
             </div >
         </Wrapper >
     );
