@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Category = mongoose.model('Category');
 const slugify = require('slugify');
 
-const { requiredAuth, checkRole } = require('../../middlewares/auth');
+const { requiredAuth, checkRole, checkAdminRole } = require('../../middlewares/auth');
 
 const categoriesListWithSubs = (categories, parentId = null) => {
     const categoriesList = [];
@@ -40,7 +40,7 @@ module.exports = function (server) {
             await category.save();
             return res.status(201).json(category);
         } catch (error) {
-            return res.status(422).json({ error: "Some error occur. Please try again later." });
+            return res.status(422).json({ error: error.code === 11000 ? 'Category already exists' : "Something went wrong.Please try again." });
         }
 
     });
@@ -64,6 +64,27 @@ module.exports = function (server) {
             return res.status(200).json(allCategories);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+    server.delete('/api/category/:id', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), async (req, res) => {
+        const categoryId = req.params.id;
+        try {
+            var delcategory = await Category.findByIdAndRemove(categoryId);
+            // get one to get deleted _id(parent id for 3rd step);
+            if (delcategory) {
+                const category = await Category.find({ parentId: categoryId });
+                category && category.map(async (cat) => {
+                    const deleteSubCate = await Category.findOneAndRemove({ parentId: cat.parentId });
+                    // delete 3 step categories
+                    if (deleteSubCate.parentId) {
+                        await Category.deleteMany({ parentId: deleteSubCate._id });
+                    }
+                })
+
+            }
+            return res.status(200).json({ msg: 'success' });
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
         }
     });
 };

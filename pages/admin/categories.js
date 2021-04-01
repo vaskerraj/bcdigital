@@ -59,7 +59,37 @@ const Categories = ({ categories }) => {
 
     }
     const deleteCategoriesHandler = async (id) => {
-
+        try {
+            const { data } = await axiosApi.delete(`/api/category/${id}`, {
+                headers: {
+                    token: adminAuth.token
+                }
+            });
+            if (data) {
+                message.success({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">Success</div>
+                            Category succssfully deleted
+                        </div>
+                    ),
+                    className: 'message-success',
+                });
+                setTimeout(() => {
+                    router.reload();
+                }, 2000);
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
     }
 
     const handleCancel = () => {
