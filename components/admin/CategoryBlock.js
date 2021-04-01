@@ -50,7 +50,7 @@ const CategoryBlock = (props) => {
                             :
                             <li key={cat._id} className="non-clickable">
                                 {cat.name}
-                                <span className="fR cp" onClick={() => editHandler(cat, cat.children)}>
+                                <span className="editcategory fR cp" onClick={() => editHandler(cat, cat.children)}>
                                     <Edit3 size={18} />
                                 </span>
                                 <span className="deletecategory fR cp mr-2">
