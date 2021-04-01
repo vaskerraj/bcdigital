@@ -40,7 +40,12 @@ module.exports = function (server) {
             await category.save();
             return res.status(201).json(category);
         } catch (error) {
-            return res.status(422).json({ error: error.code === 11000 ? 'Category already exists' : "Something went wrong.Please try again." });
+            return res.status(422).json({
+                error: error.code === 11000 ?
+                    'Category already exists'
+                    :
+                    "Something went wrong.Please try again."
+            });
         }
 
     });
@@ -66,6 +71,7 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
+
     server.delete('/api/category/:id', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), async (req, res) => {
         const categoryId = req.params.id;
         try {
@@ -85,6 +91,21 @@ module.exports = function (server) {
             return res.status(200).json({ msg: 'success' });
         } catch (error) {
             return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
+
+    server.put('/api/category', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), async (req, res) => {
+        const { name, categoryId } = req.body;
+        try {
+            await Category.findByIdAndUpdate(categoryId, { name, slug: slugify(name) });
+            return res.status(200).json({ msg: "success" });
+        } catch (error) {
+            return res.status(422).json({
+                error: error.code === 11000 ?
+                    'Category already exists'
+                    :
+                    "Something went wrong.Please try again."
+            });
         }
     });
 };
