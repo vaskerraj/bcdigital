@@ -36,3 +36,6 @@ yarn-error.log*
 
 #auth
 /firebase/ServiceAccountKey.json
+
+# production
+/public/uploads
