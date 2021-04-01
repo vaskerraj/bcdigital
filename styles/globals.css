@@ -313,3 +313,11 @@ input[type=number] {
 .category-block.subs li.active ul.sub-cat{
   display: block;
 }
+
+.cat-label{
+  color: #484848;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
