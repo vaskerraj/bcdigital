@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Category = mongoose.model('Category');
 const slugify = require('slugify');
 
-const { requiredAuth, checkRole, checkAdminRole } = require('../../middlewares/auth');
+const { requiredAuth, checkRole } = require('../../middlewares/auth');
 
 const categoriesListWithSubs = (categories, parentId = null) => {
     const categoriesList = [];
@@ -66,7 +66,7 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
-    server.delete('/api/category/:id', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), async (req, res) => {
+    server.delete('/api/category/:id', requiredAuth, checkRole(['admin']), async (req, res) => {
         const categoryId = req.params.id;
         try {
             var delcategory = await Category.findByIdAndRemove(categoryId);
