@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Popconfirm } from 'antd';
 import { Edit3, PlusSquare, Trash2 } from 'react-feather';
 
 const CategoryBlock = (props) => {
     const {
         categories, addCategory, categoryInfo,
-        subCategoryHandler, editHandler, deleteHandler, activeCat
+        subCategoryHandler, editHandler, popConfirm, activeCat
     } = props;
     return (
         <div className="category-block d-block border">
@@ -35,8 +36,15 @@ const CategoryBlock = (props) => {
                                 <span className="editcategory fR cp" onClick={() => editHandler(cat, cat.children)}>
                                     <Edit3 size={18} />
                                 </span>
-                                <span className="deletecategory fR cp mr-2" onClick={() => deleteHandler(cat.children)}>
-                                    <Trash2 size={18} />
+                                <span className="deletecategory fR cp mr-2">
+                                    <Popconfirm
+                                        title="Are you sure to delete this category?"
+                                        onConfirm={() => popConfirm(cat._id)}
+                                        okText="Yes"
+                                        cancelText="No"
+                                    >
+                                        <Trash2 size={18} />
+                                    </Popconfirm>
                                 </span>
                             </li>
                             :
@@ -45,14 +53,21 @@ const CategoryBlock = (props) => {
                                 <span className="fR cp" onClick={() => editHandler(cat, cat.children)}>
                                     <Edit3 size={18} />
                                 </span>
-                                <span className="deletecategory fR cp mr-2" onClick={() => deleteHandler(cat.children)}>
-                                    <Trash2 size={18} />
+                                <span className="deletecategory fR cp mr-2">
+                                    <Popconfirm
+                                        title="Are you sure to delete this category?"
+                                        onConfirm={() => popConfirm(cat._id)}
+                                        okText="Yes"
+                                        cancelText="No"
+                                    >
+                                        <Trash2 size={18} />
+                                    </Popconfirm>
                                 </span>
                             </li>
                     )}
                 </ul>
             </div>
-        </div>
+        </div >
     );
 }
 

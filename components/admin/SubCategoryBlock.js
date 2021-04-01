@@ -1,10 +1,11 @@
 import React from 'react';
+import { Popconfirm } from 'antd';
 import { Edit3, PlusSquare, Trash2 } from 'react-feather';
 
 const SubCategoryBlock = (props) => {
     const {
         category, categoriesChild, subCategoryClickHandler,
-        editHandler, deleteHandler, addCategoryHandler, activeCat
+        editHandler, popConfirm, addCategoryHandler, activeCat
     } = props;
     const renderAndPusSubs = (categories) => {
         let allCategories = [];
@@ -17,7 +18,14 @@ const SubCategoryBlock = (props) => {
                     >
                         {category.name}
                         <span className="fR cp" onClick={() => editHandler(category, category.children)}>
-                            <Edit3 size={18} />
+                            <Popconfirm
+                                title="Are you sure to delete this sub category?"
+                                onConfirm={() => popConfirm(category._id)}
+                                okText="Yes"
+                                cancelText="No"
+                            >
+                                <Edit3 size={18} />
+                            </Popconfirm>
                         </span>
                         {category.children.length > 0 ? <ul className="sub-cat">{renderSubCategory(category, category.children)}</ul> : null}
                     </li>
@@ -27,8 +35,15 @@ const SubCategoryBlock = (props) => {
                         <span className="editcategory fR cp" onClick={() => editHandler(category, category.children)}>
                             <Edit3 size={18} />
                         </span>
-                        <span className="deletecategory fR cp mr-2" onClick={() => deleteHandler(category.children)}>
-                            <Trash2 size={18} />
+                        <span className="deletecategory fR cp mr-2">
+                            <Popconfirm
+                                title="Are you sure to delete this sub category?"
+                                onConfirm={() => popConfirm(category._id)}
+                                okText="Yes"
+                                cancelText="No"
+                            >
+                                <Trash2 size={18} />
+                            </Popconfirm>
                         </span>
                     </li>
             )

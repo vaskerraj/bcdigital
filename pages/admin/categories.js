@@ -58,7 +58,8 @@ const Categories = ({ categories }) => {
     const editCategoriesHandler = (category, subCategory) => {
 
     }
-    const deleteCategoriesHandler = (category) => {
+    const deleteCategoriesHandler = async (id) => {
+
     }
 
     const handleCancel = () => {
@@ -77,11 +78,14 @@ const Categories = ({ categories }) => {
                 categoriesChild={categoriesChild}
                 subCategoryClickHandler={subCategoryClickHandler}
                 editHandler={editCategoriesHandler}
-                deleteHandler={deleteCategoriesHandler}
+                popConfirm={popConfirm}
                 addCategoryHandler={addCategoryHandler}
                 activeCat={activeCat}
             />
         );
+    }
+    const popConfirm = (id) => {
+        deleteCategoriesHandler(id)
     }
     const onModalSubmit = async (inputdata) => {
         try {
@@ -147,7 +151,7 @@ const Categories = ({ categories }) => {
                     categoryInfo="Categories"
                     addCategory={addCategoryHandler}
                     editHandler={editCategoriesHandler}
-                    deleteHandler={deleteCategoriesHandler}
+                    popConfirm={popConfirm}
                     subCategoryHandler={subCategoryHandler}
                     activeCat={activeCat}
                 />
