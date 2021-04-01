@@ -45,6 +45,9 @@ const CategoryBlock = (props) => {
                                 <span className="fR cp" onClick={() => editHandler(cat, cat.children)}>
                                     <Edit3 size={18} />
                                 </span>
+                                <span className="deletecategory fR cp mr-2" onClick={() => deleteHandler(cat.children)}>
+                                    <Trash2 size={18} />
+                                </span>
                             </li>
                     )}
                 </ul>
