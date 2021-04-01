@@ -46,7 +46,13 @@ const checkRole = roles => (req, res, next) =>
         ? res.status(401).json("Invalid Authentication")
         : next();
 
+const checkAdminRole = roles => (req, res, next) =>
+    !roles.includes(req.user.adminRole)
+        ? res.status(401).json("Invalid Authentication")
+        : next();
+
 module.exports = {
     requiredAuth,
     checkRole,
+    checkAdminRole
 }
