@@ -97,7 +97,10 @@ const Categories = ({ categories }) => {
     }
 
     const subCategoryClickHandler = (e) => {
-        e.target.classList.add("active");
+        for (const li of document.querySelectorAll(".category-block.subs li.active")) {
+            li.classList.remove("active");
+        }
+        e.currentTarget.classList.add("active");
     }
 
     const subCategoryHandler = (category, categoriesChild) => {
