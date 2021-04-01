@@ -25,7 +25,7 @@ const SlidebarMenu = ({ onActive }) => {
                 <Link href="/admin/categories">Categories</Link>
             </Menu.Item>
             <Menu.Item key="brands" icon={<TagsOutlined />}>
-                Brands
+                <Link href="/admin/brands">Brands</Link>
             </Menu.Item>
             <Menu.Item key="banners" icon={<FundProjectionScreenOutlined />}>
                 Banners

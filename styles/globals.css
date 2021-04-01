@@ -321,3 +321,9 @@ input[type=number] {
   margin-bottom: 5px;
   text-transform: uppercase;
 }
+.brand-block{
+  border: 0.75px solid #dadada;
+  border-radius: 3px;
+  background-color: #ffffff;
+  box-shadow: 0 3px 12px 0 rgb(0 0 0 / 12%);
+}
