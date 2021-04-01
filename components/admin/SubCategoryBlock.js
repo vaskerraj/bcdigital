@@ -17,14 +17,17 @@ const SubCategoryBlock = (props) => {
                         className={activeCat === category._id ? "active" : null}
                     >
                         {category.name}
-                        <span className="fR cp" onClick={() => editHandler(category, category.children)}>
+                        <span className="editcategory fR cp" onClick={() => editHandler(category, category.children)}>
+                            <Edit3 size={18} />
+                        </span>
+                        <span className="deletecategory fR cp mr-2">
                             <Popconfirm
                                 title="Are you sure to delete this sub category?"
                                 onConfirm={() => popConfirm(category._id)}
                                 okText="Yes"
                                 cancelText="No"
                             >
-                                <Edit3 size={18} />
+                                <Trash2 size={18} />
                             </Popconfirm>
                         </span>
                         {category.children.length > 0 ? <ul className="sub-cat">{renderSubCategory(category, category.children)}</ul> : null}
