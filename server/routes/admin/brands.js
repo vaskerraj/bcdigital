@@ -21,7 +21,7 @@ const { requiredAuth, checkRole, checkAdminRole } = require('../../middlewares/a
 module.exports = function (server) {
     server.get('/api/admin/brands', requiredAuth, checkRole(['admin']), async (req, res) => {
         try {
-            const brands = await Brand.find({}).lean();
+            const brands = await Brand.find({}, null, { sort: { order: 1 } }).lean();
             if (brands) return res.status(200).json(brands);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
@@ -41,5 +41,20 @@ module.exports = function (server) {
         } catch (error) {
             return res.status(422).json({ error: "Something went wrong. Please try again later" });
         }
+    });
+    server.post('/api/orderbrands', requiredAuth, checkRole(['admin']), async (req, res) => {
+        const { order } = req.body;
+        try {
+            order.map(async (o, index) => {
+
+                let orderkey = index + 1;
+                //  .exec fix issue of TypeError: Converting circular structure to JSON--> starting at object with constructor 'NativeTopology'
+                await Brand.findByIdAndUpdate(o._id, { $set: { order: orderkey } });
+            });
+            return res.status(200).json({ msg: 'success' });
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later" });
+        }
+
     });
 }
