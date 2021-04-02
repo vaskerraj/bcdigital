@@ -6,7 +6,8 @@ import { PlusOutlined } from '@ant-design/icons';
 
 import { useForm } from 'react-hook-form';
 
-import axiosApi from '../../helpers/api'
+import axiosApi from '../../helpers/api';
+import baseUrl from '../../helpers/baseUrl';
 
 // config antdesign message
 message.config({
@@ -21,23 +22,38 @@ const getBase64 = (img, callback) => {
     reader.readAsDataURL(img);
 }
 const BrandModal = (props) => {
-    const { title, visible, handleCancel, modalAction } = props;
+    const { title, visible, handleCancel, modalAction, brandsData } = props;
     const [visibled, setVisibled] = useState(false);
 
-    // image upload
+    // image upload states
     const [previewImage, setPreviewImage] = useState("");
     const [fileList, setFileList] = useState([]);
 
     const defaultValues = {
-        name: modalAction === "edit_brand" ? "dharma" : null,
+        name: modalAction === "edit_brand" ? brandsData.name : null,
     }
     const { register, handleSubmit, errors, reset } = useForm({
         defaultValues: defaultValues,
     });
 
     useEffect(() => {
-        reset(defaultValues)
+        reset(defaultValues);
     }, [visible]);
+
+    useEffect(() => {
+        console.log(brandsData)
+        if (brandsData && modalAction === "edit_brand") {
+            const rerrangeBrandData =
+            {
+                uid: brandsData._id,
+                name: brandsData.image,
+                status: 'done',
+                url: `${baseUrl}/uploads/brands/${brandsData.image}`,
+            }
+            setPreviewImage(`${baseUrl}/uploads/brands/${brandsData.image}`); setPreviewImage(`${baseUrl}/uploads/brands/${brandsData.image}`);
+            setFileList([rerrangeBrandData]);
+        }
+    }, [brandsData]);
 
     const router = useRouter();
 
@@ -63,7 +79,6 @@ const BrandModal = (props) => {
         );
         setFileList(fileList);
     };
-
 
     const uploadButton = (
         <div>
@@ -99,6 +114,7 @@ const BrandModal = (props) => {
                     listType="picture-card"
                     className="avatar-uploader"
                     showUploadList={false}
+                    fileList={fileList}
                     onChange={handleUpload}
                     beforeUpload={() => false}
                     maxCount={1}
@@ -107,11 +123,27 @@ const BrandModal = (props) => {
                 </Upload>
                 <input type="text" name="brandCheck"
                     value={fileList}
+                    readOnly={true}
                     ref={register({
                         required: "Select brand image"
                     })}
                 />
                 {errors.brandCheck && <p className="errorMsg">{errors.brandCheck.message}</p>}
+            </div>
+            <div className="d-block border-top mt-5 text-right">
+                <button type="button" onClick={handleCancel} className="btn btn-lg c-btn-light font16 mt-4 mr-5">
+                    Cancel
+                </button>
+                {modalAction === 'add_brand' &&
+                    <button type="submit" className="btn btn-lg c-btn-primary font16 mt-4">
+                        ADD BRAND
+                    </button>
+                }
+                {modalAction === 'edit_brand' &&
+                    <button type="submit" className="btn btn-lg c-btn-primary font16 mt-4">
+                        UPDATE BRAND
+                    </button>
+                }
             </div>
         </>
     )

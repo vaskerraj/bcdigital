@@ -327,3 +327,8 @@ input[type=number] {
   background-color: #ffffff;
   box-shadow: 0 3px 12px 0 rgb(0 0 0 / 12%);
 }
+
+.avatar-uploader > .ant-upload {
+  width: 128px;
+  height: 128px;
+}

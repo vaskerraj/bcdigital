@@ -18,6 +18,7 @@ const Brands = ({ brands }) => {
     const [visible, setVisible] = useState(false);
     const [modalTitle, setModalTitle] = useState('');
     const [modalAction, setmodalAction] = useState('');
+    const [brandsData, setBrandsData] = useState();
 
     const { adminAuth } = useSelector(state => state.adminAuth);
 
@@ -25,13 +26,21 @@ const Brands = ({ brands }) => {
         setVisible(true);
         setModalTitle("Add Brand");
         setmodalAction("add_brand");
+        setBrandsData('');
     }
     const handleCancel = () => {
         setVisible(false);
     }
 
-    const onDelete = (id) => {
+    const onDeleteHandler = (id) => {
         console.log(id)
+    }
+
+    const onEditHandler = (brands) => {
+        setVisible(true);
+        setModalTitle("Edit Brand");
+        setmodalAction("edit_brand");
+        setBrandsData(brands);
     }
     const SortableBrands = SortableElement(({ value }) =>
         <div className="col-sm-2 col-md-3">
@@ -43,7 +52,7 @@ const Brands = ({ brands }) => {
                     {value.name}
                 </div>
                 <div className="d-flex justify-content-between mt-3">
-                    <button className="btn c-btn-primary" style={{ paddingLeft: '1.2rem', paddingRight: '1.2rem', border: '1px solid' }}>
+                    <button onClick={() => onEditHandler(value)} className="btn c-btn-primary" style={{ paddingLeft: '1.2rem', paddingRight: '1.2rem', border: '1px solid' }}>
                         <Edit3 size={16} />
                     </button>
                     <button onClick={() => onDelete(value._id)} className="btn c-btn-primary">
@@ -58,7 +67,7 @@ const Brands = ({ brands }) => {
         return (
             <div className="row">
                 {items.map((value, index) => (
-                    <SortableBrands key={`item-${value}`} index={index} value={value} />
+                    <SortableBrands key={`item-${value._id}`} index={index} value={value} />
                 ))}
             </div>
         );
@@ -85,6 +94,7 @@ const Brands = ({ brands }) => {
                 visible={visible}
                 handleCancel={handleCancel}
                 modalAction={modalAction}
+                brandsData={brandsData}
             />
             <div className="d-block text-right mb-3">
                 <button onClick={() => addBrand()} className="btn btn-lg c-btn-primary font16">
