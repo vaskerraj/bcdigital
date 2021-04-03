@@ -39,4 +39,14 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
+
+    // brand list
+    server.get('/api/brands', async (req, res) => {
+        try {
+            const brands = await Brand.find({}, null, { sort: { order: 1 } }).lean();
+            if (brands) return res.status(200).json(brands);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
 }
