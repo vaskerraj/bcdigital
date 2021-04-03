@@ -79,6 +79,20 @@ module.exports = function (server) {
         } catch (error) {
             return res.status(422).json({ error: "Something went wrong. Please try again later" });
         }
+    });
 
+    server.delete('/api/brands/:id', requiredAuth, checkRole('admin'), async (req, res) => {
+        const brandId = req.params.id;
+        try {
+            const deletedBrand = await Brand.findByIdAndRemove(brandId);
+            if (deletedBrand) {
+                if (fs.existsSync(path.join(path.dirname(__dirname), brandImagePath + '/' + deletedBrand.image))) {
+                    fs.unlinkSync(path.join(path.dirname(__dirname), brandImagePath + '/' + deletedBrand.image))
+                }
+                return res.status(200).json({ msg: 'success' })
+            }
+        } catch {
+            return res.status(422).json({ error: "Something went wrong. Please try again later" });
+        }
     });
 }

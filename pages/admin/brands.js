@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import Image from 'next/image'
 import { useSelector } from 'react-redux';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
 
 import axiosApi from '../../helpers/api';
-import { message } from 'antd';
+import { Popconfirm, message } from 'antd';
 import { Edit3, Trash2 } from 'react-feather';
 
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
@@ -32,8 +33,38 @@ const Brands = ({ brands }) => {
         setVisible(false);
     }
 
-    const onDeleteHandler = (id) => {
-        console.log(id)
+    const onDeleteHandler = async (id) => {
+        try {
+            const { data } = await axiosApi.delete(`/api/brands/${id}`, {
+                headers: {
+                    token: adminAuth.token
+                }
+            });
+            if (data) {
+                message.success({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">Success</div>
+                            Brands succssfully deleted
+                        </div>
+                    ),
+                    className: 'message-success',
+                });
+                setTimeout(() => {
+                    router.reload();
+                }, 2000);
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
     }
 
     const onEditHandler = (brands) => {
@@ -43,10 +74,10 @@ const Brands = ({ brands }) => {
         setBrandsData(brands);
     }
     const SortableBrands = SortableElement(({ value }) =>
-        <div className="col-sm-2 col-md-3">
+        <div className="col-sm-6 col-md-3 mt-4">
             <div className="brand-block d-block p-3 mt-3 mt-sm-0">
-                <div className="rounded img-thumbnail">
-                    <img src={`/uploads/brands/${value.image}`} height="140" width="100%" />
+                <div className="rounded img-thumbnail text-center">
+                    <Image src={`/uploads/brands/${value.image}`} height="140" width="auto" />
                 </div>
                 <div className="d-block mt-4 font-weight-bold font16">
                     {value.name}
@@ -55,9 +86,16 @@ const Brands = ({ brands }) => {
                     <button onClick={() => onEditHandler(value)} className="btn c-btn-primary" style={{ paddingLeft: '1.2rem', paddingRight: '1.2rem', border: '1px solid' }}>
                         <Edit3 size={16} />
                     </button>
-                    <button onClick={() => onDelete(value._id)} className="btn c-btn-primary">
-                        <Trash2 size={16} /> Delete
-                </button>
+                    <Popconfirm
+                        title="Are you sure to delete this brand?"
+                        onConfirm={() => onDeleteHandler(value._id)}
+                        okText="Yes"
+                        cancelText="No"
+                    >
+                        <button className="btn c-btn-primary">
+                            <Trash2 size={16} /> Delete
+                        </button>
+                    </Popconfirm>
                 </div>
             </div>
         </div>
