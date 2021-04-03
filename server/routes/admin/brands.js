@@ -1,12 +1,14 @@
 const mongoose = require('mongoose');
 const Brand = mongoose.model('Brand');
 const slugify = require('slugify');
-var multer = require('multer');
-var path = require('path');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+const brandImagePath = "/../../public/uploads/brands";
 
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, path.join(path.dirname(__dirname), '/../../public/uploads/brands'))
+        cb(null, path.join(path.dirname(__dirname), brandImagePath))
     },
     filename: function (req, file, cb) {
         cb(null, Date.now() + '_' + file.originalname)
@@ -52,6 +54,28 @@ module.exports = function (server) {
                 await Brand.findByIdAndUpdate(o._id, { $set: { order: orderkey } });
             });
             return res.status(200).json({ msg: 'success' });
+        } catch (error) {
+
+        }
+
+    });
+
+    server.put('/api/brands', requiredAuth, checkRole(['admin']), upload.single('brandPicture'), async (req, res) => {
+        const { brandId, name } = req.body
+        try {
+            let brandPicture;
+            if (req.file) {
+                brandPicture = req.file.filename;
+            }
+            const preBrandImage = await Brand.findById(brandId).select('image');
+            if (preBrandImage) {
+                // check file
+                if (fs.existsSync(path.join(path.dirname(__dirname), brandImagePath + '/' + preBrandImage.image))) {
+                    fs.unlinkSync(path.join(path.dirname(__dirname), brandImagePath + '/' + preBrandImage.image))
+                }
+            }
+            await Brand.findByIdAndUpdate(brandId, { name, image: brandPicture });
+            return res.status(200).json({ msg: 'success' })
         } catch (error) {
             return res.status(422).json({ error: "Something went wrong. Please try again later" });
         }

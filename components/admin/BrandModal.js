@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSelector } from 'react-redux';
-import { Upload, Modal, message } from 'antd';
+import { Upload, Progress, Modal, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 
 import { useForm } from 'react-hook-form';
@@ -28,11 +28,12 @@ const BrandModal = (props) => {
     // image upload states
     const [previewImage, setPreviewImage] = useState("");
     const [fileList, setFileList] = useState([]);
+    const [progress, setProgress] = useState(0);
 
     const defaultValues = {
-        name: modalAction === "edit_brand" ? brandsData.name : null,
+        brandname: modalAction === "edit_brand" ? brandsData.name : null,
     }
-    const { register, handleSubmit, errors, reset } = useForm({
+    const { register, handleSubmit, errors, reset, setValue } = useForm({
         defaultValues: defaultValues,
     });
 
@@ -41,7 +42,10 @@ const BrandModal = (props) => {
     }, [visible]);
 
     useEffect(() => {
-        console.log(brandsData)
+        register({ name: "brandimage" });
+    }, [register]);
+
+    useEffect(() => {
         if (brandsData && modalAction === "edit_brand") {
             const rerrangeBrandData =
             {
@@ -49,11 +53,17 @@ const BrandModal = (props) => {
                 name: brandsData.image,
                 status: 'done',
                 url: `${baseUrl}/uploads/brands/${brandsData.image}`,
-            }
-            setPreviewImage(`${baseUrl}/uploads/brands/${brandsData.image}`); setPreviewImage(`${baseUrl}/uploads/brands/${brandsData.image}`);
+            };
+
+            setPreviewImage(`${baseUrl}/uploads/brands/${brandsData.image}`);
             setFileList([rerrangeBrandData]);
         }
-    }, [brandsData]);
+
+        if (modalAction === "add_brand") {
+            setPreviewImage("");
+            setFileList([]);
+        }
+    }, [brandsData, modalAction]);
 
     const router = useRouter();
 
@@ -77,7 +87,10 @@ const BrandModal = (props) => {
         getBase64(fileList[0].originFileObj, imageUrl =>
             setPreviewImage(imageUrl)
         );
+
         setFileList(fileList);
+        // setValue method of react hook form for image upload via ant design
+        setValue("brandimage", fileList[0].originFileObj);
     };
 
     const uploadButton = (
@@ -87,19 +100,107 @@ const BrandModal = (props) => {
         </div>
     );
 
-    // on form submit
     const onModalSubmit = async (inputdata) => {
-
+        const formData = new FormData();
+        formData.append('brandPicture', inputdata.brandimage);
+        formData.append('name', inputdata.brandname);
+        try {
+            const data = await axiosApi.post("/api/brands", formData,
+                {
+                    headers: {
+                        token: adminAuth.token
+                    }
+                },
+                {
+                    onUploadProgress: ProgressEvent => {
+                        const percent = Math.floor((ProgressEvent.loaded / ProgressEvent.total) * 100);
+                        setProgress(percent);
+                        if (percent === 100) {
+                            setTimeout(() => setProgress(0), 1000);
+                        }
+                    }
+                });
+            if (data) {
+                setVisibled(false);
+                message.success({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">Success</div>
+                            Brand succssfully added
+                        </div>
+                    ),
+                    className: 'message-success',
+                });
+                setTimeout(() => {
+                    router.reload();
+                }, 2000);
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
     }
     const onModalUpdate = async (inputdata) => {
-
+        const formUpdData = new FormData();
+        formUpdData.append('brandId', inputdata.brandId);
+        formUpdData.append('brandPicture', inputdata.brandimage);
+        formUpdData.append('name', inputdata.brandname);
+        try {
+            const data = await axiosApi.put("/api/brands", formUpdData,
+                {
+                    headers: {
+                        token: adminAuth.token
+                    }
+                },
+                {
+                    onUploadProgress: ProgressEvent => {
+                        const percent = Math.floor((ProgressEvent.loaded / ProgressEvent.total) * 100);
+                        setProgress(percent);
+                        if (percent === 100) {
+                            setTimeout(() => setProgress(0), 1000);
+                        }
+                    }
+                });
+            if (data) {
+                setVisibled(false);
+                message.success({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">Success</div>
+                            Brand succssfully updated
+                        </div>
+                    ),
+                    className: 'message-success',
+                });
+                setTimeout(() => {
+                    router.reload();
+                }, 2000);
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
     }
     const commonForm = () => (
         <>
             <div className="d-block">
                 <label className="cat-label">Brand Name</label>
                 <input type="text" className="form-control mt-1"
-                    name="name"
+                    name="brandname"
                     autoComplete="off"
                     ref={register({
                         required: "Provide name of the brand"
@@ -108,20 +209,24 @@ const BrandModal = (props) => {
                 {errors.name && <p className="errorMsg">{errors.name.message}</p>}
             </div>
             <div className="d-block mt-4">
-                <label className="cat-label">Brand Logo</label>
-                <Upload
-                    name="brandPicture"
-                    listType="picture-card"
-                    className="avatar-uploader"
-                    showUploadList={false}
-                    fileList={fileList}
-                    onChange={handleUpload}
-                    beforeUpload={() => false}
-                    maxCount={1}
-                >
-                    {previewImage ? <img src={previewImage} alt="avatar" style={{ width: '100%' }} /> : uploadButton}
-                </Upload>
-                <input type="text" name="brandCheck"
+                <div className="d-block" style={{ width: '12.8rem' }}>
+                    <label className="cat-label">Brand Logo</label>
+                    <Upload
+                        name="brandPicture"
+                        listType="picture-card"
+                        className="avatar-uploader"
+                        accept="image/*"
+                        showUploadList={false}
+                        fileList={fileList}
+                        onChange={handleUpload}
+                        beforeUpload={() => false}
+                        maxCount={1}
+                    >
+                        {previewImage ? <img src={previewImage} alt="avatar" style={{ width: '100%' }} /> : uploadButton}
+                    </Upload>
+                    {progress > 0 ? <Progress percent={progress} /> : null}
+                </div>
+                <input type="hidden" name="brandCheck"
                     value={fileList}
                     readOnly={true}
                     ref={register({
@@ -129,6 +234,14 @@ const BrandModal = (props) => {
                     })}
                 />
                 {errors.brandCheck && <p className="errorMsg">{errors.brandCheck.message}</p>}
+
+                {modalAction === "edit_brand" &&
+                    <input type="hidden" name="brandId"
+                        value={brandsData._id}
+                        readOnly={true}
+                        ref={register}
+                    />
+                }
             </div>
             <div className="d-block border-top mt-5 text-right">
                 <button type="button" onClick={handleCancel} className="btn btn-lg c-btn-light font16 mt-4 mr-5">
