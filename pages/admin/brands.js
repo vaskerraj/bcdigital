@@ -140,6 +140,7 @@ const Brands = ({ brands }) => {
                 </button>
             </div>
             <div className="d-block">
+                {(brandItem && brandItem.length === 0) && <div className="d-block text-center mt-5 text-muted font16">No Data</div>}
                 <SortableBrandList items={brandItem} onSortEnd={onSortEnd} />
             </div>
         </Wrapper>
