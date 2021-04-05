@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const Users = mongoose.model('Users');
+const Brand = mongoose.model('Brand');
+const Banner = mongoose.model('Banner');
 
 const admin = require('../../firebase/firebaseAdmin');
 const { requiredAuth, checkRole } = require('../middlewares/auth');
@@ -45,6 +47,16 @@ module.exports = function (server) {
         try {
             const brands = await Brand.find({}, null, { sort: { order: 1 } }).lean();
             if (brands) return res.status(200).json(brands);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    // banner list 
+    server.get('/api/banner', async (req, res) => {
+        try {
+            const banner = await Banner.find({}, null, { sort: { order: 1 } }).lean();
+            if (banner) return res.status(200).json(banner);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
