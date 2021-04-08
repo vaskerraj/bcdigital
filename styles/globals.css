@@ -281,7 +281,7 @@ input[type=number] {
   cursor: pointer;
 }
 .category-block ul li.active{
-  background-color: #d4d4d4;
+  background-color: #f4f4f4;
   border-right: 3px solid #1890ff;
 }
 
@@ -346,4 +346,93 @@ input[type=number] {
   object-fit: cover;
   width: 100%;
   height: 170px;
+}
+
+.category-container {
+  width: 100%;
+  height: 27rem;
+  display: block;
+}
+.main-category {
+	width: 21.6rem;
+  display: table-cell;
+  position: relative;
+  vertical-align: top;
+	z-index: 2;
+}
+.category-container .scrollbar{
+  height: 20rem;
+  overflow-y: auto;
+}
+.scrollbar::-webkit-scrollbar-track
+{
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+	background-color: #F5F5F5;
+}
+
+.scrollbar::-webkit-scrollbar
+{
+	width: 5px;
+	background-color: #F5F5F5;
+}
+
+.scrollbar::-webkit-scrollbar-thumb
+{
+	background-color: #000000;
+	border: 2px solid #555555;
+}
+
+.main-category .main-navigation {
+  margin: 0 0 0 0;
+  padding: 0;
+  border-radius: 0.25rem;
+  border: 1px solid #ccc;
+}
+.main-category .main-navigation li a {
+  display: block;
+  border-bottom: 1px solid #ccc;
+  padding: 0.5rem 0 4px 1.5rem;
+  text-decoration: none;
+	white-space: nowrap;
+  border-right: 3px solid transparent;
+}
+.main-category .main-navigation li a.active {
+  background-color: #f4f4f4;
+  border-right: 3px solid #1890ff;
+}
+.dropdown-submenu > .dropdown-menu {
+  width: 21.6rem;
+  font-size: inherit;
+	top: 0;
+  left: 100%;
+  margin-left: 1.5rem;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.dropdown-submenu > .dropdown-menu > .dropdown-submenu > .dropdown-menu {
+  margin-top: -0.2rem
+}
+/* for main categories */
+.dropdown-submenu .dropdown-menu.active {
+	display: inline-table;
+}
+/* for sub categories */
+.dropdown-submenu > a.active ~ .dropdown-menu.subs {
+	display: inline-table;
+}
+
+.dropdown-submenu.pull-left {
+	float: none;
+}
+.dropdown-submenu.pull-left > .dropdown-menu {
+	left: -100%;
+	margin-left: 10px;
+	-webkit-border-radius: 6px 0 6px 6px;
+	-moz-border-radius: 6px 0 6px 6px;
+	border-radius: 6px 0 6px 6px;
+}
+.main-category ul {
+	list-style: none;
 }
