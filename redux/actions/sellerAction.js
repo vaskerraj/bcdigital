@@ -6,7 +6,7 @@ import {
 }
     from '../types/sellerType';
 
-export const allSellers = () => async (dispatch) => {
+export const allSellers = () => async (dispatch, getState) => {
     dispatch({ type: SELLER_LIST_RESPONSE });
     try {
         const { adminAuth: { adminAuth } } = getState();
