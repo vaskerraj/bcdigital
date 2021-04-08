@@ -1,11 +1,33 @@
 const mongoose = require('mongoose');
 const Users = mongoose.model('Users');
+const Category = mongoose.model('Category');
 const Brand = mongoose.model('Brand');
 const Banner = mongoose.model('Banner');
 
 const admin = require('../../firebase/firebaseAdmin');
 const { requiredAuth, checkRole } = require('../middlewares/auth');
 const verifySms = require('../utils/verifySms');
+
+const categoriesListWithSubs = (categories, parentId = null) => {
+    const categoriesList = [];
+    let category;
+    if (parentId === null) {
+        category = categories.filter(cat => cat.parentId == undefined)
+    } else {
+        category = categories.filter(cat => cat.parentId == parentId)
+    }
+
+    for (let cat of category) {
+        categoriesList.push({
+            _id: cat._id,
+            name: cat.name,
+            slug: cat.slug,
+            parentId: cat.parentId,
+            children: categoriesListWithSubs(categories, cat._id)
+        });
+    }
+    return categoriesList;
+}
 
 module.exports = function (server) {
     server.post('/api/changePwd', requiredAuth, checkRole(['subscriber']), async (req, res) => {
@@ -37,6 +59,17 @@ module.exports = function (server) {
             await user.save();
 
             return res.status(200).json({ msg: "success" });
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.get('/api/categories', async (req, res) => {
+        try {
+            const categories = await Category.find({}).lean();
+            // get list of categories with subs
+            const allCategories = categoriesListWithSubs(categories)
+            return res.status(200).json(allCategories);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }

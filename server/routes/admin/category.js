@@ -61,17 +61,6 @@ module.exports = function (server) {
         }
     });
 
-    server.get('/api/categories', async (req, res) => {
-        try {
-            const categories = await Category.find({}).lean();
-            // get list of categories with subs
-            const allCategories = categoriesListWithSubs(categories)
-            return res.status(200).json(allCategories);
-        } catch (error) {
-            return res.status(422).json({ error: "Some error occur. Please try again later." });
-        }
-    });
-
     server.delete('/api/category/:id', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), async (req, res) => {
         const categoryId = req.params.id;
         try {
