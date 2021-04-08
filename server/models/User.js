@@ -44,6 +44,10 @@ const userSchema = new mongoose.Schema({
     adminRole: {
         type: String
     },
+    sellerRole: {
+        type: String,
+        default: 'normal'
+    },
     cart: {
         type: Array,
         default: []
