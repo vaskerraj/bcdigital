@@ -35,7 +35,7 @@ export const signin = (email, password) => async (dispatch) => {
         dispatch({ type: ADMIN_SIGIN_SUCCESS, payload: dispatchData });
 
     } catch (error) {
-        dispatch({ type: ADMIN_SIGIN_ERROR, payload: error.response.data });
+        dispatch({ type: ADMIN_SIGIN_ERROR, payload: error.response ? error.response.data : error.message });
     }
 }
 

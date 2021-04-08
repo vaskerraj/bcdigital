@@ -1,11 +1,13 @@
 import { createStore, combineReducers, applyMiddleware } from 'redux';
 import ThunkMiddleware from 'redux-thunk';
 import { adminAuthReducer } from './reducers/adminAuthReducer';
+import { categoriesReducer } from './reducers/categoryReducer';
 
 const initalState = {};
 
 const reducer = combineReducers({
-    adminAuth: adminAuthReducer
+    adminAuth: adminAuthReducer,
+    categoryList: categoriesReducer
 
 });
 
