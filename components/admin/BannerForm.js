@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form';
 
 import axiosApi from '../../helpers/api';
 import baseUrl from '../../helpers/baseUrl';
+import ChooseCategory from '../ChooseCategory';
 
 // config antdesign message
 message.config({
@@ -43,6 +44,30 @@ const BannerForm = (props) => {
     const [mobilePreviewImage, setMobilePreviewImage] = useState("");
     const [webFileList, setWebFileList] = useState([]);
     const [mobileFileList, setMobileFileList] = useState([]);
+
+    const [onOpenChoosenCategory, setOnOpenChoosenCategory] = useState(false);
+    // get selected categories list and category id
+    const [confirmCategory, setConfirmCategory] = useState({
+        categoryId: null,
+        firstCatName: '',
+        secondCatName: '',
+        thirdCatName: ''
+    });
+
+    const [selectedCatText, setSelectedCatText] = useState('');
+
+    useEffect(() => {
+        const firstDivider = (confirmCategory.firstCatName && confirmCategory.secondCatName)
+            ? ' / '
+            : '';
+        const secondDivider = (confirmCategory.secondCatName && confirmCategory.thirdCatName)
+            ? ' / '
+            : '';
+        const selcatText = confirmCategory.firstCatName + firstDivider + confirmCategory.secondCatName + secondDivider + confirmCategory.thirdCatName;
+
+        setSelectedCatText(selcatText);
+
+    }, [confirmCategory]);
 
     const { register, handleSubmit, errors, reset, setValue } = useForm();
 
@@ -219,19 +244,24 @@ const BannerForm = (props) => {
                         {errors.bannerPostion && <p className="errorMsg">{errors.bannerPostion.message}</p>}
                     </div>
                     {!fieldCategory &&
-                        <div className="col-sm-6 mt-4">
+                        <div className="col-sm-6 mt-4 position-relative">
                             <label className="cat-label">Cateogry</label>
-                            <select name="bannerCategory" className="form-control"
+                            <input name="bannerCategory" className="form-control"
+                                onClick={() => setOnOpenChoosenCategory(true)}
+                                value={selectedCatText}
                                 ref={register({
                                     required: "Provide Category"
                                 })}
-                            >
-                                <option value="">Select</option>
-                            </select>
+                            />
                             {errors.bannerFor && <p className="errorMsg">{errors.bannerFor.message}</p>}
-                            <div className="select-subcate-container">
-                                Category list
-                            </div>
+                            {onOpenChoosenCategory &&
+                                <div className="select-subcate-container pt-3 pr-3 pl-3 border">
+                                    <ChooseCategory
+                                        catLevel={2}
+                                        setConfirmCategory={setConfirmCategory}
+                                    />
+                                </div>
+                            }
                         </div>
                     }
                     {fieldBannerFor &&

@@ -436,3 +436,11 @@ input[type=number] {
 .main-category ul {
 	list-style: none;
 }
+
+.select-subcate-container {
+  position: absolute;
+  top: 6.5rem;
+  width: 97.2%;
+  background-color: #fff;
+  z-index: 1;
+}
