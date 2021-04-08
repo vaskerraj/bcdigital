@@ -94,4 +94,15 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
+
+    // seller details
+    server.get('/api/seller/:id', requiredAuth, async (req, res) => {
+        const sellerId = req.params.id;
+        try {
+            const sellers = await Users.findById(sellerId).select('_id name username picture role sellerRole addresses');
+            return res.status(200).json(sellers);
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
 }
