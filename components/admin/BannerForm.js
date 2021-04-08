@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { useSelector } from 'react-redux';
-import { Upload, Progress, DatePicker, Button, message } from 'antd';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { Upload, Progress, DatePicker, Select, Button, message } from 'antd';
+const { Option, OptGroup } = Select;
 const { RangePicker } = DatePicker;
 import { UploadOutlined } from '@ant-design/icons';
 
@@ -10,7 +12,11 @@ import { useForm } from 'react-hook-form';
 
 import axiosApi from '../../helpers/api';
 import baseUrl from '../../helpers/baseUrl';
+
 import ChooseCategory from '../ChooseCategory';
+
+import { allSellers } from '../../redux/actions/sellerAction';
+import { allCategories } from '../../redux/actions/categoryAction';
 
 // config antdesign message
 message.config({
@@ -68,6 +74,16 @@ const BannerForm = (props) => {
         setSelectedCatText(selcatText);
 
     }, [confirmCategory]);
+
+    const dispatch = useDispatch();
+
+    // seller option
+    const { sellers } = useSelector(state => state.sellerList);
+    useEffect(async () => {
+        dispatch(allSellers());
+    }, []);
+
+    console.log(sellers);
 
     const { register, handleSubmit, errors, reset, setValue } = useForm();
 
@@ -184,6 +200,10 @@ const BannerForm = (props) => {
         }
     }
 
+    const onChangeSeller = (value) => {
+        setValue("sellerId", value);
+    }
+
     const onChangeDatePicker = (date, dateString) => {
         setValue("validityStart", date[0].toISOString());
         setValue("validityEnd", date[1].toISOString());
@@ -243,7 +263,7 @@ const BannerForm = (props) => {
                         </select>
                         {errors.bannerPostion && <p className="errorMsg">{errors.bannerPostion.message}</p>}
                     </div>
-                    {!fieldCategory &&
+                    {fieldCategory &&
                         <div className="col-sm-6 mt-4 position-relative">
                             <label className="cat-label">Cateogry</label>
                             <input name="bannerCategory" className="form-control"
@@ -286,18 +306,27 @@ const BannerForm = (props) => {
                         </div>
                     }
                     {
-                        fieldSellerList &&
+                        !fieldSellerList &&
                         <div className="col-sm-6 mt-4">
                             <label className="cat-label">Sellers</label>
-                            <select name="seller" className="form-control"
-                                ref={register({
-                                    required: "Provide seller"
-                                })}
-                            >
-                                <option value="">Select</option>
-                                <option value="">Own Seller</option>
-                            </select>
-                            {errors.seller && <p className="errorMsg">{errors.seller.message}</p>}
+                            <Select defaultValue="" style={{ width: '100%', display: "block" }} onChange={onChangeSeller}>
+                                <Option value="">Select</Option>
+                                <OptGroup label="Own Shop">
+                                    {
+                                        sellers.filter(seller => seller.sellerRole === 'own').map(filteredSeller => (
+                                            <Option key={filteredSeller._id} value={filteredSeller._id}>{filteredSeller.name}</Option>
+                                        ))
+                                    }
+                                </OptGroup>
+                                <OptGroup label="Sellers">
+                                    {
+                                        sellers.filter(seller => seller.sellerRole === 'normal').map(filteredSeller => (
+                                            <Option key={filteredSeller._id} value={filteredSeller._id}>{filteredSeller.name}</Option>
+                                        ))
+                                    }
+                                </OptGroup>
+                            </Select>
+                            {errors.sellerId && <p className="errorMsg">{errors.sellerId.message}</p>}
                         </div>
                     }
                     {

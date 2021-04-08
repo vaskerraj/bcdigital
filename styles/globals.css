@@ -444,3 +444,8 @@ input[type=number] {
   background-color: #fff;
   z-index: 1;
 }
+
+.ant-select-single:not(.ant-select-customize-input) .ant-select-selector{
+  height : 3.7rem;
+  padding-top: 0.3rem;
+}
