@@ -249,6 +249,7 @@ const BannerForm = (props) => {
                             <input name="bannerCategory" className="form-control"
                                 onClick={() => setOnOpenChoosenCategory(true)}
                                 value={selectedCatText}
+                                autoComplete="off"
                                 ref={register({
                                     required: "Provide Category"
                                 })}
@@ -259,6 +260,7 @@ const BannerForm = (props) => {
                                     <ChooseCategory
                                         catLevel={2}
                                         setConfirmCategory={setConfirmCategory}
+                                        handleCancel={setOnOpenChoosenCategory}
                                     />
                                 </div>
                             }

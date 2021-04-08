@@ -3,7 +3,7 @@ import { ChevronRight } from 'react-feather';
 import { useDispatch, useSelector } from 'react-redux';
 import { allCategories } from '../redux/actions/categoryAction';
 
-const ChooseCategory = ({ catLevel, setConfirmCategory }) => {
+const ChooseCategory = ({ catLevel, setConfirmCategory, handleCancel }) => {
     const [subCategories, setSubCategories] = useState('');
     const [activeCat, setActiveCat] = useState();
     const [selectedCategory, setSelectedCategory] = useState();
@@ -85,6 +85,10 @@ const ChooseCategory = ({ catLevel, setConfirmCategory }) => {
         )
     }
 
+    const cancelCategoryHanlder = () => {
+        handleCancel(false);
+    }
+
     const clearCategoryHanlder = () => {
         setSubCategories('');
         setActiveCat('');
@@ -97,6 +101,9 @@ const ChooseCategory = ({ catLevel, setConfirmCategory }) => {
     }
     const confirmCategoryHandler = () => {
         setConfirmCategory({ "categoryId": selectedCategory, "firstCatName": firstCategoryName, "secondCatName": secondCategoryName, "thirdCatName": thirdCategoryName });
+
+        //close after confirm
+        handleCancel(false);
     }
 
     return (
@@ -141,7 +148,7 @@ const ChooseCategory = ({ catLevel, setConfirmCategory }) => {
                     {thirdCategoryName}
                 </div>
                 <div className="text-right">
-                    <button type="button" className="btn btn-light mr-2">Cancel</button>
+                    <button type="button" onClick={cancelCategoryHanlder} className="btn btn-light mr-2">Cancel</button>
                     <button type="button" onClick={clearCategoryHanlder} className="btn btn-light mr-2">Clear</button>
                     <button onClick={confirmCategoryHandler} type="button" className="btn btn-success" disabled={lastCategoryList}>Confirm</button>
                 </div>
