@@ -46,7 +46,7 @@ const ChooseCategory = ({ catLevel, setConfirmCategory, handleCancel }) => {
         return subCategories.map(category =>
             (catLevel === 3 && category.children.length > 0) ?
                 <li key={category._id} className={`dropdown-submenu ${subsLevel}`}>
-                    <a href="javascript:void(0)"
+                    <a
                         onClick={(e) => subCategoryShowHandler(e, category, subsLevel)}
                     >
                         {category.name}
@@ -63,7 +63,7 @@ const ChooseCategory = ({ catLevel, setConfirmCategory, handleCancel }) => {
                 </li>
                 :
                 <li key={category._id} className={subsLevel}>
-                    <a href="javascript:void(0)"
+                    <a
                         onClick={(e) => subCategoryShowHandler(e, category, subsLevel)}
                     >
                         {category.name}
@@ -116,7 +116,6 @@ const ChooseCategory = ({ catLevel, setConfirmCategory, handleCancel }) => {
                                 <li key={cat._id} className="dropdown-submenu" >
                                     <a
                                         className={activeCat === cat._id ? "active" : ''}
-                                        href="javascript:void(0)"
                                         onClick={() => showSubCatHandler(cat)}
                                     >
                                         {cat.name}
@@ -130,7 +129,6 @@ const ChooseCategory = ({ catLevel, setConfirmCategory, handleCancel }) => {
                                 <li key={cat._id}>
                                     <a
                                         className={activeCat === cat._id ? "active" : ''}
-                                        href="javascript:void(0)"
                                         onClick={(e) => showSubCatHandler(cat)}
                                     >
                                         {cat.name}
