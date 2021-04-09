@@ -113,7 +113,7 @@ const ChooseCategory = ({ catLevel, setConfirmCategory, handleCancel }) => {
                     <ul className="main-navigation scrollbar">
                         {categories && categories.map(cat =>
                             cat.children.length ?
-                                <li key={cat._id} class="dropdown-submenu" >
+                                <li key={cat._id} className="dropdown-submenu" >
                                     <a
                                         className={activeCat === cat._id ? "active" : ''}
                                         href="javascript:void(0)"
