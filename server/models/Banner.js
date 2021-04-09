@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Schema;
 
 const bannerSchema = new mongoose.Schema({
-    bannerPostion: {
+    bannerPosition: {
         type: String,
         require: true
     },

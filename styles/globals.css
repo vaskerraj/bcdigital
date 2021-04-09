@@ -437,6 +437,10 @@ input[type=number] {
 	list-style: none;
 }
 
+.normal-input-readyonly.form-control[readonly]{
+  background-color: #fff;
+}
+
 .select-subcate-container {
   position: absolute;
   top: 6.5rem;

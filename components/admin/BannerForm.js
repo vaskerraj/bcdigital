@@ -16,7 +16,6 @@ import baseUrl from '../../helpers/baseUrl';
 import ChooseCategory from '../ChooseCategory';
 
 import { allSellers } from '../../redux/actions/sellerAction';
-import { allCategories } from '../../redux/actions/categoryAction';
 
 // config antdesign message
 message.config({
@@ -32,12 +31,14 @@ const getBase64 = (img, callback) => {
 }
 
 const BannerForm = (props) => {
+    const { Action } = props;
     const [bannerPostionValue, setBannerPostionValue] = useState('');
     const [fieldCategory, setFieldCategory] = useState(false);
 
     const [fieldBannerFor, setFieldBannerFor] = useState(false);
     const [bannerForValue, setBannerForValue] = useState('');
 
+    const [categoryId, setCategoryId] = useState('');
     const [optionSellerPage, setOptionSellerPage] = useState(true);
     const [fieldSellerList, setFieldSellerList] = useState(false);
     const [fieldProduct, setFieldProduct] = useState(false);
@@ -50,6 +51,11 @@ const BannerForm = (props) => {
     const [mobilePreviewImage, setMobilePreviewImage] = useState("");
     const [webFileList, setWebFileList] = useState([]);
     const [mobileFileList, setMobileFileList] = useState([]);
+    const [progress, setProgress] = useState(0);
+
+    // seller upload state
+    const [sellerList, setSellerList] = useState("");
+
 
     const [onOpenChoosenCategory, setOnOpenChoosenCategory] = useState(false);
     // get selected categories list and category id
@@ -73,9 +79,15 @@ const BannerForm = (props) => {
 
         setSelectedCatText(selcatText);
 
+        // categoryId state
+        setCategoryId(confirmCategory.categoryId);
+
     }, [confirmCategory]);
 
+    const router = useRouter();
     const dispatch = useDispatch();
+
+    const { adminAuth } = useSelector(state => state.adminAuth);
 
     // seller option
     const { sellers } = useSelector(state => state.sellerList);
@@ -83,9 +95,15 @@ const BannerForm = (props) => {
         dispatch(allSellers());
     }, []);
 
-    console.log(sellers);
-
     const { register, handleSubmit, errors, reset, setValue } = useForm();
+
+    useEffect(() => {
+        register({ name: "sellerId" });
+        register({ name: "validityStart" });
+        register({ name: "validityEnd" });
+        register({ name: "webImage" });
+        register({ name: "mobileImage" });
+    }, [register]);
 
     //  bannerPostionHandler
     const bannerPostionHandler = (value) => {
@@ -200,8 +218,9 @@ const BannerForm = (props) => {
         }
     }
 
-    const onChangeSeller = (value) => {
+    const onChangeSeller = value => {
         setValue("sellerId", value);
+        setSellerList(value);
     }
 
     const onChangeDatePicker = (date, dateString) => {
@@ -244,13 +263,83 @@ const BannerForm = (props) => {
         // setValue method of react hook form for image upload via ant design
         setValue("mobileImage", fileList[0].originFileObj);
     };
+
+    const onSubmit = async (inputdata) => {
+        console.log(inputdata);
+        const formData = new FormData();
+        formData.append('bannerPosition', inputdata.bannerPosition);
+        formData.append('bannerFor', inputdata.bannerFor);
+        inputdata.categoryId !== undefined && inputdata.categoryId !== null
+            ? formData.append('categoryId', inputdata.categoryId) : null;
+
+        inputdata.sellerId !== undefined && inputdata.sellerId !== null
+            ? formData.append('sellerId', inputdata.sellerId) : null;
+
+        inputdata.productId !== undefined && inputdata.productId !== null
+            ? formData.append('productId', inputdata.productId) : null;
+
+        inputdata.validityStart !== undefined && inputdata.validityStart !== null
+            ? formData.append('validityStart', inputdata.validityStart) : null;
+
+        inputdata.validityEnd !== undefined && inputdata.validityEnd !== null
+            ? formData.append('validityEnd', inputdata.validityEnd) : null;
+
+        formData.append('bannerName', inputdata.bannerName);
+        formData.append('webImage', inputdata.webImage);
+        formData.append('mobileImage', inputdata.mobileImage);
+        if (Action === 'add_banner') {
+
+            try {
+                const data = await axiosApi.post("/api/banner", formData,
+                    {
+                        headers: {
+                            token: adminAuth.token
+                        }
+                    },
+                    {
+                        onUploadProgress: ProgressEvent => {
+                            const percent = Math.floor((ProgressEvent.loaded / ProgressEvent.total) * 100);
+                            setProgress(percent);
+                            if (percent === 100) {
+                                setTimeout(() => setProgress(0), 1000);
+                            }
+                        }
+                    });
+                if (data) {
+                    message.success({
+                        content: (
+                            <div>
+                                <div className="font-weight-bold">Success</div>
+                                Banner succssfully added
+                            </div>
+                        ),
+                        className: 'message-success',
+                    });
+
+                    router.reload();
+                }
+            } catch (error) {
+                message.warning({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">Error</div>
+                            {error.response ? error.response.data.error : error.message}
+                        </div>
+                    ),
+                    className: 'message-warning',
+                });
+            }
+        } else {
+
+        }
+    }
     return (
-        <form>
+        <form onSubmit={handleSubmit(onSubmit)}>
             <div className="col">
                 <div className="row">
                     <div className="col-sm-6 mt-4">
                         <label className="cat-label">Banner Position</label>
-                        <select name="bannerPostion" className="form-control"
+                        <select defaultValue="" name="bannerPosition" className="form-control"
                             onChange={(e) => bannerPostionHandler(e.target.value)}
                             ref={register({
                                 required: "Select at where you want to display banner"
@@ -266,15 +355,24 @@ const BannerForm = (props) => {
                     {fieldCategory &&
                         <div className="col-sm-6 mt-4 position-relative">
                             <label className="cat-label">Cateogry</label>
-                            <input name="bannerCategory" className="form-control"
+                            <input name="bannerCategory" className="form-control normal-input-readyonly"
+                                readOnly
                                 onClick={() => setOnOpenChoosenCategory(true)}
                                 value={selectedCatText}
                                 autoComplete="off"
                                 ref={register({
-                                    required: "Provide Category"
+                                    required: "Provide category"
                                 })}
                             />
-                            {errors.bannerFor && <p className="errorMsg">{errors.bannerFor.message}</p>}
+                            <input type="hidden" name="categoryId"
+                                value={categoryId}
+                                readOnly={true}
+                                ref={register({
+                                    required: "Provide category"
+                                })}
+                            />
+                            {errors.bannerCategory && <p className="errorMsg">{errors.bannerCategory.message}</p>}
+                            {errors.categoryId && <p className="categoryId">{errors.categoryId.message}</p>}
                             {onOpenChoosenCategory &&
                                 <div className="select-subcate-container pt-3 pr-3 pl-3 border">
                                     <ChooseCategory
@@ -289,10 +387,10 @@ const BannerForm = (props) => {
                     {fieldBannerFor &&
                         <div className="col-sm-6 mt-4">
                             <label className="cat-label">Banner For</label>
-                            <select name="bannerFor" className="form-control"
+                            <select defaultValue="" name="bannerFor" className="form-control"
                                 onChange={(e) => bannerForHandler(e.target.value)}
                                 ref={register({
-                                    required: "Provide seller"
+                                    required: "Provide banner for"
                                 })}
                             >
                                 <option value="">Select</option>
@@ -306,7 +404,7 @@ const BannerForm = (props) => {
                         </div>
                     }
                     {
-                        !fieldSellerList &&
+                        fieldSellerList &&
                         <div className="col-sm-6 mt-4">
                             <label className="cat-label">Sellers</label>
                             <Select defaultValue="" style={{ width: '100%', display: "block" }} onChange={onChangeSeller}>
@@ -314,19 +412,26 @@ const BannerForm = (props) => {
                                 <OptGroup label="Own Shop">
                                     {
                                         sellers.filter(seller => seller.sellerRole === 'own').map(filteredSeller => (
-                                            <Option key={filteredSeller._id} value={filteredSeller._id}>{filteredSeller.name}</Option>
+                                            <Option key={filteredSeller._id} value={filteredSeller._id}>{filteredSeller.name}/{filteredSeller.username}</Option>
                                         ))
                                     }
                                 </OptGroup>
                                 <OptGroup label="Sellers">
                                     {
                                         sellers.filter(seller => seller.sellerRole === 'normal').map(filteredSeller => (
-                                            <Option key={filteredSeller._id} value={filteredSeller._id}>{filteredSeller.name}</Option>
+                                            <Option key={filteredSeller._id} value={filteredSeller._id}>{filteredSeller.name}/{filteredSeller.username}</Option>
                                         ))
                                     }
                                 </OptGroup>
                             </Select>
-                            {errors.sellerId && <p className="errorMsg">{errors.sellerId.message}</p>}
+                            <input type="hidden" name="checkSellerId"
+                                value={sellerList}
+                                readOnly={true}
+                                ref={register({
+                                    required: "Select seller"
+                                })}
+                            />
+                            {errors.checkSellerId && <p className="errorMsg">{errors.checkSellerId.message}</p>}
                         </div>
                     }
                     {
@@ -364,7 +469,11 @@ const BannerForm = (props) => {
                     }
                     <div className="col-sm-6 mt-4">
                         <label className="cat-label">Banner Name</label>
-                        <input type="text" name="bannerName" className="form-control" />
+                        <input type="text" name="bannerName" className="form-control"
+                            ref={register({
+                                required: "Provide banner name"
+                            })}
+                        />
                         {errors.bannerName && <p className="errorMsg">{errors.bannerName.message}</p>}
                     </div>
                 </div>
@@ -387,6 +496,14 @@ const BannerForm = (props) => {
                                     Choose Web Banner Image
                                 </Button>
                             </Upload>
+                            <input type="hidden" name="webImageCheck"
+                                value={webFileList}
+                                readOnly={true}
+                                ref={register({
+                                    required: "Upload picture"
+                                })}
+                            />
+                            {errors.webImageCheck && <p className="errorMsg">{errors.webImageCheck.message}</p>}
                         </div>
                         {webPreviewImage &&
                             <div className="mt-4">
@@ -410,6 +527,14 @@ const BannerForm = (props) => {
                                     Choose Mobile Banner Image
                                 </Button>
                             </Upload>
+                            <input type="hidden" name="mobileImageCheck"
+                                value={mobileFileList}
+                                readOnly={true}
+                                ref={register({
+                                    required: "Upload picture"
+                                })}
+                            />
+                            {errors.mobileImageCheck && <p className="errorMsg">{errors.mobileImageCheck.message}</p>}
                         </div>
                         {mobilePreviewImage &&
                             <div className="mt-4">

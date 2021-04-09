@@ -16,8 +16,10 @@ const AddBrands = () => {
     const { adminAuth } = useSelector(state => state.adminAuth);
 
     return (
-        <Wrapper onActive="banners" breadcrumb={["Banner"]}>
-            <BannerForm />
+        <Wrapper onActive="banners" breadcrumb={["Add Banner", "Banner"]}>
+            <BannerForm
+                Action="add_banner"
+            />
         </Wrapper>
     );
 }
