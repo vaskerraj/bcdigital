@@ -66,15 +66,17 @@ module.exports = function (server) {
             let brandPicture;
             if (req.file) {
                 brandPicture = req.file.filename;
-            }
-            const preBrandImage = await Brand.findById(brandId).select('image');
-            if (preBrandImage) {
-                // check file
-                if (fs.existsSync(path.join(path.dirname(__dirname), brandImagePath + '/' + preBrandImage.image))) {
-                    fs.unlinkSync(path.join(path.dirname(__dirname), brandImagePath + '/' + preBrandImage.image))
+
+                const preBrandImage = await Brand.findById(brandId).select('image');
+                if (preBrandImage) {
+                    // check file
+                    if (fs.existsSync(path.join(path.dirname(__dirname), brandImagePath + '/' + preBrandImage.image))) {
+                        fs.unlinkSync(path.join(path.dirname(__dirname), brandImagePath + '/' + preBrandImage.image))
+                    }
                 }
+                await Brand.findByIdAndUpdate(brandId, { image: brandPicture });
             }
-            await Brand.findByIdAndUpdate(brandId, { name, image: brandPicture });
+            await Brand.findByIdAndUpdate(brandId, { name });
             return res.status(200).json({ msg: 'success' })
         } catch (error) {
             return res.status(422).json({ error: "Something went wrong. Please try again later" });

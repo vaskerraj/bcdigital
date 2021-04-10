@@ -102,35 +102,47 @@ module.exports = function (server) {
     });
 
     server.put('/api/banner', requiredAuth, checkRole(['admin']), bannerUpload, async (req, res) => {
+
+        const { bannerId, bannerPosition, bannerFor, sellerId, categoryId, productId, validityStart, validityEnd, bannerName } = req.body
         try {
-            const { bannerId, bannerPosition, bannerFor, sellerId, categoryId, productId, validityStart, validityEnd, bannerName } = req.body
-
-            if (req.files['webImage'][0]) {
-                webPicture = req.files['webImage'][0].filename;
-            }
-
-            if (req.files['mobileImage'][0]) {
-                mobilePicture = req.files['mobileImage'][0].filename;
-            }
-            const preBannerImage = await Banner.findById(bannerId).select('webImage, mobileImage');
-            if (preBannerImage) {
-                // check file
-                if (fs.existsSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + preBannerImage.webImage))) {
-                    fs.unlinkSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + preBannerImage.webImage))
+            if (req.files['webImage']) {
+                if (req.files['webImage'][0]) {
+                    webPicture = req.files['webImage'][0].filename;
                 }
-                if (fs.existsSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + preBannerImage.mobileImage))) {
-                    fs.unlinkSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + preBannerImage.mobileImage))
+                const preBannerWebImage = await Banner.findById(bannerId).select('webImage');
+                if (preBannerWebImage) {
+                    // check file
+                    if (fs.existsSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + preBannerWebImage.webImage))) {
+                        fs.unlinkSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + preBannerWebImage.webImage))
+                    }
                 }
+                await Banner.findByIdAndUpdate(bannerId, {
+                    webImage: webPicture
+                });
             }
+            if (req.files['mobileImage']) {
+                if (req.files['mobileImage'][0]) {
+                    mobilePicture = req.files['mobileImage'][0].filename;
+                }
+                const preBannerMobileImage = await Banner.findById(bannerId).select('mobileImage');
+                if (preBannerMobileImage) {
+                    if (fs.existsSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + preBannerImage.preBannerMobileImage))) {
+                        fs.unlinkSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + preBannerImage.preBannerMobileImage))
+                    }
+                }
+                await Banner.findByIdAndUpdate(bannerId, {
+                    mobileImage: mobilePicture
+                });
+            }
+
             await Banner.findByIdAndUpdate(bannerId, {
                 bannerPosition, bannerFor,
                 sellerId, categoryId, productId,
                 validityStart, validityEnd,
-                bannerName, slug: slugify(bannerName),
-                webImage: webPicture, mobileImage: mobilePicture
+                bannerName, slug: slugify(bannerName)
             });
             return res.status(200).json({ msg: 'success' });
-        } catch (error) {
+        } catch {
             return res.status(422).json({ error: "Something went wrong. Please try again later" });
         }
 
