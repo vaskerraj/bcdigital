@@ -80,6 +80,27 @@ module.exports = function (server) {
 
     });
 
+    server.get('/api/admin/banner/:id', requiredAuth, checkRole(['admin']), async (req, res) => {
+        const bannerId = req.params.id;
+        try {
+            const banner = await Banner.findById(bannerId).populate({
+                path: 'categoryId',
+                as: 'breadcrumb',
+                populate: ({
+                    path: 'parentId',
+                    select: 'name slug _id',
+                    populate: ({
+                        path: 'parentId',
+                        select: 'name slug _id',
+                    })
+                })
+            }).lean();
+            if (banner) return res.status(200).json(banner);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
     server.put('/api/banner', requiredAuth, checkRole(['admin']), bannerUpload, async (req, res) => {
         try {
             const { bannerId, bannerPosition, bannerFor, sellerId, categoryId, productId, validityStart, validityEnd, bannerName } = req.body
