@@ -7,4 +7,7 @@ module.exports = {
     env: {
         api: 'http://localhost:3000',
     },
+    images: {
+        domains: ['localhost'],
+    },
 }

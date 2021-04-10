@@ -31,14 +31,13 @@ const getBase64 = (img, callback) => {
 }
 
 const BannerForm = (props) => {
-    const { Action } = props;
+    const { Action, bannerData } = props;
     const [bannerPostionValue, setBannerPostionValue] = useState('');
     const [fieldCategory, setFieldCategory] = useState(false);
 
     const [fieldBannerFor, setFieldBannerFor] = useState(false);
     const [bannerForValue, setBannerForValue] = useState('');
 
-    const [categoryId, setCategoryId] = useState('');
     const [optionSellerPage, setOptionSellerPage] = useState(true);
     const [fieldSellerList, setFieldSellerList] = useState(false);
     const [fieldProduct, setFieldProduct] = useState(false);
@@ -56,8 +55,8 @@ const BannerForm = (props) => {
     // seller upload state
     const [sellerList, setSellerList] = useState("");
 
-
     const [onOpenChoosenCategory, setOnOpenChoosenCategory] = useState(false);
+    const [categoryId, setCategoryId] = useState('');
     // get selected categories list and category id
     const [confirmCategory, setConfirmCategory] = useState({
         categoryId: null,
@@ -95,7 +94,40 @@ const BannerForm = (props) => {
         dispatch(allSellers());
     }, []);
 
-    const { register, handleSubmit, errors, reset, setValue } = useForm();
+    // selected catgories for banner on edit banner
+    useEffect(() => {
+        if (bannerData && Action === 'edit_banner') {
+            const categoryData = bannerData.categoryId;
+            if (categoryData) {
+                const firstBreadcrumb = categoryData.parentId.parentId ? categoryData.parentId.parentId.name + ' / ' : null;
+                const secondBreadcrumb = categoryData.parentId ? categoryData.parentId.name + ' / ' : null;
+                const thirdBreadcrumb = categoryData.name;
+                setSelectedCatText(firstBreadcrumb ? firstBreadcrumb : '' + secondBreadcrumb + thirdBreadcrumb);
+                //////////////////////////^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^//////////////////////////////
+                // check for 3rd level of category(at 2nd level of cateogry its null)
+            }
+        }
+    }, [bannerData, Action]);
+
+    const defaultValues = {
+        bannerPosition: Action === "edit_banner" ? bannerData.bannerPosition : '',
+        bannerFor: Action === "edit_banner" ? bannerData.bannerFor : '',
+        categoryId: Action === "edit_banner" ? bannerData.categoryId : '',
+        sellerId: Action === "edit_banner" ? bannerData.sellerId : '',
+        productId: Action === "edit_banner" ? bannerData.productId : '',
+        bannerValidity: Action === "edit_banner" ? bannerData.validityStart ? 'validity_yes' : 'validity_no' : '',
+        validityStart: Action === "edit_banner" ? bannerData.validityStart : '',
+        validityEnd: Action === "edit_banner" ? bannerData.validityEnd : '',
+        bannerName: Action === "edit_banner" ? bannerData.bannerName : '',
+        bannerName: Action === "edit_banner" ? bannerData.bannerName : '',
+    }
+    const { register, handleSubmit, errors, reset, setValue } = useForm({
+        defaultValues: defaultValues,
+    });
+
+    useEffect(() => {
+        reset(defaultValues);
+    }, []);
 
     useEffect(() => {
         register({ name: "sellerId" });
@@ -228,6 +260,52 @@ const BannerForm = (props) => {
         setValue("validityEnd", date[1].toISOString());
     }
 
+    useEffect(() => {
+        if (bannerData && Action === "edit_banner") {
+            bannerPostionHandler(bannerData.bannerPosition);
+            bannerForHandler(bannerData.bannerFor);
+            //banner validaity on database have validity date
+            bannderValidityHandler(bannerData.validityStart ? 'validity_yes' : 'validity_no')
+
+            // image
+            const flistListWebBannerData =
+            {
+                uid: bannerData._id,
+                name: bannerData.image,
+                status: 'done',
+                url: `${baseUrl}/uploads/banners/${bannerData.webImage}`,
+            };
+
+            setWebPreviewImage(`${baseUrl}/uploads/banners/${bannerData.webImage}`);
+            setWebFileList([flistListWebBannerData]);
+
+            // mobile 
+
+            const flistListMobileBannerData =
+            {
+                uid: bannerData._id,
+                name: bannerData.image,
+                status: 'done',
+                url: `${baseUrl}/uploads/banners/${bannerData.mobileImage}`,
+            };
+
+            setMobilePreviewImage(`${baseUrl}/uploads/banners/${bannerData.mobileImage}`);
+            setMobileFileList([flistListMobileBannerData]);
+
+        }
+
+        if (Action === "add_banner") {
+            setWebPreviewImage("");
+            setWebPreviewImage([]);
+
+            // mobile 
+
+            setMobilePreviewImage("");
+            setMobileFileList([]);
+
+        }
+    }, [bannerData, Action]);
+
     const imageValidation = (file) => {
         const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
         if (!isJpgOrPng) {
@@ -338,17 +416,18 @@ const BannerForm = (props) => {
             <div className="col">
                 <div className="row">
                     <div className="col-sm-6 mt-4">
-                        <label className="cat-label">Banner Position</label>
-                        <select defaultValue="" name="bannerPosition" className="form-control"
+                        <label htmlFor="bannerPosition" className="cat-label">Banner Position</label>
+                        <select defaultValue="" name="bannerPosition" id="bannerPosition" className="form-control"
+                            readOnly={Action === 'edit_banner' ? true : false}
                             onChange={(e) => bannerPostionHandler(e.target.value)}
                             ref={register({
                                 required: "Select at where you want to display banner"
                             })}
                         >
-                            <option value="">Select</option>
-                            <option value="position_home">Home</option>
-                            <option value="position_seller">Seller's Page</option>
-                            <option value="position_category">Category Page</option>
+                            <option key="p_blank" value="">Select</option>
+                            <option key="position_home" value="position_home">Home</option>
+                            <option key="position_seller" value="position_seller">Seller's Page</option>
+                            <option key="position_category" value="position_category">Category Page</option>
                         </select>
                         {errors.bannerPostion && <p className="errorMsg">{errors.bannerPostion.message}</p>}
                     </div>
@@ -463,7 +542,10 @@ const BannerForm = (props) => {
                     {filedValidityDate &&
                         <div className="col-sm-6 mt-4">
                             <label className="cat-label">Start date - End date</label>
-                            <RangePicker onChange={(date, dateString) => onChangeDatePicker(date, dateString, 1)} className="form-control" />
+                            <RangePicker
+                                onChange={(date, dateString) => onChangeDatePicker(date, dateString, 1)}
+                                className="form-control"
+                            />
                             {errors.bannerValidityDate && <p className="errorMsg">{errors.bannerValidityDate.message}</p>}
                         </div>
                     }
@@ -506,8 +588,10 @@ const BannerForm = (props) => {
                             {errors.webImageCheck && <p className="errorMsg">{errors.webImageCheck.message}</p>}
                         </div>
                         {webPreviewImage &&
-                            <div className="mt-4">
-                                <Image src={webPreviewImage} className="webBannerPreivew" width="100%" height="120" />
+                            <div className="mt-4 position-relative" style={{ width: '100%', height: '200px' }}>
+                                <Image src={webPreviewImage} className="webBannerPreivew"
+                                    layout="fill"
+                                />
                             </div>
                         }
                     </div>
@@ -537,15 +621,20 @@ const BannerForm = (props) => {
                             {errors.mobileImageCheck && <p className="errorMsg">{errors.mobileImageCheck.message}</p>}
                         </div>
                         {mobilePreviewImage &&
-                            <div className="mt-4">
-                                <Image src={mobilePreviewImage} className="mobileBannerPreivew" width="100%" height="120" />
+                            <div className="mt-4 position-relative" style={{ width: '80%', height: '150px' }}>
+                                <Image src={mobilePreviewImage} className="mobileBannerPreivew"
+                                    quality="100"
+                                    layout="fill"
+                                />
                             </div>
                         }
                     </div>
                 </div>
             </div>
             <div className="d-block mt-5">
-                <button type="submit" className="btn c-btn-primary">Add Brand</button>
+                <button type="submit" className="btn c-btn-primary">
+                    {Action === 'edit_banner' ? 'UPDATE BANNER' : 'ADD BANNER'}
+                </button>
             </div>
         </form >
     )
