@@ -38,7 +38,6 @@ const BannerForm = (props) => {
     const [fieldCategory, setFieldCategory] = useState(false);
 
     const [fieldBannerFor, setFieldBannerFor] = useState(false);
-    const [bannerForValue, setBannerForValue] = useState('');
 
     const [optionSellerPage, setOptionSellerPage] = useState(true);
     const [fieldSellerList, setFieldSellerList] = useState(false);
@@ -288,7 +287,7 @@ const BannerForm = (props) => {
             const flistListWebBannerData =
             {
                 uid: bannerData._id,
-                name: bannerData.image,
+                name: bannerData.webImage,
                 status: 'done',
                 url: `${baseUrl}/uploads/banners/${bannerData.webImage}`,
             };
@@ -301,7 +300,7 @@ const BannerForm = (props) => {
             const flistListMobileBannerData =
             {
                 uid: bannerData._id,
-                name: bannerData.image,
+                name: bannerData.mobileImage,
                 status: 'done',
                 url: `${baseUrl}/uploads/banners/${bannerData.mobileImage}`,
             };
@@ -363,6 +362,7 @@ const BannerForm = (props) => {
     };
 
     const onSubmit = async (inputdata) => {
+        console.log(inputdata)
         const formData = new FormData();
         formData.append('bannerPosition', inputdata.bannerPosition);
         formData.append('bannerFor', inputdata.bannerFor);
@@ -384,6 +384,7 @@ const BannerForm = (props) => {
         formData.append('bannerName', inputdata.bannerName);
         formData.append('webImage', inputdata.webImage);
         formData.append('mobileImage', inputdata.mobileImage);
+
         if (Action === 'add_banner') {
 
             try {
@@ -427,7 +428,47 @@ const BannerForm = (props) => {
                 });
             }
         } else {
+            try {
+                formData.append('bannerId', bannerData._id);
+                const data = await axiosApi.put(`/api/banner`, formData,
+                    {
+                        headers: {
+                            token: adminAuth.token
+                        }
+                    },
+                    {
+                        onUploadProgress: ProgressEvent => {
+                            const percent = Math.floor((ProgressEvent.loaded / ProgressEvent.total) * 100);
+                            setProgress(percent);
+                            if (percent === 100) {
+                                setTimeout(() => setProgress(0), 1000);
+                            }
+                        }
+                    });
+                if (data) {
+                    message.success({
+                        content: (
+                            <div>
+                                <div className="font-weight-bold">Success</div>
+                                Banner succssfully added
+                            </div>
+                        ),
+                        className: 'message-success',
+                    });
 
+                    router.reload();
+                }
+            } catch (error) {
+                message.warning({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">Error</div>
+                            {error.response ? error.response.data.error : error.message}
+                        </div>
+                    ),
+                    className: 'message-warning',
+                });
+            }
         }
     }
     return (
