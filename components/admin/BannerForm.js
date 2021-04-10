@@ -10,6 +10,8 @@ import { UploadOutlined } from '@ant-design/icons';
 
 import { useForm } from 'react-hook-form';
 
+import moment from 'moment';
+
 import axiosApi from '../../helpers/api';
 import baseUrl from '../../helpers/baseUrl';
 
@@ -82,6 +84,9 @@ const BannerForm = (props) => {
         setCategoryId(confirmCategory.categoryId);
 
     }, [confirmCategory]);
+
+    const [validityStartDate, setValidityStartDate] = useState('');
+    const [validityEndDate, setValidityEndDate] = useState('');
 
     const router = useRouter();
     const dispatch = useDispatch();
@@ -260,12 +265,24 @@ const BannerForm = (props) => {
         setValue("validityEnd", date[1].toISOString());
     }
 
+    const validityDateFormatOnEdit = 'YYYY-MM-DD';
     useEffect(() => {
         if (bannerData && Action === "edit_banner") {
             bannerPostionHandler(bannerData.bannerPosition);
             bannerForHandler(bannerData.bannerFor);
             //banner validaity on database have validity date
-            bannderValidityHandler(bannerData.validityStart ? 'validity_yes' : 'validity_no')
+            bannderValidityHandler(bannerData.validityStart ? 'validity_yes' : 'validity_no');
+
+            //set default date on edit
+            bannerData.validityStart ?
+                setValidityStartDate(moment(bannerData.validityStart, validityDateFormatOnEdit))
+                :
+                setValidityStartDate('');
+
+            bannerData.validityEnd ?
+                setValidityEndDate(moment(bannerData.validityEnd, validityDateFormatOnEdit))
+                :
+                setValidityEndDate('');
 
             // image
             const flistListWebBannerData =
@@ -299,9 +316,12 @@ const BannerForm = (props) => {
             setWebPreviewImage([]);
 
             // mobile 
-
             setMobilePreviewImage("");
             setMobileFileList([]);
+
+            //set blank date
+            setValidityStartDate('')
+            setValidityEndDate('')
 
         }
     }, [bannerData, Action]);
@@ -543,6 +563,8 @@ const BannerForm = (props) => {
                         <div className="col-sm-6 mt-4">
                             <label className="cat-label">Start date - End date</label>
                             <RangePicker
+                                defaultValue={[validityStartDate, validityEndDate]}
+                                format={validityDateFormatOnEdit}
                                 onChange={(date, dateString) => onChangeDatePicker(date, dateString, 1)}
                                 className="form-control"
                             />
