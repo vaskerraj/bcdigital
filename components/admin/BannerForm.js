@@ -313,7 +313,7 @@ const BannerForm = (props) => {
 
         if (Action === "add_banner") {
             setWebPreviewImage("");
-            setWebPreviewImage([]);
+            setWebFileList([]);
 
             // mobile 
             setMobilePreviewImage("");
@@ -363,23 +363,22 @@ const BannerForm = (props) => {
     };
 
     const onSubmit = async (inputdata) => {
-        console.log(inputdata);
         const formData = new FormData();
         formData.append('bannerPosition', inputdata.bannerPosition);
         formData.append('bannerFor', inputdata.bannerFor);
-        inputdata.categoryId !== undefined && inputdata.categoryId !== null
+        inputdata.categoryId !== undefined && inputdata.categoryId !== null && inputdata.categoryId !== ''
             ? formData.append('categoryId', inputdata.categoryId) : null;
 
-        inputdata.sellerId !== undefined && inputdata.sellerId !== null
+        inputdata.sellerId !== undefined && inputdata.sellerId !== null && inputdata.sellerId !== ''
             ? formData.append('sellerId', inputdata.sellerId) : null;
 
-        inputdata.productId !== undefined && inputdata.productId !== null
+        inputdata.productId !== undefined && inputdata.productId !== null && inputdata.productId !== ''
             ? formData.append('productId', inputdata.productId) : null;
 
-        inputdata.validityStart !== undefined && inputdata.validityStart !== null
+        inputdata.validityStart !== undefined && inputdata.validityStart !== null && inputdata.validityStart !== ''
             ? formData.append('validityStart', inputdata.validityStart) : null;
 
-        inputdata.validityEnd !== undefined && inputdata.validityEnd !== null
+        inputdata.validityEnd !== undefined && inputdata.validityEnd !== null && inputdata.validityEnd !== ''
             ? formData.append('validityEnd', inputdata.validityEnd) : null;
 
         formData.append('bannerName', inputdata.bannerName);
