@@ -24,7 +24,7 @@ import { allSellers } from '../../../redux/actions/sellerAction';
 const Brands = ({ banner }) => {
     const [bannerItem, setBannerItem] = useState([]);
 
-    const [bannerPostionValue, setBannerPostionValue] = useState('');
+    const [bannerPostionValue, setBannerPostionValue] = useState("");
     const [fieldCategory, setFieldCategory] = useState(false);
     const [fieldSellerList, setFieldSellerList] = useState(false);
     // seller upload state
@@ -68,6 +68,13 @@ const Brands = ({ banner }) => {
     useEffect(async () => {
         dispatch(allSellers());
     }, [bannerPostionValue]);
+
+    //set init banner at init render
+    useEffect(() => {
+        const initBanner = banner.filter(bn => bn.bannerPosition === "position_home");
+        setBannerItem(Object.values(initBanner ? initBanner : []));
+        setBannerPostionValue('position_home');
+    }, []);
 
     //  bannerPostionHandler
     const bannerPostionHandler = (value) => {
@@ -220,7 +227,7 @@ const Brands = ({ banner }) => {
                     <div className="row">
                         <div className="col-12 col-md-5 mt-3">
                             <label className="cat-label">Banner Position</label>
-                            <select defaultValue="" name="bannerPosition" className="form-control"
+                            <select defaultValue="position_home" name="bannerPosition" className="form-control"
                                 onChange={(e) => bannerPostionHandler(e.target.value)}
                             >
                                 <option value="">Select</option>
