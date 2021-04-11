@@ -11,6 +11,8 @@ import { UploadOutlined } from '@ant-design/icons';
 import { useForm } from 'react-hook-form';
 
 import moment from 'moment';
+import momenttz from 'moment-timezone';
+momenttz.tz.setDefault("Asia/Kathmandu");
 
 import axiosApi from '../../helpers/api';
 import baseUrl from '../../helpers/baseUrl';
@@ -260,8 +262,12 @@ const BannerForm = (props) => {
     }
 
     const onChangeDatePicker = (date, dateString) => {
-        setValue("validityStart", date[0].toISOString());
-        setValue("validityEnd", date[1].toISOString());
+        const validityStart = momenttz(date[0]).tz('Asia/Kathmandu').format();
+        const validityEnd = momenttz(date[1]).tz('Asia/Kathmandu').format();
+        console.log(validityStart, validityEnd);
+        setValue("validityStart", validityStart);
+        setValue("validityEnd", validityEnd);
+
     }
 
     const validityDateFormatOnEdit = 'YYYY-MM-DD';
@@ -274,12 +280,12 @@ const BannerForm = (props) => {
 
             //set default date on edit
             bannerData.validityStart ?
-                setValidityStartDate(moment(bannerData.validityStart, validityDateFormatOnEdit))
+                setValidityStartDate(moment(bannerData.validityStart, validityDateFormatOnEdit, '+05:45'))
                 :
                 setValidityStartDate('');
 
             bannerData.validityEnd ?
-                setValidityEndDate(moment(bannerData.validityEnd, validityDateFormatOnEdit))
+                setValidityEndDate(moment(bannerData.validityEnd, validityDateFormatOnEdit, '+05:45'))
                 :
                 setValidityEndDate('');
 
@@ -456,7 +462,7 @@ const BannerForm = (props) => {
                         className: 'message-success',
                     });
 
-                    router.reload();
+                    router.push(router.asPath);
                 }
             } catch (error) {
                 message.warning({
