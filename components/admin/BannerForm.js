@@ -455,7 +455,7 @@ const BannerForm = (props) => {
                         className: 'message-success',
                     });
 
-                    router.push(router.asPath);
+                    router.push('/admin/banner');
                 }
             } catch (error) {
                 message.warning({
