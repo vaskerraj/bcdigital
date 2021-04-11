@@ -126,8 +126,8 @@ module.exports = function (server) {
                 }
                 const preBannerMobileImage = await Banner.findById(bannerId).select('mobileImage');
                 if (preBannerMobileImage) {
-                    if (fs.existsSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + preBannerImage.preBannerMobileImage))) {
-                        fs.unlinkSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + preBannerImage.preBannerMobileImage))
+                    if (fs.existsSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + preBannerMobileImage.mobileImage))) {
+                        fs.unlinkSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + preBannerMobileImage.mobileImage))
                     }
                 }
                 await Banner.findByIdAndUpdate(bannerId, {

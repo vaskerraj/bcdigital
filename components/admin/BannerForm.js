@@ -257,7 +257,6 @@ const BannerForm = (props) => {
     const onChangeDatePicker = (date, dateString) => {
         const validityStart = momenttz(date[0]).tz('Asia/Kathmandu').format();
         const validityEnd = momenttz(date[1]).tz('Asia/Kathmandu').format();
-        console.log(validityStart, validityEnd);
         setValue("validityStart", validityStart);
         setValue("validityEnd", validityEnd);
 
@@ -361,7 +360,6 @@ const BannerForm = (props) => {
     };
 
     const onSubmit = async (inputdata) => {
-        console.log(inputdata)
         const formData = new FormData();
         formData.append('bannerPosition', inputdata.bannerPosition);
         formData.append('bannerFor', inputdata.bannerFor);
