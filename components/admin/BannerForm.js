@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import { Upload, Progress, DatePicker, Select, Button, message } from 'antd';
 const { Option, OptGroup } = Select;
@@ -35,7 +35,7 @@ const getBase64 = (img, callback) => {
 }
 
 const BannerForm = (props) => {
-    const { Action, bannerData } = props;
+    const { Action, bannerData, sellers } = props;
     const [bannerPostionValue, setBannerPostionValue] = useState('');
     const [fieldCategory, setFieldCategory] = useState(false);
 
@@ -90,15 +90,8 @@ const BannerForm = (props) => {
     const [validityEndDate, setValidityEndDate] = useState('');
 
     const router = useRouter();
-    const dispatch = useDispatch();
 
     const { adminAuth } = useSelector(state => state.adminAuth);
-
-    // seller option
-    const { sellers } = useSelector(state => state.sellerList);
-    useEffect(async () => {
-        dispatch(allSellers());
-    }, []);
 
     // selected catgories for banner on edit banner
     useEffect(() => {

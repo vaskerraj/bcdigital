@@ -1,24 +1,31 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link'
-import Image from 'next/image'
 import { useSelector } from 'react-redux';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
 
-import axiosApi from '../../../helpers/api';
-import { Popconfirm, message } from 'antd';
+import { ChevronLeft } from 'react-feather';
 
 import Wrapper from '../../../components/admin/Wrapper';
 import BannerForm from '../../../components/admin/BannerForm';
 
-const AddBrands = () => {
+const AddBrands = ({ sellers }) => {
 
     const { adminAuth } = useSelector(state => state.adminAuth);
 
     return (
         <Wrapper onActive="banners" breadcrumb={["Add Banner", "Banner"]}>
+            <div className="d-block text-right">
+                <Link href="/admin/banner">
+                    <a className="font16 mb-2">
+                        <ChevronLeft size={20} />
+                        Back
+                    </a>
+                </Link>
+            </div>
             <BannerForm
                 Action="add_banner"
+                sellers={sellers}
             />
         </Wrapper>
     );
@@ -26,14 +33,14 @@ const AddBrands = () => {
 export async function getServerSideProps(context) {
     try {
         const cookies = parseCookies(context);
-        const { data } = await axios.get(`${process.env.api}/api/isAdmin`, {
+        const { data } = await axios.get(`${process.env.api}/api/admingetseller`, {
             headers: {
                 token: cookies.ad_token,
             },
         });
         return {
             props: {
-                banner: data
+                sellers: data
             }
         }
     } catch (err) {
