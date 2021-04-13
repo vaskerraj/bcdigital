@@ -460,3 +460,16 @@ input[type=number] {
   border:1px solid #e8e8e8;
   padding: 1rem 0rem 2.5rem 0rem;
 }
+
+/* filter tab for react-table */
+.filter-tab .activebar{
+  width: 33%;
+  height: 0.4rem;
+  margin: auto;
+  margin-top: 0.2rem;
+  background-color: transparent;
+}
+
+.filter-tab .activebar.active{
+  background-color: #dd4b39;
+}
