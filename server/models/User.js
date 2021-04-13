@@ -53,6 +53,9 @@ const userSchema = new mongoose.Schema({
         default: []
     },
     addresses: [addressSchema],
+    status: {
+        type: String,
+    },
     // wishlist: [{ type: ObjectId, ref: 'Products' }]
 }, { timestamps: true });
 

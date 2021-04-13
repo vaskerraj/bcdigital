@@ -36,7 +36,8 @@ module.exports = function (server) {
                 picture: sellerPicture,
                 role: 'seller',
                 sellerRole: 'own',
-                method: 'custom'
+                method: 'custom',
+                status: 'approved'
             });
             await user.save();
 
