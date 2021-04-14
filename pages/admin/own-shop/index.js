@@ -14,7 +14,7 @@ import Wrapper from '../../../components/admin/Wrapper';
 import baseUrl from '../../../helpers/baseUrl';
 import { ReactTable } from '../../../components/helpers/ReactTable';
 import OwnShopModal from '../../../components/admin/OwnShopModal';
-import EditAuthModal from '../../../components/admin/EditAuthModal';
+import EditSellerAuthModal from '../../../components/admin/EditSellerAuthModal';
 
 // config antdesign message
 message.config({
@@ -272,7 +272,7 @@ const OwnShopList = ({ sellers }) => {
                 modalAction={modalAction}
                 ownshopData={dataForModal}
             />
-            <EditAuthModal
+            <EditSellerAuthModal
                 visible={visibleAuthModal}
                 handleCancel={handleAuthModalCancel}
                 ownshopData={dataForModal}

@@ -14,7 +14,7 @@ message.config({
     duration: 3,
 });
 
-const EditAuthModal = (props) => {
+const EditSellerAuthModal = (props) => {
     const { visible, handleCancel, ownshopData } = props;
     const [activeTab, setActiveTab] = useState('username');
 
@@ -153,5 +153,5 @@ const EditAuthModal = (props) => {
     );
 }
 
-export default EditAuthModal;
+export default EditSellerAuthModal;
 
