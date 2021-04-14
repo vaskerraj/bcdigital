@@ -138,4 +138,32 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Something went wrong. Please try again later." })
         }
     });
+
+    server.put('/api/ownseller/username', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), async (req, res) => {
+        const { mobile, sellerId } = req.body;
+        try {
+            await Users.findByIdAndUpdate(sellerId, { username: mobile, mobile });
+            return res.status(200).json({ msg: 'success' });
+        } catch (error) {
+            return res.status(422).json({
+                error: error.code === 11000 ?
+                    'Shop with username already exists'
+                    :
+                    "Something went wrong. Please try again later."
+            });
+        }
+    });
+
+    server.put('/api/ownseller/password', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), async (req, res) => {
+        const { password, sellerId } = req.body;
+        try {
+            const user = await Users.findById(sellerId);
+            user.password = password;
+            await user.save();
+
+            return res.status(200).json({ msg: "success" });
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
 };

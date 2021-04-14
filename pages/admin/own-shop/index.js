@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link'
+import { useRouter } from 'next/router';
 import { useSelector } from 'react-redux';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
@@ -13,7 +14,7 @@ import Wrapper from '../../../components/admin/Wrapper';
 import baseUrl from '../../../helpers/baseUrl';
 import { ReactTable } from '../../../components/helpers/ReactTable';
 import OwnShopModal from '../../../components/admin/OwnShopModal';
-import { useRouter } from 'next/router';
+import EditAuthModal from '../../../components/admin/EditAuthModal';
 
 // config antdesign message
 message.config({
@@ -27,6 +28,7 @@ const OwnShopList = ({ sellers }) => {
     const [activeTab, setActiveTab] = useState('approved');
 
     const [visible, setVisible] = useState(false);
+    const [visibleAuthModal, setVisibleAuthModal] = useState(false);
     const [modalTitle, setModalTitle] = useState('');
     const [modalAction, setModalAction] = useState('');
     const [dataForModal, setDataForModal] = useState('');
@@ -64,10 +66,16 @@ const OwnShopList = ({ sellers }) => {
         },
         {
             Header: "Username",
-            accessor: "username",
-            sortable: false,
-            show: true,
-            displayValue: " Username "
+            Cell: ({ row: { original } }) => {
+                return (
+                    <>
+                        <span>{original.username}</span>
+                        <button className="btn btn-light ml-1" onClick={() => changeSellerAuthHandler(original)}>
+                            <EditFilled size={25} color="blue" />
+                        </button>
+                    </>
+                )
+            }
         },
         {
             Header: "Mobile No.",
@@ -146,6 +154,11 @@ const OwnShopList = ({ sellers }) => {
         const filteredData = sellers.filter(data => data.status === activeTab && data.sellerRole === 'own');
         setOwnShopInitData(filteredData)
     }, [activeTab]);
+
+    const changeSellerAuthHandler = useCallback(async (seller) => {
+        setVisibleAuthModal(true);
+        setDataForModal(seller);
+    });
 
     const changeSellerStatusHandler = useCallback(async (id, status) => {
         try {
@@ -246,6 +259,10 @@ const OwnShopList = ({ sellers }) => {
         setVisible(false);
     }
 
+    const handleAuthModalCancel = () => {
+        setVisibleAuthModal(false)
+    }
+
     return (
         <Wrapper onActive="ownShop" breadcrumb={["Own Seller"]}>
             <OwnShopModal
@@ -253,6 +270,11 @@ const OwnShopList = ({ sellers }) => {
                 visible={visible}
                 handleCancel={handleCancel}
                 modalAction={modalAction}
+                ownshopData={dataForModal}
+            />
+            <EditAuthModal
+                visible={visibleAuthModal}
+                handleCancel={handleAuthModalCancel}
                 ownshopData={dataForModal}
             />
             <div className="d-flex" style={{ fontSize: '1.6rem', fontWeight: 600 }}>
