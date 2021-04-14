@@ -11,7 +11,8 @@ import {
     UserOutlined,
     PieChartOutlined,
     BarChartOutlined,
-    SettingOutlined
+    SettingOutlined,
+    ShoppingCartOutlined
 } from '@ant-design/icons';
 
 const { SubMenu } = Menu;
@@ -36,10 +37,9 @@ const SlidebarMenu = ({ onActive }) => {
             <Menu.Item key="sellers" icon={<TeamOutlined />}>
                 <Link href="/admin/sellers">Sellers</Link>
             </Menu.Item>
-            <SubMenu key="sub1" icon={<UserOutlined />} title="Own Shop">
-                <Menu.Item key="manageOwnSeller">Manage Seller</Menu.Item>
-                <Menu.Item key="addOwnSeller">Add Seller</Menu.Item>
-            </SubMenu>
+            <Menu.Item key="ownShop" icon={<ShoppingCartOutlined />}>
+                <Link href="/admin/own-shop/">Own Shop</Link>
+            </Menu.Item>
             <SubMenu key="sub2" icon={<TeamOutlined />} title="Delivery">
                 <Menu.Item key="manageDelivery">Manage Delivery</Menu.Item>
                 <Menu.Item key="addDelivery">Add Delivery</Menu.Item>

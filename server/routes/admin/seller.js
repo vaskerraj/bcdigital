@@ -21,8 +21,8 @@ const admin = require('../../../firebase/firebaseAdmin');
 const { requiredAuth, checkRole, checkAdminRole } = require('../../middlewares/auth');
 
 module.exports = function (server) {
-    server.post('/api/ownseller', requiredAuth, checkRole(['admin']), upload.single('sellerPicture'), async (req, res) => {
-        const { name, mobile, password } = req.body;
+    server.post('/api/ownseller', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), upload.single('sellerPicture'), async (req, res) => {
+        const { name, email, mobile, password } = req.body;
         try {
             let sellerPicture;
             if (req.file) {
@@ -30,6 +30,7 @@ module.exports = function (server) {
             }
             const user = new Users({
                 name,
+                email,
                 username: mobile,
                 mobile,
                 password,
@@ -92,23 +93,28 @@ module.exports = function (server) {
         }
     });
 
-    server.put('/api/seller', requiredAuth, checkRole(['admin']), upload.single('sellerPicture'), async (req, res) => {
-        const { name, mobile, sellerId } = req.body;
+    server.put('/api/ownseller', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), upload.single('sellerPicture'), async (req, res) => {
+        const { name, email, sellerId } = req.body;
         try {
             let sellerPicture;
             if (req.file) {
                 sellerPicture = req.file.filename;
-            }
-            const preSellerImage = await Users.findById(sellerId).select('picture');
-            if (preSellerImage) {
-                // check file
-                if (fs.existsSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preSellerImage.picture))) {
-                    fs.unlinkSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preSellerImage.picture))
+                const preSellerImage = await Users.findById(sellerId).select('picture');
+                if (preSellerImage) {
+                    // check file
+                    if (fs.existsSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preSellerImage.picture))) {
+                        fs.unlinkSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preSellerImage.picture))
+                    }
                 }
+                console.log("file", sellerPicture);
+                await Users.findByIdAndUpdate(sellerId, {
+                    picture: sellerPicture
+                });
             }
-            await Users.findByIdAndUpdate(sellerId, { name, username: mobile, mobile, picture: sellerPicture });
+            await Users.findByIdAndUpdate(sellerId, { name, email });
             return res.status(200).json({ msg: "success" });
-        } catch (error) {
+        }
+        catch (error) {
             return res.status(422).json({
                 error: error.code === 11000 ?
                     'Seller already exists'
