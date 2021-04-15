@@ -46,14 +46,13 @@ const SlidebarMenu = ({ onActive }) => {
             </SubMenu>
             <Menu.Item key="report" icon={<PieChartOutlined />}>
                 Report
-        </Menu.Item>
+            </Menu.Item>
             <Menu.Item key="account" icon={<BarChartOutlined />}>
                 Account
-        </Menu.Item>
-            <SubMenu key="sub3" icon={<UserOutlined />} title="Sub Admin">
-                <Menu.Item key="manageSubAdmin">Manage</Menu.Item>
-                <Menu.Item key="addSubAdmin">Add</Menu.Item>
-            </SubMenu>
+            </Menu.Item>
+            <Menu.Item key="subAdmin" icon={<UserOutlined />}>
+                <Link href="/admin/sub-admin/">Sub Admin</Link>
+            </Menu.Item>
             <Menu.Item key="setting" icon={<SettingOutlined />}>
                 Setting
         </Menu.Item>
