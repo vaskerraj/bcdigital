@@ -473,21 +473,3 @@ input[type=number] {
 .filter-tab .activebar.active{
   background-color: #dd4b39;
 }
-
-.setting-tab .ant-tabs-nav::before{
-  border-bottom : none;
-}
-
-.setting-tab .ant-tabs-tab{
-  font-size: 1.6rem;
-  font-weight: 600;
-}
-
-.setting-tab .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn{
-  color: #000000
-}
-
-.setting-tab .ant-tabs-ink-bar {
-  height: 0.4rem !important;
-  background: #dd4b39 !important;
-}

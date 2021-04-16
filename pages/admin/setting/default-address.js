@@ -3,25 +3,20 @@ import { useDispatch } from 'react-redux';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
 
-import { Tabs } from 'antd';
-const { TabPane } = Tabs;
-
-import Wrapper from '../../components/admin/Wrapper';
+import Wrapper from '../../../components/admin/Wrapper';
+import SettingTab from '../../../components/admin/SettingTab';
+import DeafultAddressModal from '../../../components/admin/DeafultAddressModal';
 
 const Setting = () => {
-    const [defaultTabKey, setDefaultTabKey] = useState(1);
+    const [visible, setVisible] = useState(false);
     const dispatch = useDispatch();
     return (
         <Wrapper onActive="setting" breadcrumb={["Setting"]}>
-            <div className="d-block setting-tab">
-                <Tabs defaultActiveKey={defaultTabKey} >
-                    <TabPane tab="Default Address" key="1">
-                        Defult address
-                    </TabPane>
-                    <TabPane tab="Email Setup" key="2">
-                        Email Setup
-                    </TabPane>
-                </Tabs>
+            <SettingTab />
+            <div className="d-block">
+                <div className="d-block text-right">
+                    <button className="btn c-btn-primary" onClick={() => setVisible(true)}>Add Default Address</button>
+                </div>
             </div>
         </Wrapper >
     );
