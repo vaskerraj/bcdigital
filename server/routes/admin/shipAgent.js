@@ -42,6 +42,15 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
+    server.get('/api/shipagent/:id', requiredAuth, checkRole(['admin']), async (req, res) => {
+        const shipAgentId = req.params.id;
+        try {
+            const shipAgent = await ShippingAgent.findById(shipAgentId).lean();
+            return res.status(200).json(shipAgent);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
 
     server.delete('/api/shipagent/:id', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'contentManager']), async (req, res) => {
         const shipAgentId = req.params.id;
