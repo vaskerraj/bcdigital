@@ -12,13 +12,22 @@ import {
     PieChartOutlined,
     BarChartOutlined,
     SettingOutlined,
-    ShoppingCartOutlined
+    ShoppingCartOutlined,
 } from '@ant-design/icons';
+
+import { Truck } from 'react-feather';
 
 const { SubMenu } = Menu;
 const SlidebarMenu = ({ onActive }) => {
     return (
-        <Menu theme="dark" defaultSelectedKeys={[onActive]} mode="inline">
+        <Menu theme="dark"
+            defaultSelectedKeys={[onActive]}
+            defaultOpenKeys={[
+                onActive === 'agents' || onActive === 'shipping'
+                    ? 'sub3' : ''
+            ]}
+            mode="inline"
+        >
             <Menu.Item key="index" icon={<DesktopOutlined />}>
                 <Link href="/admin/"> Dashboard</Link>
             </Menu.Item>
@@ -53,6 +62,14 @@ const SlidebarMenu = ({ onActive }) => {
             <Menu.Item key="subAdmin" icon={<UserOutlined />}>
                 <Link href="/admin/sub-admin/">Sub Admin</Link>
             </Menu.Item>
+            <SubMenu key="sub3" icon={<Truck />} title=" Shipping">
+                <Menu.Item key="shipping">
+                    <Link href="/admin/shipping/">Shipping Charge</Link>
+                </Menu.Item>
+                <Menu.Item key="agents">
+                    <Link href="/admin/shipping/agents">Agents</Link>
+                </Menu.Item>
+            </SubMenu>
             <Menu.Item key="setting" icon={<SettingOutlined />}>
                 <Link href="/admin/setting/default-address">Setting</Link>
             </Menu.Item>
