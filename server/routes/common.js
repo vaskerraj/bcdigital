@@ -29,6 +29,27 @@ const categoriesListWithSubs = (categories, parentId = null) => {
     return categoriesList;
 }
 
+const addressListWithSubs = (addresses, parentId = null) => {
+    const addressesList = [];
+    let address;
+    if (parentId === null) {
+        address = addresses.filter(add => add.parentId == undefined)
+    } else {
+        address = addresses.filter(add => add.parentId == parentId)
+    }
+
+    for (let add of address) {
+        addressesList.push({
+            _id: add._id,
+            name: add.name,
+            slug: add.slug,
+            parentId: add.parentId,
+            children: addressListWithSubs(addresses, add._id)
+        });
+    }
+    return addressesList;
+}
+
 module.exports = function (server) {
     server.post('/api/changePwd', requiredAuth, checkRole(['subscriber']), async (req, res) => {
         const { current, password, method, role } = req.body;
@@ -96,13 +117,25 @@ module.exports = function (server) {
     });
 
     // seller details
-    server.get('/api/seller/:id', requiredAuth, async (req, res) => {
+    server.get('/api/seller/:id', async (req, res) => {
         const sellerId = req.params.id;
         try {
             const sellers = await Users.findById(sellerId).select('_id name username picture role sellerRole addresses');
             return res.status(200).json(sellers);
         } catch (error) {
             return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
+
+    // default address of service at region city
+    server.get('/api/defaultaddress', async (req, res) => {
+        try {
+            const addresses = await DefaultAddress.find({}).lean();
+            // get list of categories with subs
+            const allAddresses = addressListWithSubs(addresses)
+            return res.status(200).json(allAddresses);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
 }
