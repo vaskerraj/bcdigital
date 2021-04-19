@@ -29,10 +29,12 @@ const shipAgentSchema = new mongoose.Schema({
         unique: true
     },
     minDeliveryTime: {
-        Type: String,
+        type: Number,
+        require: true,
     },
     maxDeliveryTime: {
-        Type: String,
+        type: Number,
+        require: true,
     },
     status: {
         type: String,
