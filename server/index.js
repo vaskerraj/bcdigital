@@ -11,6 +11,7 @@ require('./models/Category.js');
 require('./models/Brand.js');
 require('./models/Banner.js');
 require('./models/DefaultAddress.js');
+require('./models/ShipAgent.js');
 
 const port = parseInt(process.env.PORT, 10) || 3000
 const dev = process.env.NODE_ENV !== 'production'
