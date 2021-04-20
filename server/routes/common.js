@@ -3,6 +3,8 @@ const Users = mongoose.model('Users');
 const Category = mongoose.model('Category');
 const Brand = mongoose.model('Brand');
 const Banner = mongoose.model('Banner');
+const DefaultAddress = mongoose.model('DefaultAddress');
+const ShippingCost = mongoose.model('ShippingPlan');
 
 const admin = require('../../firebase/firebaseAdmin');
 const { requiredAuth, checkRole } = require('../middlewares/auth');
@@ -134,6 +136,17 @@ module.exports = function (server) {
             // get list of categories with subs
             const allAddresses = addressListWithSubs(addresses)
             return res.status(200).json(allAddresses);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    // shipping plan for user
+    server.get('/api/shippingPlans/:cityId', requiredAuth, checkRole(['user']), async (req, res) => {
+        const cityId = req.params.cityId;
+        try {
+            const shipCost = await ShippingCost.find({ cityId }).lean();
+            return res.status(200).json(shipCost);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
