@@ -64,7 +64,7 @@ const SlidebarMenu = ({ onActive }) => {
             </Menu.Item>
             <SubMenu key="sub3" icon={<Truck />} title=" Shipping">
                 <Menu.Item key="shipping">
-                    <Link href="/admin/shipping/">Shipping Charge</Link>
+                    <Link href="/admin/shipping/">Shipping Plan</Link>
                 </Menu.Item>
                 <Menu.Item key="agents">
                     <Link href="/admin/shipping/agents">Agents</Link>

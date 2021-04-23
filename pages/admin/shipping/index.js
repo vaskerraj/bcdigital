@@ -19,7 +19,7 @@ message.config({
     duration: 3,
 });
 
-const SellerList = ({ shippingPlan }) => {
+const ShippingPlanList = ({ shippingPlan }) => {
     const [shippingPlanData, setShippingCostData] = useState(shippingPlan);
 
     const [visible, setVisible] = useState(false);
@@ -29,7 +29,6 @@ const SellerList = ({ shippingPlan }) => {
 
     const router = useRouter();
     const { adminAuth } = useSelector(state => state.adminAuth);
-    console.log(adminAuth);
     const precolumns = useMemo(() => [
         {
             Header: "Name",
@@ -63,7 +62,7 @@ const SellerList = ({ shippingPlan }) => {
             show: true,
             Cell: ({ row: { original } }) => (
                 <>
-                    <button className="btn btn-info mr-2"
+                    <button className={`btn btn-info mr-2 ${adminAuth === null ? 'disabled' : ''}`}
                         onClick={() => editHandler(original)}
                     >
                         <EditFilled />
@@ -145,7 +144,7 @@ const SellerList = ({ shippingPlan }) => {
                 shippingPlanData={dataForModal}
             />
             <div className="d-block text-right mt-3">
-                <button type="button" onClick={addHandler} className="btn c-btn-primary">
+                <button type="button" onClick={addHandler} className={`btn c-btn-primary ${adminAuth === null ? 'disabled' : ''}`}>
                     Add Shipping Plan
                 </button>
             </div>
@@ -187,4 +186,4 @@ export async function getServerSideProps(context) {
     }
 }
 
-export default SellerList;
+export default ShippingPlanList;
