@@ -9,18 +9,27 @@ module.exports = function (server) {
         // cityId = defaultAddress's cityId
         const { name, shipAgentId, cityId, amount, minDeliveryTime, maxDeliveryTime } = req.body;
         try {
-
-            const shippingCost = new ShippingCost({
-                name,
-                shipAgentId,
-                cityId,
-                amount,
-                minDeliveryTime,
-                maxDeliveryTime
+            //check exsiting data
+            const checkshipCost = await ShippingCost.findOne({
+                name, shipAgentId, cityId
             });
-            await shippingCost.save();
+            console.log(checkshipCost);
+            if (!checkshipCost) {
+                const shippingCost = new ShippingCost({
+                    name,
+                    shipAgentId,
+                    cityId,
+                    amount,
+                    minDeliveryTime,
+                    maxDeliveryTime
+                });
+                await shippingCost.save();
 
-            return res.status(201).json({ msg: 'success' });
+                return res.status(201).json({ msg: 'success' });
+            } else {
+                return res.status(422).json({ error: "Plan already exsit with this name, city and agent." });
+            }
+
         } catch (error) {
             return res.status(422).json({ error: "Something went wrong.Please try again." });
         }
@@ -65,22 +74,27 @@ module.exports = function (server) {
     server.put('/api/shipcost', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'contentManager']), async (req, res) => {
         const { name, shipAgentId, cityId, amount, minDeliveryTime, maxDeliveryTime, shipCostId } = req.body;
         try {
-            await ShippingCost.findByIdAndUpdate(shipCostId, {
-                name,
-                shipAgentId,
-                cityId,
-                amount,
-                minDeliveryTime,
-                maxDeliveryTime
+            //check exsiting data
+            const checkshipCost = await ShippingCost.findOne({
+                name, shipAgentId, cityId
             });
-            return res.status(200).json({ msg: "success" });
+            if (!checkshipCost) {
+                await ShippingCost.findByIdAndUpdate(shipCostId, {
+                    name,
+                    shipAgentId,
+                    cityId,
+                    amount,
+                    minDeliveryTime,
+                    maxDeliveryTime
+                });
+                return res.status(200).json({ msg: "success" });
+            } else {
+                return res.status(422).json({ error: "Plan already exsit with this name, city and agent." });
+            }
         }
         catch (error) {
             return res.status(422).json({
-                error: error.code === 11000 ?
-                    'Agent already exists with this email address'
-                    :
-                    "Something went wrong. Please try again later."
+                error: "Something went wrong. Please try again later."
             });
         }
     });
