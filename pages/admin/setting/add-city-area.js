@@ -37,11 +37,10 @@ const SubCategory = ({ addresses }) => {
             <label className="cat-label">
                 {nextLabel}
             </label>
-            <select name="parentId"
+            <select defaultValue="" name="parentId"
                 className="form-control"
                 onChange={(e) => parentIdChangeHandler(e)}
                 ref={register()}
-                required="true"
             >
                 <option value="">Select</option>
                 {addressesChild.map(add =>

@@ -109,7 +109,7 @@ const Setting = ({ addresses }) => {
         setActiveAdd(address._id)
         setCityArea(
             <SubDefaultAddressBlock
-                addresses={address}
+                address={address}
                 addressChild={addressChild}
                 subAddressClickHandler={subAddressClickHandler}
                 editHandler={editAddressHandler}

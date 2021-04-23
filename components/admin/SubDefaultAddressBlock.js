@@ -60,7 +60,7 @@ const SubDefaultAddressBlock = (props) => {
                     {section}
                 </div>
                 <div className="mr-2">
-                    <PlusSquare size={24} onClick={() => addAddressHandler(addressChild, section)} className="addcategory cp" />
+                    <PlusSquare size={24} onClick={() => addAddressHandler(providedAddress, section)} className="addcategory cp" />
                 </div>
             </div>
             <div className="d-block">
