@@ -38,10 +38,13 @@ const ShippingPlanList = ({ shippingPlan }) => {
         },
         {
             Header: "City",
-            accessor: "cityId.name",
-            sortable: false,
-            show: true,
-            displayValue: " City "
+            accessor: row => row.cityId.name,
+            Cell: ({ row: { original } }) => (
+                <>
+                    <span className="text-muted">{original.cityId.name}/</span>
+                    <span>{original.cityId.parentId.name}</span>
+                </>
+            )
         },
         {
             Header: "Shipping Agent.",

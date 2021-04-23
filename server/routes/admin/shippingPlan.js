@@ -40,7 +40,13 @@ module.exports = function (server) {
         try {
             const shipCost = await ShippingCost.find({})
                 .populate('shipAgentId')
-                .populate('cityId').lean();
+                .populate({
+                    path: 'cityId',
+                    populate: ({
+                        path: 'parentId',
+                        select: 'name'
+                    })
+                }).lean();
             return res.status(200).json(shipCost);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
@@ -52,7 +58,13 @@ module.exports = function (server) {
         try {
             const shippingCost = await ShippingCost.findById(shipCostId)
                 .populate('shipAgentId')
-                .populate('cityId').lean();
+                .populate({
+                    path: 'cityId',
+                    populate: ({
+                        path: 'parentId',
+                        select: 'name'
+                    })
+                }).lean();
             return res.status(200).json(shippingCost);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
