@@ -23,7 +23,7 @@ const SlidebarMenu = ({ onActive }) => {
         <Menu theme="dark"
             defaultSelectedKeys={[onActive]}
             defaultOpenKeys={[
-                onActive === 'agents' || onActive === 'shipping'
+                onActive === 'agents' || onActive === 'shipping' || onActive === 'delivery'
                     ? 'sub3' : ''
             ]}
             mode="inline"
@@ -49,10 +49,6 @@ const SlidebarMenu = ({ onActive }) => {
             <Menu.Item key="ownShop" icon={<ShoppingCartOutlined />}>
                 <Link href="/admin/own-shop/">Own Shop</Link>
             </Menu.Item>
-            <SubMenu key="sub2" icon={<TeamOutlined />} title="Delivery">
-                <Menu.Item key="manageDelivery">Manage Delivery</Menu.Item>
-                <Menu.Item key="addDelivery">Add Delivery</Menu.Item>
-            </SubMenu>
             <Menu.Item key="report" icon={<PieChartOutlined />}>
                 Report
             </Menu.Item>
@@ -65,6 +61,9 @@ const SlidebarMenu = ({ onActive }) => {
             <SubMenu key="sub3" icon={<Truck />} title=" Shipping">
                 <Menu.Item key="shipping">
                     <Link href="/admin/shipping/">Shipping Plan</Link>
+                </Menu.Item>
+                <Menu.Item key="delivery">
+                    <Link href="/admin/shipping/delivery/">Delivery Users</Link>
                 </Menu.Item>
                 <Menu.Item key="agents">
                     <Link href="/admin/shipping/agents">Agents</Link>
