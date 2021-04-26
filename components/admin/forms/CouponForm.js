@@ -7,7 +7,6 @@ const { RangePicker } = DatePicker;
 
 import { useForm } from 'react-hook-form';
 
-
 import moment from 'moment';
 
 import axiosApi from '../../../helpers/api';
@@ -27,8 +26,6 @@ const CouponForm = (props) => {
     const [validityDate, setValidityDate] = useState('');
     const [couponUseInCategory, setCouponUseInCategory] = useState(false);
     const [categoryIds, setCategoryIds] = useState([]);
-
-    const defaultIds = ["608446241cd9953410a5ca7a", "6084d80553e2f833f4842039"];
 
     const validityDateFormatOnEdit = 'YYYY-MM-DD';
 
@@ -57,7 +54,7 @@ const CouponForm = (props) => {
         category: action === "edit_coupon" ? couponData.categoryIds : [],
     }
     const { register, handleSubmit, errors, setValue, getValues, reset } = useForm({
-        defaultValues: { item_ids: defaultIds }
+        defaultValues: defaultValues
     });
 
 
@@ -364,7 +361,7 @@ const CouponForm = (props) => {
                         {action === 'edit_coupon' &&
 
                             <RangePicker
-                                defaultValue={[moment(couponData.validityStart, validityDateFormatOnEdit), moment(couponData.validityEnd, validityDateFormatOnEdit)]}
+                                defaultValue={[moment(couponData.validityStart, validityDateFormatOnEdit).add(1, 'd'), moment(couponData.validityEnd, validityDateFormatOnEdit).add(1, 'd')]}
                                 format={validityDateFormatOnEdit}
                                 onChange={(date, dateString) => onChangeDatePicker(date, dateString)}
                                 className="form-control"
