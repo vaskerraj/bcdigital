@@ -474,3 +474,15 @@ input[type=number] {
 .filter-tab .activebar.active{
   background-color: #dd4b39;
 }
+
+/* coupon */
+
+.categories-coupon{
+  min-width: 23.2rem;
+  
+}
+
+.categories-coupon .scrollbar{
+  height: 35rem;
+  overflow-y: auto;
+}

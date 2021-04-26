@@ -41,7 +41,7 @@ const SlidebarMenu = ({ onActive }) => {
                 <Link href="/admin/banner">Banners</Link>
             </Menu.Item>
             <Menu.Item key="coupon" icon={<GiftOutlined />}>
-                Coupon
+                <Link href="/admin/coupon/">Coupon</Link>
             </Menu.Item>
             <Menu.Item key="sellers" icon={<TeamOutlined />}>
                 <Link href="/admin/sellers">Sellers</Link>
