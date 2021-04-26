@@ -5,6 +5,7 @@ const Brand = mongoose.model('Brand');
 const Banner = mongoose.model('Banner');
 const DefaultAddress = mongoose.model('DefaultAddress');
 const ShippingCost = mongoose.model('ShippingPlan');
+const Coupon = mongoose.model('Coupon');
 
 const admin = require('../../firebase/firebaseAdmin');
 const { requiredAuth, checkRole } = require('../middlewares/auth');
@@ -147,6 +148,27 @@ module.exports = function (server) {
         try {
             const shipCost = await ShippingCost.find({ cityId }).lean();
             return res.status(200).json(shipCost);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    // coupon 
+    server.get('/api/coupon', requiredAuth, checkRole(['user']), async (req, res) => {
+        try {
+            const coupons = await Coupon.find({}).populate('categoryId').lean();
+            return res.status(200).json(coupons);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    // coupon detail
+    server.get('/api/coupon/:id', requiredAuth, checkRole(['user']), async (req, res) => {
+        const couponId = req.params.id;
+        try {
+            const coupons = await Coupon.findById(couponId).populate('categoryId').lean();
+            return res.status(200).json(coupons);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
