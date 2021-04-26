@@ -11,15 +11,13 @@ import { UploadOutlined } from '@ant-design/icons';
 import { useForm } from 'react-hook-form';
 
 import moment from 'moment';
-import momenttz from 'moment-timezone';
-momenttz.tz.setDefault("Asia/Kathmandu");
 
-import axiosApi from '../../helpers/api';
-import baseUrl from '../../helpers/baseUrl';
+import axiosApi from '../../../helpers/api';
+import baseUrl from '../../../helpers/baseUrl';
 
-import ChooseCategory from '../ChooseCategory';
+import ChooseCategory from '../../ChooseCategory';
 
-import { allSellers } from '../../redux/actions/sellerAction';
+import { allSellers } from '../../../redux/actions/sellerAction';
 
 // config antdesign message
 message.config({
@@ -86,6 +84,7 @@ const BannerForm = (props) => {
 
     }, [confirmCategory]);
 
+    const [validityDate, setValidityDate] = useState('');
     const [validityStartDate, setValidityStartDate] = useState('');
     const [validityEndDate, setValidityEndDate] = useState('');
 
@@ -117,7 +116,6 @@ const BannerForm = (props) => {
         bannerValidity: Action === "edit_banner" ? bannerData.validityStart ? 'validity_yes' : 'validity_no' : '',
         validityStart: Action === "edit_banner" ? bannerData.validityStart : '',
         validityEnd: Action === "edit_banner" ? bannerData.validityEnd : '',
-        bannerName: Action === "edit_banner" ? bannerData.bannerName : '',
         bannerName: Action === "edit_banner" ? bannerData.bannerName : '',
     }
     const { register, handleSubmit, errors, reset, setValue } = useForm({
@@ -255,11 +253,18 @@ const BannerForm = (props) => {
     }
 
     const onChangeDatePicker = (date, dateString) => {
-        const validityStart = momenttz(date[0]).tz('Asia/Kathmandu').format();
-        const validityEnd = momenttz(date[1]).tz('Asia/Kathmandu').format();
-        setValue("validityStart", validityStart);
-        setValue("validityEnd", validityEnd);
 
+        if (date) {
+            const validityStart = moment(date[0]);
+            const validityEnd = moment(date[1]);
+            setValue("validityStart", validityStart);
+            setValue("validityEnd", validityEnd);
+
+            setValidityDate(validityStart !== '' && validityEnd !== '' ? date : "")
+
+        } else {
+            setValidityDate('');
+        }
     }
 
     const validityDateFormatOnEdit = 'YYYY-MM-DD';
@@ -270,14 +275,17 @@ const BannerForm = (props) => {
             //banner validaity on database have validity date
             bannderValidityHandler(bannerData.validityStart ? 'validity_yes' : 'validity_no');
 
+            //for banner validaity error
+            setValidityDate(bannerData.validityStart);
+
             //set default date on edit
             bannerData.validityStart ?
-                setValidityStartDate(moment(bannerData.validityStart, validityDateFormatOnEdit, '+05:45'))
+                setValidityStartDate(moment(bannerData.validityStart, validityDateFormatOnEdit).add(1, 'd'))
                 :
                 setValidityStartDate('');
 
             bannerData.validityEnd ?
-                setValidityEndDate(moment(bannerData.validityEnd, validityDateFormatOnEdit, '+05:45'))
+                setValidityEndDate(moment(bannerData.validityEnd, validityDateFormatOnEdit).add(1, 'd'))
                 :
                 setValidityEndDate('');
 
@@ -372,10 +380,10 @@ const BannerForm = (props) => {
         inputdata.productId !== undefined && inputdata.productId !== null && inputdata.productId !== ''
             ? formData.append('productId', inputdata.productId) : null;
 
-        inputdata.validityStart !== undefined && inputdata.validityStart !== null && inputdata.validityStart !== ''
+        inputdata.bannerValidity === 'validity_yes' && inputdata.validityStart !== undefined && inputdata.validityStart !== null && inputdata.validityStart !== ''
             ? formData.append('validityStart', inputdata.validityStart) : null;
 
-        inputdata.validityEnd !== undefined && inputdata.validityEnd !== null && inputdata.validityEnd !== ''
+        inputdata.bannerValidity === 'validity_yes' && inputdata.validityEnd !== undefined && inputdata.validityEnd !== null && inputdata.validityEnd !== ''
             ? formData.append('validityEnd', inputdata.validityEnd) : null;
 
         formData.append('bannerName', inputdata.bannerName);
@@ -605,7 +613,13 @@ const BannerForm = (props) => {
                                 onChange={(date, dateString) => onChangeDatePicker(date, dateString, 1)}
                                 className="form-control"
                             />
-                            {errors.bannerValidityDate && <p className="errorMsg">{errors.bannerValidityDate.message}</p>}
+                            <input type="hidden" name="validityDate"
+                                value={validityDate}
+                                ref={register({
+                                    required: "Provide validity date"
+                                })}
+                            />
+                            {errors.validityDate && <p className="errorMsg">{errors.validityDate.message}</p>}
                         </div>
                     }
                     <div className="col-sm-6 mt-4">

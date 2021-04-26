@@ -6,7 +6,7 @@ import axios from 'axios';
 import { ChevronLeft } from 'react-feather';
 
 import Wrapper from '../../../../components/admin/Wrapper';
-import BannerForm from '../../../../components/admin/BannerForm';
+import BannerForm from '../../../../components/admin/forms/BannerForm';
 
 const EditBrand = ({ banner, sellers }) => {
     return (
