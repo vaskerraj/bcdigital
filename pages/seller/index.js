@@ -1,21 +1,27 @@
-import React from 'react';
-import { useDispatch } from 'react-redux';
-import nookies from 'nookies';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { parseCookies } from 'nookies';
 import axios from 'axios';
-import { signout } from '../../redux/actions/sellerAuthAction';
+import axiosApi from '../../helpers/api';
+
+import Wrapper from '../../components/seller/Wrapper';
 
 const SellerDashbaord = () => {
     const dispatch = useDispatch();
+
+    const { sellerAuth } = useSelector(state => state.sellerAuth);
+
     return (
-        <div>
-            Sellers pannel
-            <button className="fR" onClick={() => dispatch(signout())}>logout</button>
-        </div>
+        <Wrapper onActive="index" breadcrumb={["Dashboard"]}>
+            <div className="d-block">
+                Dashboard page
+            </div>
+        </Wrapper>
     );
 }
 export async function getServerSideProps(context) {
     try {
-        const cookies = nookies.get(context);
+        const cookies = parseCookies(context);
         const { data } = await axios.get(`${process.env.api}/api/isseller`, {
             headers: {
                 token: cookies.sell_token,
@@ -25,10 +31,12 @@ export async function getServerSideProps(context) {
             props: {}
         }
     } catch (err) {
+        console.log(err)
         return {
             redirect: {
+                source: '/seller/login',
+                destination: '/seller/login',
                 permanent: false,
-                destination: "/seller/login",
             },
             props: {
                 tokenError: err.data
