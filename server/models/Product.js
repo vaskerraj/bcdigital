@@ -50,15 +50,10 @@ const ProductSchema = new mongoose.Schema({
         require: true,
         default: 0
     },
-    color: {
-        type: String,
+    colour: {
+        name: [{ type: String }],
+        images: [{ type: String }]
     },
-    images: [{
-        color: { type: String },
-        images: [{
-            type: String,
-        }]
-    }],
     rating: [{
         ratedBy: { type: ObjectId, ref: 'Users' },
         star: {
@@ -77,16 +72,7 @@ const ProductSchema = new mongoose.Schema({
         enum: ["yes", "no"],
         default: "no"
     },
-    filters: {
-        electronic: {
-            storage: { type: String },
-            ram: { type: String }
-        },
-        other: {
-            size: { type: String },
-            enum: ["S", "L", "M", "XL", "XXL", "Free Style"],
-        }
-    },
+    attributes: {}, // leave empty object(filter and search)
     warranty: {
         warrantyType: { type: String },
         warrantyPeriod: { type: String }
