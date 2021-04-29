@@ -57,10 +57,16 @@ const ProductForm = (props) => {
 
     }, [confirmCategory]);
 
+    // make validation easy
+    const [brandId, setBrandId] = useState('');
 
     const router = useRouter();
 
     const { register, handleSubmit, errors, setValue, reset } = useForm();
+
+    useEffect(() => {
+        register({ name: "brand" });
+    }, [register]);
 
     const dispatch = useDispatch();
     const { sellerAuth } = useSelector(state => state.sellerAuth);
@@ -73,8 +79,9 @@ const ProductForm = (props) => {
         dispatch(allBrands());
     }, [action]);
 
-    const onChange = (value) => {
-        console.log(`selected ${value}`);
+    const onBrandChange = (value) => {
+        setBrandId(value);
+        setValue("brand", value);
     }
 
 
@@ -169,6 +176,7 @@ const ProductForm = (props) => {
                                 <Select
                                     showSearch
                                     style={{ width: '100%' }}
+                                    onChange={onBrandChange}
                                     placeholder="Select brand"
                                     optionFilterProp="children"
                                     allowClear={true}
@@ -181,6 +189,14 @@ const ProductForm = (props) => {
                                         <Option key={brand._id} value={brand._id}>{brand.name}</Option>
                                     ))}
                                 </Select>
+                                <input type="hidden" name="brandId"
+                                    value={brandId}
+                                    readOnly={true}
+                                    ref={register({
+                                        required: "Provide brand"
+                                    })}
+                                />
+                                {errors.brandId && <p className="categoryId">{errors.brandId.message}</p>}
                             </div>
                         </div>
                     </div>
