@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { message, DatePicker } from 'antd';
+import { message, Select, DatePicker } from 'antd';
+
+const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 import { useForm } from 'react-hook-form';
@@ -12,6 +14,7 @@ import moment from 'moment';
 import axiosApi from '../../helpers/api';
 
 import ChooseCategory from '../ChooseCategory';
+import { allBrands } from '../../redux/actions/brandAction';
 
 
 // config antdesign message
@@ -62,6 +65,18 @@ const ProductForm = (props) => {
     const dispatch = useDispatch();
     const { sellerAuth } = useSelector(state => state.sellerAuth);
     console.log(sellerAuth)
+
+    const { brands } = useSelector(state => state.brandList);
+    console.log(brands)
+
+    useEffect(() => {
+        dispatch(allBrands());
+    }, [action]);
+
+    const onChange = (value) => {
+        console.log(`selected ${value}`);
+    }
+
 
     const onSubmit = async (inputdata) => {
         if (action === 'add_product') {
@@ -134,6 +149,40 @@ const ProductForm = (props) => {
                                 />
                             </div>
                         }
+                    </div>
+                    <div className="col-12 mt-4">
+                        <label className="cat-label">Product Name</label>
+                        <input type="text"
+                            name="productname"
+                            className="form-control"
+                            autoComplete="off"
+                            ref={register({
+                                require: "Provide product name"
+                            })}
+                        />
+                    </div>
+
+                    <div className="col-12 mt-4">
+                        <div className="row">
+                            <div className="col-sm-6 col-md-4">
+                                <label className="cat-label">Brand</label>
+                                <Select
+                                    showSearch
+                                    style={{ width: '100%' }}
+                                    placeholder="Select brand"
+                                    optionFilterProp="children"
+                                    allowClear={true}
+                                    filterOption={(input, option) =>
+                                        option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                                    }
+                                >
+                                    <Option value="">No Brand</Option>
+                                    {brands && brands.map(brand => (
+                                        <Option key={brand._id} value={brand._id}>{brand.name}</Option>
+                                    ))}
+                                </Select>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
