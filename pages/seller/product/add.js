@@ -5,6 +5,7 @@ import axios from 'axios';
 import axiosApi from '../../../helpers/api';
 
 import Wrapper from '../../../components/seller/Wrapper';
+import ProductForm from '../../../components/forms/ProductForm';
 
 const AddProduct = () => {
     const dispatch = useDispatch();
@@ -14,7 +15,9 @@ const AddProduct = () => {
     return (
         <Wrapper onActive="addproduct" breadcrumb={["Product"]}>
             <div className="d-block">
-                Add Product Page
+                <ProductForm
+                    action="add_product"
+                />
             </div>
         </Wrapper>
     );
