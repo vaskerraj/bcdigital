@@ -6,13 +6,23 @@ const fs = require('fs');
 const path = require('path');
 const productImagePath = "/../public/uploads/products";
 const productImageTempPath = "/../public/uploads/products/temp";
+const editorImagePath = "/../public/uploads/products/editor";
 
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, path.join(path.dirname(__dirname), productImagePath))
+        if (file.fieldname === 'upload') {
+            cb(null, path.join(path.dirname(__dirname), editorImagePath))
+        } else {
+            cb(null, path.join(path.dirname(__dirname), productImagePath))
+        }
+
     },
     filename: function (req, file, cb) {
-        cb(null, file.fieldname.split('_')[1] + '_' + file.originalname)
+        if (file.fieldname === 'upload') {
+            cb(null, Date.now() + '_' + file.originalname)
+        } else {
+            cb(null, file.fieldname.split('_')[1] + '_' + file.originalname)
+        }
     }
 })
 
@@ -135,6 +145,13 @@ module.exports = function (server) {
             if (products) return res.status(200).json(products);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+
+    server.post('/api/product/editor', upload.single('upload'), function (req, res) {
+        if (req.file) {
+            console.log(req.file);
         }
     });
 

@@ -712,7 +712,45 @@ const ProductForm = (props) => {
                         </div>
                     </div>
 
+                    <div className="col-12 border-top pt-4 mt-5">
+                        <label className="cat-label">Short Description</label>
+                        <Controller
+                            name="shortDescription"
+                            defaultValue=""
+                            control={control}
+                            render={({ onChange, ref }) => (
+                                <Editor data=""
+                                    onChange={(event, editor) => {
+                                        const data = editor.getData();
+                                        onChange(data);
+                                    }
+                                    }
+                                />
+                            )}
+                            rules={{ required: "Provide short description" }}
+                        />
+                        {errors.shortDescription && <p className="errorMsg">{errors.shortDescription.message}</p>}
+                    </div>
 
+                    <div className="col-12 mt-5">
+                        <label className="cat-label">Description</label>
+                        <Controller
+                            name="description"
+                            defaultValue=""
+                            control={control}
+                            render={({ onChange, ref }) => (
+                                <Editor data=""
+                                    onChange={(event, editor) => {
+                                        const data = editor.getData();
+                                        onChange(data);
+                                    }
+                                    }
+                                />
+                            )}
+                            rules={{ required: "Provide description" }}
+                        />
+                        {errors.description && <p className="errorMsg">{errors.description.message}</p>}
+                    </div>
                 </div>
                 {/* ../col */}
             </div>
