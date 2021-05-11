@@ -4,7 +4,8 @@ const slugify = require('slugify');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const productImagePath = "/../../public/uploads/products";
+const productImagePath = "/../public/uploads/products";
+const productImageTempPath = "/../public/uploads/products/temp";
 
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -17,11 +18,24 @@ var storage = multer.diskStorage({
 
 var upload = multer({ storage: storage });
 
+
+var colorImageTempStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, path.join(path.dirname(__dirname), productImageTempPath))
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '_' + file.originalname)
+    }
+})
+
+
+var uploadImageBaseOnColor = multer({ storage: colorImageTempStorage });
+
 const { requiredAuth, checkRole } = require('../middlewares/auth');
 
 module.exports = function (server) {
     server.post('/api/product', requiredAuth, checkRole(['admin', 'seller']), upload.any(), async (req, res) => {
-        const { name, shortDescription, description, brand, price, speicalPricePercentage, specialValidityStart, specialValidityEnd, offeredBy, category, quantity, color, freeShipping, attributes, warrantyType, warrantyPeriod, weight, length, width, height, dangerousMaterials } = req.body
+        const { name, shortDescription, description, brand, price, speicalPricePercentage, specialValidityStart, specialValidityEnd, offeredBy, category, quantity, color, size, freeShipping, attributes, warrantyType, warrantyPeriod, weight, length, width, height, dangerousMaterials } = req.body
         try {
 
             let productPictures = [];
@@ -49,6 +63,7 @@ module.exports = function (server) {
                     name: color,
                     images: productPictures
                 },
+                size,
                 freeShipping,
                 attributes: attributes, // leave empty object
                 warranty: {
@@ -121,5 +136,12 @@ module.exports = function (server) {
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
+    });
+
+    server.post('/api/product/colour/images', uploadImageBaseOnColor.any(), function (req, res) {
+        console.log(req.files);
+        var filenames = req.files.map(file => file.filename)
+        console.log(filenames)
+        return res.status(200).json({ filename: filenames });
     });
 }
