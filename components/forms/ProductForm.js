@@ -60,6 +60,9 @@ const ProductForm = (props) => {
         // categoryId state
         setCategoryId(confirmCategory.categoryId);
 
+        // clear error at confirm category
+        clearErrors("bannerCategory");
+
     }, [confirmCategory]);
 
     // make validation easy
