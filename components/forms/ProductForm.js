@@ -10,6 +10,8 @@ import { InboxOutlined, EditOutlined, ArrowLeftOutlined } from '@ant-design/icon
 
 import { useForm, Controller } from 'react-hook-form';
 
+import moment from 'moment';
+
 import axiosApi from '../../helpers/api';
 import baseUrl from '../../helpers/baseUrl';
 
@@ -242,9 +244,13 @@ const ProductForm = (props) => {
 
     const discountConfirmHandler = (index, discount, promodate) => {
         setDiscountContainerVisible('');
-        document.querySelector('[name="product[' + index + '].discount"]').value = discount;
-        document.querySelector('[name="product[' + index + '].promodate"]').value = promodate;
         document.querySelector('#discountTxt_' + index).textContent = discount;
+        document.querySelector('[name="product[' + index + '].discount"]').value = discount;
+        // promo date
+        const promoStart = moment(promodate[0]);
+        const promoEnd = moment(promodate[1]);
+        document.querySelector('[name="product[' + index + '].promoStartDate"]').value = promoStart;
+        document.querySelector('[name="product[' + index + '].promoEndDate"]').value = promoEnd;
         // recalculate final price after confirm
         handleLineItemChange(index)
     }
@@ -689,7 +695,8 @@ const ProductForm = (props) => {
                                                             </Popover>
 
                                                             <input type="hidden" name={`product[${i}].discount`} />
-                                                            <input type="hidden" name={`product[${i}].promodate`} />
+                                                            <input type="hidden" name={`product[${i}].promoStartDate`} />
+                                                            <input type="hidden" name={`product[${i}].promoEndDate`} />
                                                         </td>
                                                         <td>
                                                             <span id={`finalprice_${i}`} className="font-weight-bold">-</span>
