@@ -200,6 +200,11 @@ input[type=number] {
   }
 }
 
+/* fixing issue of ant design  icon postion(not vertical align to center) */
+.anticon svg{
+  vertical-align: initial !important;
+}
+
 .ant-menu-item-selected.main-menu{
   background:transparent !important;
 }
@@ -485,4 +490,12 @@ input[type=number] {
 .categories-coupon .scrollbar{
   height: 35rem;
   overflow-y: auto;
+}
+
+
+/* seller custom styling */
+/* add product styling */
+
+.product-picture span{
+  display: block;
 }
