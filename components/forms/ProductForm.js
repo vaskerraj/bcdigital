@@ -65,26 +65,19 @@ const ProductForm = (props) => {
 
     }, [confirmCategory]);
 
-    // make validation easy
-    const [brandId, setBrandId] = useState('');
-
     // color with image
     const [colorWithImage, setColorWithImage] = useState([]);
     const [quntityWithPriceOnSize, setQuntityWithPriceOnSize] = useState([]);
-    const [lineItems, setLineItems] = useState([]);
 
     // discount
     const [discountContainerVisible, setDiscountContainerVisible] = useState('');
-
+    const [productWarranty, setProductWarranty] = useState(true);
 
     const router = useRouter();
 
-    const { register, handleSubmit, errors, control, getValues, reset, setError, clearErrors } = useForm();
-
-    useEffect(() => {
-        register({ name: "brand" });
-        register({ name: "shortDescription" });
-    }, [register]);
+    const { register, handleSubmit, errors, control, getValues, reset, setError, trigger, clearErrors } = useForm({
+        mode: "onChange"
+    });
 
     const dispatch = useDispatch();
     const { sellerAuth } = useSelector(state => state.sellerAuth);
@@ -268,6 +261,9 @@ const ProductForm = (props) => {
 
         const finalPrice = price - price * (discount / 100);
         document.querySelector('#finalprice_' + elementIndex).textContent = finalPrice;
+
+        console.log(errors)
+        console.log(getValues())
     }
 
     const onSubmit = async (inputdata) => {
@@ -332,7 +328,7 @@ const ProductForm = (props) => {
                             })}
                         />
                         {errors.bannerCategory && <p className="errorMsg">{errors.bannerCategory.message}</p>}
-                        {errors.categoryId && <p className="categoryId d-none">{errors.categoryId.message}</p>}
+                        {errors.categoryId && <p className="errorMsg d-none">{errors.categoryId.message}</p>}
                         {onOpenChoosenCategory &&
                             <div className="select-subcate-container pt-3 pr-3 pl-3 border">
                                 <ChooseCategory
@@ -432,7 +428,6 @@ const ProductForm = (props) => {
                                                         accept=".png, .jpg, .jpeg"
                                                         style={{ height: '15rem' }}
                                                         multiple={true}
-                                                        ref={ref}
                                                         action={`${baseUrl}/api/product/colour/images`}
                                                         onChange={(file) => {
 
@@ -514,7 +509,6 @@ const ProductForm = (props) => {
                                                         accept=".png, .jpg, .jpeg"
                                                         style={{ height: '10rem' }}
                                                         multiple={true}
-                                                        ref={ref}
                                                         action={`${baseUrl}/api/product/colour/images`}
                                                         onChange={(file) => {
 
@@ -579,7 +573,6 @@ const ProductForm = (props) => {
                                             value={quntityWithPriceOnSize}
                                             placeholder="Select Size"
                                             optionFilterProp="children"
-                                            ref={ref}
                                             filterOption={(input, option) =>
                                                 option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                                             }
@@ -686,7 +679,7 @@ const ProductForm = (props) => {
                                                                     register={register}
                                                                     control={control}
                                                                     errors={errors}
-                                                                    clearErrors={clearErrors}
+                                                                    trigger={trigger}
                                                                     getValues={getValues}
                                                                     setError={setError}
                                                                     rangePickerDateFormat={rangePickerDateFormat}
@@ -697,13 +690,13 @@ const ProductForm = (props) => {
                                                                 <EditOutlined size={16} onClick={() => handleDiscountVisibleChange(i)} />
                                                             </Popover>
 
-                                                            <input type="hidden" name={`product[${i}].discount`} />
-                                                            <input type="hidden" name={`product[${i}].promoStartDate`} />
-                                                            <input type="hidden" name={`product[${i}].promoEndDate`} />
+                                                            <input type="hidden" name={`product[${i}].discount`} ref={register()} />
+                                                            <input type="hidden" name={`product[${i}].promoStartDate`} ref={register()} />
+                                                            <input type="hidden" name={`product[${i}].promoEndDate`} ref={register()} />
                                                         </td>
                                                         <td>
                                                             <span id={`finalprice_${i}`} className="font-weight-bold">-</span>
-                                                            <input type="hidden" name={`product[${i}].finalprice`} />
+                                                            <input type="hidden" name={`product[${i}].finalprice`} ref={register()} />
                                                         </td>
                                                     </tr>
                                                 ))}

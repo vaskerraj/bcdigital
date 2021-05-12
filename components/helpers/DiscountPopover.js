@@ -2,7 +2,7 @@ import React from 'react';
 import { DatePicker } from 'antd';
 const { RangePicker } = DatePicker;
 
-const DiscountPopover = ({ index, Controller, register, control, errors, clearErrors, getValues, setError, rangePickerDateFormat, discountConfirmHandler, onDiscountCancelHandler }) => {
+const DiscountPopover = ({ index, Controller, register, control, errors, trigger, getValues, setError, rangePickerDateFormat, discountConfirmHandler, onDiscountCancelHandler }) => {
     return (
         <>
             <div className="d-block" style={{ width: '33.2rem' }}>
@@ -10,11 +10,19 @@ const DiscountPopover = ({ index, Controller, register, control, errors, clearEr
                 <input type="number" name={`product[${index}].rawdiscount`}
                     step="1" min="1" max="100"
                     className="form-control"
-                    onChange={() => {
-                        clearErrors(`product[${index}].rawdiscount`);
-                    }
-                    }
-                    ref={register}
+                    ref={register({
+                        required: "Provide discount",
+                        min: {
+                            value: 1,
+                            message:
+                                "Discount must be between 1 - 100"
+                        },
+                        max: {
+                            value: 100,
+                            message:
+                                "Discount must be between 1 - 100"
+                        }
+                    })}
                 />
                 <p className="errorMsg">
                     {errors.product?.[index]?.rawdiscount &&
@@ -35,12 +43,12 @@ const DiscountPopover = ({ index, Controller, register, control, errors, clearEr
                                 format={rangePickerDateFormat}
                                 onChange={(date) => {
                                     onChange(date);
-                                    clearErrors(`product[${index}].rawpromodate`)
                                 }
                                 }
                                 className="form-control"
                             />
                         )}
+                        rules={{ required: "Provide promo date" }}
                     />
                     <p className="errorMsg">
                         {errors.product?.[index]?.rawpromodate &&
@@ -60,33 +68,13 @@ const DiscountPopover = ({ index, Controller, register, control, errors, clearEr
                     type="button"
                     className="btn btn-lg btn-warning ml-3"
                     onClick={() => {
-                        getValues(`product[${index}].rawdiscount`) !== ''
-                            && getValues(`product[${index}].rawpromodate`) !== ''
-                            ? discountConfirmHandler(index, getValues(`product[${index}].rawdiscount`), getValues(`product[${index}].rawpromodate`))
-                            :
-                            null,
-                            [
-                                getValues(`product[${index}].rawdiscount`) === '' ?
-                                    {
-                                        name: `product[${index}].rawdiscount`,
-                                        message: "Provide discount"
-                                    }
-                                    : {
-                                        name: "",
-                                        message: ""
-                                    },
-                                getValues(`product[${index}].rawpromodate`) === '' ?
-                                    {
-                                        name: `product[${index}].rawpromodate`,
-                                        message: "Provide date"
-                                    }
-                                    : {
-                                        name: "",
-                                        message: ""
-                                    },
-                            ].forEach(({ name, message }) =>
-                                setError(name, { message })
-                            );
+                        trigger([`product[${index}].rawdiscount`, `product[${index}].rawpromodate`]),
+                            getValues(`product[${index}].rawdiscount`) !== ''
+                                && getValues(`product[${index}].rawpromodate`) !== ''
+                                ?
+                                discountConfirmHandler(index, getValues(`product[${index}].rawdiscount`), getValues(`product[${index}].rawpromodate`))
+                                :
+                                null
                     }
                     }
                 >
