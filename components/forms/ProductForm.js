@@ -749,6 +749,177 @@ const ProductForm = (props) => {
                         />
                         {errors.description && <p className="errorMsg">{errors.description.message}</p>}
                     </div>
+                    <div className="col-12 mt-5 border-top">
+                        <div className="row mt-4">
+                            <div className="d-flex">
+                                <div className="text-info">
+                                    <label>
+                                        <input type="radio" name="warranty" value="yes"
+                                            defaultChecked={true}
+                                            onChange={() => setProductWarranty(true)} className="mr-1"
+                                        />
+                                        Product have Warranty ?
+                                    </label>
+                                </div>
+                                <div className="text-info ml-3">
+                                    <label>
+                                        <input type="radio" name="warranty" value="no"
+                                            onChange={() => setProductWarranty(false)} className="mr-1"
+                                        />
+                                        Product doesn't have Warranty?
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        {productWarranty &&
+                            <div className="row mt-3">
+                                <div className="col-sm-6">
+                                    <label className="cat-label">Warranty Type</label>
+                                    <select name="warrantyType" className="form-control"
+                                        ref={register({
+                                            required: "Provide warranty Type"
+                                        })}
+                                    >
+                                        <option value="">Select</option>
+                                        <option value="brand">Brand Warranty</option>
+                                        <option value="local">Local Warranty</option>
+                                    </select>
+                                    {errors.warrantyType && <p className="errorMsg">{errors.warrantyType.message}</p>}
+                                </div>
+                                <div className="col-sm-6">
+                                    <label className="cat-label">Warranty Period</label>
+                                    <select name="warrantyPeriod" className="form-control"
+                                        ref={register({
+                                            required: "Provide warranty Type"
+                                        })}
+                                    >
+                                        <option value="">Select</option>
+                                        <option>3 Month</option>
+                                        <option>4 Month</option>
+                                        <option>5 Month</option>
+                                        <option>6 Month</option>
+                                        <option>7 Month</option>
+                                        <option>8 Month</option>
+                                        <option>9 Month</option>
+                                        <option>10 Month</option>
+                                        <option>11 Month</option>
+                                        <option>1 Year</option>
+                                        <option>2 Year</option>
+                                        <option>3 Year</option>
+                                        <option>4 Year</option>
+                                        <option>5 Year</option>
+                                    </select>
+                                    {errors.warrantyPeriod && <p className="errorMsg">{errors.warrantyPeriod.message}</p>}
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div className="col-12 mt-5 border-top">
+                        <div className="d-block mt-4">Provide information about product for delivery purpose</div>
+                        <div className="d-block mt-3">
+                            <b>Free Shipping</b>
+                            <label>
+                                <input type="radio" name="freeShipping" value="no"
+                                    className="ml-3 mr-1"
+                                    ref={register({
+                                        required: "Provide free shipping status"
+                                    })}
+                                />
+                                No
+                            </label>
+                            <label>
+                                <input type="radio" name="freeShipping" value="yes"
+                                    className=" ml-2 mr-1"
+                                    ref={register({
+                                        required: "Provide free shipping status"
+                                    })}
+                                />
+                                Yes
+                            </label>
+                            {errors.freeShipping && <p className="errorMsg">{errors.freeShipping.message} </p>}
+                        </div>
+                        <div className="d-block col-sm-6 col-md-4 mt-3">
+                            <label className="cat-label">Weight(kg)</label>
+                            <input type="text" name="weight" className="form-control"
+                                ref={register({
+                                    required: "Provide package weight"
+                                })}
+                            />
+                            {errors.weight && <p className="errorMsg">{errors.weight.message}</p>}
+                        </div>
+                        <div className="d-block mt-3">
+                            <div className="cat-label">Dimensions (cm)</div>
+                            <div className="row">
+                                <div className="col-sm-4">
+                                    <input type="number" name="length" className="form-control"
+                                        ref={register({
+                                            required: "Provide package length"
+                                        })}
+                                        placeholder="Length(cm)"
+                                    />
+                                    {errors.length && <p className="errorMsg">{errors.length.message}</p>}
+                                </div>
+                                <div className="col-sm-4 mt-2 mt-sm-0">
+                                    <input type="number" name="width" className="form-control"
+                                        ref={register({
+                                            required: "Provide package width"
+                                        })}
+                                        placeholder="Width(cm)"
+                                    />
+                                    {errors.width && <p className="errorMsg">{errors.width.message}</p>}
+                                </div>
+                                <div className="col-sm-4 mt-2 mt-sm-0">
+                                    <input type="number" name="height" className="form-control"
+                                        ref={register({
+                                            required: "Provide package height"
+                                        })}
+                                        placeholder="Height(cm)"
+                                    />
+                                    {errors.height && <p className="errorMsg">{errors.height.message}</p>}
+                                </div>
+                            </div>
+                            <div className="d-block mt-3">
+                                <label className="cat-label">Dangerous Materials</label>
+                                <div className="d-block">
+                                    <div className="d-flex">
+                                        <div className="mr-3">
+                                            <input type="checkbox" name="dangerousMaterials" id="dangerous_none" value="None"
+                                                ref={register({ validate: v => v.length > 0 })}
+                                            />
+                                            <label htmlFor="dangerous_none">
+                                                None
+                                            </label>
+                                        </div>
+                                        <div className="mr-3">
+                                            <input type="checkbox" name="dangerousMaterials" id="dangerous_battery" value="Battery"
+                                                ref={register({ validate: v => v.length > 0 })}
+                                            />
+                                            <label htmlFor="dangerous_battery">
+                                                Battery
+                                            </label>
+                                        </div>
+                                        <div className="mr-3">
+                                            <input type="checkbox" name="dangerousMaterials" id="dangerous_liquid" value="Liquid"
+                                                ref={register({ validate: v => v.length > 0 })}
+                                            />
+                                            <label htmlFor="dangerous_liquid">
+                                                Liquid
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <input type="checkbox" name="dangerousMaterials" id="dangerous_flamable" value="Flamable"
+                                                ref={register({ validate: v => v.length > 0 })}
+                                            />
+                                            <label htmlFor="dangerous_flamable">
+                                                Flamable
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                {errors.dangerousMaterials && <p className="errorMsg">Check at least one dangerous materials</p>}
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 {/* ../col */}
             </div>
