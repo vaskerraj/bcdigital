@@ -263,11 +263,8 @@ const ProductForm = (props) => {
         const price = document.querySelector('[name="product[' + elementIndex + '].price"]').value || 0;
         const discount = document.querySelector('[name="product[' + elementIndex + '].discount"]').value || 0;
 
-        const finalPrice = price - price * (discount / 100);
+        const finalPrice = parseFloat(price - price * (discount / 100)).toFixed(2);
         document.querySelector('#finalprice_' + elementIndex).textContent = finalPrice;
-
-        console.log(errors)
-        console.log(getValues())
     }
 
     const onSubmit = async (inputdata) => {
@@ -648,7 +645,7 @@ const ProductForm = (props) => {
                                                             />
                                                         </td>
                                                         <td>
-                                                            <input type="text" name={`product[${i}].quantity`} className="form-control pt-1 pb-1"
+                                                            <input type="number" name={`product[${i}].quantity`} className="form-control pt-1 pb-1"
                                                                 style={{ width: '12rem', height: '3rem' }}
                                                                 ref={register({
                                                                     required: "Provide quantity"
@@ -659,7 +656,7 @@ const ProductForm = (props) => {
                                                             }
                                                         </td>
                                                         <td>
-                                                            <input type="text" name={`product[${i}].price`} className="form-control pt-1 pb-1"
+                                                            <input type="number" name={`product[${i}].price`} className="form-control pt-1 pb-1"
                                                                 style={{ width: '12rem', height: '3rem' }}
                                                                 onChange={() => handleLineItemChange(i)}
                                                                 ref={register({
@@ -701,6 +698,7 @@ const ProductForm = (props) => {
                                                         <td>
                                                             <span id={`finalprice_${i}`} className="font-weight-bold">-</span>
                                                             <input type="hidden" name={`product[${i}].finalprice`} ref={register()} />
+                                                            <input type="hidden" name={`product[${i}].sold`} value="0" ref={register()} />
                                                         </td>
                                                     </tr>
                                                 ))}
