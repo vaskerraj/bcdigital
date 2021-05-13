@@ -231,6 +231,10 @@ const ProductForm = (props) => {
 
     const productWithoutSize = useCallback(() => {
         setQuntityWithPriceOnSize(["nosize"])
+        // reset size if product doesnt have any size
+        reset({
+            size: ['nosize']
+        });
         setDiscountContainerVisible('');
     });
 
