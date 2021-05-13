@@ -215,24 +215,27 @@ const ProductForm = (props) => {
         // reset validation while allowClear of select icon
         if (sizes.length === 0) {
             reset({
+                ...getValues(),
                 size: ''
             });
         }
         setQuntityWithPriceOnSize(sizes);
     });
 
-    const backToProductSize = () => {
+    const backToProductSize = useCallback(() => {
         // reset validation while back from no picture
         reset({
+            ...getValues(),
             size: ''
         });
         setQuntityWithPriceOnSize([]);
-    }
+    });
 
     const productWithoutSize = useCallback(() => {
         setQuntityWithPriceOnSize(["nosize"])
         // reset size if product doesnt have any size
         reset({
+            ...getValues(),
             size: ['nosize']
         });
         setDiscountContainerVisible('');
@@ -265,10 +268,10 @@ const ProductForm = (props) => {
 
         const finalPrice = parseFloat(price - price * (discount / 100)).toFixed(2);
         document.querySelector('#finalprice_' + elementIndex).textContent = finalPrice;
+        console.log(errors);
     }
 
     const onSubmit = async (inputdata) => {
-        console.log(inputdata)
         if (action === 'add_product') {
             try {
                 const data = await axiosApi.post("/api/product", {
