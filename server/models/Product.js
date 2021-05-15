@@ -1,6 +1,26 @@
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Schema;
 
+const Products = new mongoose.Schema({
+    size: { type: String, require: true },
+    quantity: { type: Number, require: true },
+    price: { type: Number, require: true },
+    discount: Number,
+    promoStartDate: Date,
+    promoEndDate: Date,
+    finalPrice: { type: Number, require: true },
+    sold: { type: Number, require: true, default: 0 },
+    approved: {
+        status: { type: String, default: "pending" },
+        approvedBy: { type: ObjectId, ref: 'Users' },
+        approvedAt: { type: Date }
+    },
+    status: {
+        type: String, // active, inactive , deleted
+        default: "active"
+    },
+});
+
 const ProductSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -26,34 +46,16 @@ const ProductSchema = new mongoose.Schema({
         type: ObjectId,
         ref: 'Brand'
     },
-    price: {
-        type: Number,
-        require: true,
-    },
-    specialPrice: {
-        price: { type: Number },
-        validityStart: { type: Date },
-        validityEnd: { type: Date },
-        offeredBy: { type: String, enum: ["seller", "admin", "brand"] }
-    },
     category: {
         type: ObjectId,
         ref: 'Category'
     },
-    quantity: {
-        type: Number,
+    colour: [],
+    size: [{
+        type: String,
         require: true,
-        default: 0
-    },
-    sold: {
-        type: Number,
-        require: true,
-        default: 0
-    },
-    colour: {
-        name: [{ type: String }],
-        images: [{ type: String }]
-    },
+    }],
+    products: [Products],
     rating: [{
         ratedBy: { type: ObjectId, ref: 'Users' },
         star: {
@@ -68,9 +70,12 @@ const ProductSchema = new mongoose.Schema({
         createdAt: { type: Date }
     }],
     freeShipping: {
-        type: String,
-        enum: ["yes", "no"],
-        default: "no"
+        status: {
+            type: String,
+            enum: ["yes", "no"],
+            default: "no"
+        },
+        offeredBy: { type: ObjectId, ref: 'Users' },
     },
     attributes: {}, // leave empty object(filter and search)
     warranty: {
@@ -93,7 +98,6 @@ const ProductSchema = new mongoose.Schema({
         type: ObjectId,
         ref: 'Users'
     }
-
 });
 
 mongoose.models.Product || mongoose.model('Product', ProductSchema)

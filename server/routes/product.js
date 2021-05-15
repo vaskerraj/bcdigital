@@ -41,44 +41,65 @@ var colorImageTempStorage = multer.diskStorage({
 
 var uploadImageBaseOnColor = multer({ storage: colorImageTempStorage });
 
+const moveImageAndFile = async (oldPath, newPath) => {
+    console.log(oldPath);
+    try {
+        await fs.renameSync(oldPath, newPath);
+    } catch (err) {
+        // console.log(err);
+    }
+}
+
 const { requiredAuth, checkRole } = require('../middlewares/auth');
 
 module.exports = function (server) {
-    server.post('/api/product', requiredAuth, checkRole(['admin', 'seller']), upload.any(), async (req, res) => {
-        const { name, shortDescription, description, brand, price, speicalPricePercentage, specialValidityStart, specialValidityEnd, offeredBy, category, quantity, color, size, freeShipping, attributes, warrantyType, warrantyPeriod, weight, length, width, height, dangerousMaterials } = req.body
+    server.post('/api/product', requiredAuth, checkRole(['admin', 'seller']), async (req, res) => {
+        console.log(req.body)
+        const { inputdata: {
+            categoryId,
+            productname,
+            brand,
+            colour,
+            product,
+            shortDescription,
+            description,
+            warrantyType,
+            freeShipping,
+            warrantyPeriod,
+            weight,
+            length,
+            width,
+            height,
+            dangerousMaterials
+        } } = req.body
+
         try {
 
-            let productPictures = [];
-            if (req.files) {
-                productPictures = req.files.map(file => {
-                    return file.filename;
-                });
-            }
-            const product = new Product({
-                name,
-                slug: slugify(name),
+            // move picture from temp folder to parent folder
+            const imageWithNameOnly = colour.filter(item => item.name !== '');
+            imageWithNameOnly.map(item => {
+                var files = item.images;
+                files.map(file => {
+                    moveImageAndFile(path.join(path.dirname(__dirname), "/../public/uploads/products/temp/" + file),
+                        path.join(path.dirname(__dirname), "/../public/uploads/products/" + file));
+                })
+            });
+            const newProduct = new Product({
+                category: categoryId,
+                name: productname,
+                slug: slugify(productname + '_' + Date.now()),
+                brand: brand === 'null' ? null : brand,
+                colour: colour.filter(item => item.name !== ''),
+                products: product,
                 shortDescription,
                 description,
-                brand,
-                price,
-                speicalPrice: {
-                    price: speicalPricePercentage,
-                    validityStart: specialValidityStart,
-                    validityEnd: specialValidityEnd,
-                    offeredBy
-                },
-                category,
-                quantity,
-                colour: {
-                    name: color,
-                    images: productPictures
-                },
-                size,
-                freeShipping,
-                attributes: attributes, // leave empty object
                 warranty: {
                     warrantyType,
                     warrantyPeriod
+                },
+                freeShipping: {
+                    status: freeShipping,
+                    offeredBy: req.user.id
                 },
                 package: {
                     weight,
@@ -91,7 +112,7 @@ module.exports = function (server) {
                 },
                 createdBy: req.user.id
             });
-            await product.save();
+            await newProduct.save();
             return res.status(201).json({ msg: 'success' })
         } catch (error) {
             return res.status(422).json({ error: "Something went wrong. Please try again later" });

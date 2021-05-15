@@ -266,9 +266,8 @@ const ProductForm = (props) => {
         const price = document.querySelector('[name="product[' + elementIndex + '].price"]').value || 0;
         const discount = document.querySelector('[name="product[' + elementIndex + '].discount"]').value || 0;
 
-        const finalPrice = parseFloat(price - price * (discount / 100)).toFixed(2);
+        const finalPrice = Math.round(parseFloat(price) - price * (parseFloat(discount) / 100));
         document.querySelector('#finalprice_' + elementIndex).textContent = finalPrice;
-        console.log(errors);
     }
 
     const onSubmit = async (inputdata) => {
@@ -293,7 +292,7 @@ const ProductForm = (props) => {
                         className: 'message-success',
                     });
                     setTimeout(() => {
-                        router.push('/seller/product/add');
+                        router.reload();
                     }, 2000);
                 }
             } catch (error) {
