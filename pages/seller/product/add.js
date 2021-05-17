@@ -13,7 +13,7 @@ const AddProduct = () => {
     const { sellerAuth } = useSelector(state => state.sellerAuth);
 
     return (
-        <Wrapper onActive="addproduct" breadcrumb={["Product"]}>
+        <Wrapper onActive="addproduct" breadcrumb={["Product", "Add Product"]}>
             <div className="d-block">
                 <ProductForm
                     action="add_product"
