@@ -182,4 +182,54 @@ module.exports = function (server) {
         console.log(filenames)
         return res.status(200).json({ filename: filenames });
     });
+
+    server.put('/api/product/status/:id/:status', requiredAuth, checkRole(['admin', 'seller']), async (req, res) => {
+        const productId = req.params.id;
+        const productStatus = req.params.status;
+        try {
+            if (productStatus === 'active') {
+                await Product.findOneAndUpdate({ 'products._id': productId },
+                    {
+                        '$set': { 'products.$.status': 'inactive' },
+                    }
+                );
+            } else {
+                await Product.findOneAndUpdate({ 'products._id': productId },
+                    {
+                        '$set': { 'products.$.status': 'active' },
+                    }
+                );
+            }
+            return res.status(200).json({ msg: 'success' });
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
+
+    server.delete('/api/product/:id', requiredAuth, checkRole(['admin', 'seller']), async (req, res) => {
+        const productId = req.params.id;
+        try {
+            await Product.findOneAndUpdate({ 'products._id': productId },
+                {
+                    '$set': { 'products.$.status': 'deleted' },
+                }
+            );
+            return res.status(200).json({ msg: 'success' });
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
+    server.get('/api/product/restore/:id', requiredAuth, checkRole(['admin', 'seller']), async (req, res) => {
+        const productId = req.params.id;
+        try {
+            await Product.findOneAndUpdate({ 'products._id': productId },
+                {
+                    '$set': { 'products.$.status': 'active' },
+                }
+            );
+            return res.status(200).json({ msg: 'success' });
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
 }
