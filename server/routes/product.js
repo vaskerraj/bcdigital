@@ -44,9 +44,11 @@ var uploadImageBaseOnColor = multer({ storage: colorImageTempStorage });
 const moveImageAndFile = async (oldPath, newPath) => {
     console.log(oldPath);
     try {
-        await fs.renameSync(oldPath, newPath);
+        if (fs.existsSync(oldPath)) {
+            await fs.renameSync(oldPath, newPath);
+        }
     } catch (err) {
-        // console.log(err);
+        return res.status(422).json({ error: "Something went wrong. Please try again later" });
     }
 }
 
@@ -72,12 +74,10 @@ module.exports = function (server) {
             height,
             dangerousMaterials
         } } = req.body
-
         try {
 
             // move picture from temp folder to parent folder
-            const imageWithNameOnly = colour.filter(item => item.name !== '');
-            imageWithNameOnly.map(item => {
+            colour.map(item => {
                 var files = item.images;
                 files.map(file => {
                     moveImageAndFile(path.join(path.dirname(__dirname), "/../public/uploads/products/temp/" + file),
@@ -119,6 +119,78 @@ module.exports = function (server) {
         }
     });
 
+    server.put('/api/product/:id', requiredAuth, checkRole(['admin', 'seller']), async (req, res) => {
+        const productId = req.params.id;
+        const { inputdata: {
+            categoryId,
+            productname,
+            brand,
+            colour,
+            product,
+            shortDescription,
+            description,
+            warrantyType,
+            freeShipping,
+            warrantyPeriod,
+            weight,
+            length,
+            width,
+            height,
+            dangerousMaterials
+        } } = req.body
+        try {
+            // move picture from temp folder to parent folder
+            colour.map(item => {
+                var files = item.images;
+                files.map(file => {
+                    moveImageAndFile(path.join(path.dirname(__dirname), "/../public/uploads/products/temp/" + file),
+                        path.join(path.dirname(__dirname), "/../public/uploads/products/" + file));
+                })
+            });
+
+            // return false;
+            await Product.findByIdAndUpdate(productId, {
+                category: categoryId,
+                name: productname,
+                slug: slugify(productname + '_' + Date.now()),
+                brand: brand === 'null' ? null : brand,
+                products: product,
+                shortDescription,
+                description,
+                warranty: {
+                    warrantyType,
+                    warrantyPeriod
+                },
+                freeShipping: {
+                    status: freeShipping,
+                    offeredBy: req.user.id
+                },
+                package: {
+                    weight,
+                    dimensions: {
+                        length,
+                        width,
+                        height
+                    },
+                    dangerousMaterials
+                },
+            });
+
+            // Note: update image at onChange antd upload and prevent updating if upload is untouch
+            colour.map(async (item) => {
+                var imagesItem = item.images;
+                if (imagesItem[0].uid === undefined) {
+                    await Product.findByIdAndUpdate(productId, {
+                        colour
+                    });
+                }
+            });
+            return res.status(201).json({ msg: 'success' })
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
     server.get('/api/products', async (req, res) => {
         try {
             const products = await Product.find({}, null, { sort: { order: 1 } })
@@ -138,6 +210,30 @@ module.exports = function (server) {
                 .populate({
                     path: 'createdBy',
                     select: 'name username role picture, _id',
+                })
+                .lean();
+            if (products) return res.status(200).json(products);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.get('/api/product/:id', async (req, res) => {
+        const productId = req.params.id;
+        try {
+            const products = await Product.findById(productId)
+                .populate('brand')
+                .populate({
+                    path: 'category',
+                    select: 'name _id',
+                    populate: ({
+                        path: 'parentId',
+                        select: 'name _id',
+                        populate: ({
+                            path: 'parentId',
+                            select: 'name _id',
+                        })
+                    })
                 })
                 .lean();
             if (products) return res.status(200).json(products);
