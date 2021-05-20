@@ -1,14 +1,19 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { DatePicker } from 'antd';
+import moment from 'moment';
 const { RangePicker } = DatePicker;
 
-const DiscountPopover = ({ index, Controller, register, control, errors, trigger, getValues, setError, rangePickerDateFormat, discountConfirmHandler, onDiscountCancelHandler }) => {
+const DiscountPopover = ({
+    index, Controller, register, control, errors, trigger, getValues, setError,
+    defineDiscount, definePromoStartDate, definePromoEndDate,
+    rangePickerDateFormat, discountConfirmHandler, onDiscountCancelHandler
+}) => {
     return (
         <>
             <div className="d-block" style={{ width: '33.2rem' }}>
                 <label className="cat-label">Discount(%)</label>
                 <input type="number" name={`product[${index}].rawdiscount`}
-                    step="1" min="1" max="100"
+                    defaultValue={defineDiscount !== null && defineDiscount !== undefined ? defineDiscount : ''}
                     className="form-control"
                     ref={register({
                         required: "Provide discount",
@@ -35,11 +40,22 @@ const DiscountPopover = ({ index, Controller, register, control, errors, trigger
                     <label className="cat-label"> Promotion Date</label>
                     <Controller
                         name={`product[${index}].rawpromodate`}
-                        defaultValue=""
+                        defaultValue={
+                            definePromoStartDate !== null && definePromoStartDate !== undefined
+                                && definePromoEndDate !== null && definePromoEndDate !== undefined
+                                ?
+                                [
+                                    moment(definePromoStartDate, rangePickerDateFormat).add(1, 'd'),
+                                    moment(definePromoEndDate, rangePickerDateFormat).add(1, 'd')
+                                ]
+                                :
+                                ''
+                        }
                         control={control}
-                        render={({ onChange, ref }) => (
+                        render={({ onChange, value, ref }) => (
                             <RangePicker
                                 allowClear={false}
+                                value={value}
                                 format={rangePickerDateFormat}
                                 onChange={(date) => {
                                     onChange(date);

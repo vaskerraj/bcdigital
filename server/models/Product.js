@@ -79,8 +79,8 @@ const ProductSchema = new mongoose.Schema({
     },
     attributes: {}, // leave empty object(filter and search)
     warranty: {
-        warrantyType: { type: String },
-        warrantyPeriod: { type: String }
+        warrantyType: { type: String, default: null },
+        warrantyPeriod: { type: String, default: null }
     },
     package: {
         weight: { type: Number },
