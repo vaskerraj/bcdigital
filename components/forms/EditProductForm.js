@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -29,9 +29,12 @@ message.config({
     duration: 3,
 });
 
+const useMountEffect = fun => useEffect(fun, []);
 
 const EditProductForm = (props) => {
     const { action, productData } = props;
+
+    const scrollOnErrorRef = useRef(null);
 
     const [onOpenChoosenCategory, setOnOpenChoosenCategory] = useState(false);
     const [categoryId, setCategoryId] = useState(productData.category._id);
@@ -128,7 +131,6 @@ const EditProductForm = (props) => {
         defaultValues: defaultValues,
     });
 
-    console.log(errors);
     useEffect(() => {
         reset(defaultValues);
     }, []);
@@ -342,8 +344,22 @@ const EditProductForm = (props) => {
         document.querySelector('[name="product[' + elementIndex + '].finalPrice"]').value = finalPrice;
     }
 
+    const scrollToProductImage = () => scrollOnErrorRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
     const onSubmit = async (inputdata) => {
-        console.log(inputdata);
+        if (inputdata.colour[0].images.length < 2) {
+            scrollToProductImage();
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        Upload at least 2 and upto 6 pictures of your product.
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+            return false;
+        }
         if (action === 'edit_product') {
             try {
                 const data = await axiosApi.put(`/api/product/${productData._id}`, {
@@ -381,6 +397,9 @@ const EditProductForm = (props) => {
             }
         }
     }
+
+    useMountEffect(scrollToProductImage); // Scroll on mount
+
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             <div className="col">
@@ -484,7 +503,7 @@ const EditProductForm = (props) => {
                                     </label>
                                 </div>
                             </div>
-                            <div className="d-block col-sm-6 col-md-4">
+                            <div className="d-block col-sm-6 col-md-4" ref={scrollOnErrorRef}>
 
                                 {colorWithImage[0] !== "nocolour" ?
 
