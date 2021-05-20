@@ -108,7 +108,7 @@ const ProductForm = (props) => {
             let exsitingColor = [...colorWithImage]
             exsitingColor.splice(index, 1, colour);
 
-            setColorWithImage(exsitingColor);
+            // setColorWithImage(exsitingColor);
 
             var el = document.getElementById("productPicture_" + index);
             removeClass(el, 'd-none');
@@ -179,6 +179,7 @@ const ProductForm = (props) => {
                             multiple={true}
                             ref={ref}
                             action={`${baseUrl}/api/product/colour/images`}
+                            listType="picture"
                             onChange={(file) => {
 
                                 var imageUid = file.fileList.map(file => {
@@ -268,6 +269,7 @@ const ProductForm = (props) => {
 
         const finalPrice = Math.round(parseFloat(price) - price * (parseFloat(discount) / 100));
         document.querySelector('#finalprice_' + elementIndex).textContent = finalPrice;
+        document.querySelector('[name="product[' + elementIndex + '].finalPrice"]').value = finalPrice;
     }
 
     const onSubmit = async (inputdata) => {
@@ -432,6 +434,7 @@ const ProductForm = (props) => {
                                                         style={{ height: '15rem' }}
                                                         multiple={true}
                                                         action={`${baseUrl}/api/product/colour/images`}
+                                                        listType="picture"
                                                         onChange={(file) => {
 
                                                             var imageUid = file.fileList.map(file => {
@@ -699,7 +702,7 @@ const ProductForm = (props) => {
                                                         </td>
                                                         <td>
                                                             <span id={`finalprice_${i}`} className="font-weight-bold">-</span>
-                                                            <input type="hidden" name={`product[${i}].finalprice`} ref={register()} />
+                                                            <input type="hidden" name={`product[${i}].finalPrice`} ref={register()} />
                                                             <input type="hidden" name={`product[${i}].sold`} value="0" ref={register()} />
                                                         </td>
                                                     </tr>
