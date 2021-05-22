@@ -102,9 +102,13 @@ const EditProductForm = (props) => {
     });
 
     const [quntityWithPriceOnSize, setQuntityWithPriceOnSize] = useState(productData.products);
+    const [countRender, setCountRender] = useState(1);
 
     // discount
     const [discountContainerVisible, setDiscountContainerVisible] = useState('');
+    useEffect(() => {
+        setCountRender(c => c + 1);
+    }, [discountContainerVisible]);
     const [productWarranty, setProductWarranty] = useState(true);
 
     useEffect(() => {
@@ -786,6 +790,7 @@ const EditProductForm = (props) => {
                                                             <span id={`discountTxt_${i}`} className="mr-2 font-weight-bold">
                                                                 {item.discount !== null ? item.discount : '-'}
                                                             </span>
+
                                                             <Popover
                                                                 placement="top"
                                                                 trigger="click"
@@ -809,14 +814,47 @@ const EditProductForm = (props) => {
                                                             >
                                                                 <EditOutlined size={16} onClick={() => handleDiscountVisibleChange(i)} />
                                                             </Popover>
-
-                                                            <input type="hidden" name={`product[${i}].discount`} defaultValue={item.discount} ref={register()} />
-                                                            <input type="hidden" name={`product[${i}].promoStartDate`} defaultValue={item.promoStartDate} ref={register()} />
-                                                            <input type="hidden" name={`product[${i}].promoEndDate`} defaultValue={item.promoEndDate} ref={register()} />
+                                                            {countRender === 1 ?
+                                                                <input type="hidden" name={`product[${i}].discount`}
+                                                                    value={item.discount === null ? '' : item.discount}
+                                                                    ref={register()}
+                                                                /> :
+                                                                <input type="hidden" name={`product[${i}].discount`}
+                                                                    ref={register()}
+                                                                />
+                                                            }
+                                                            {countRender === 1 ?
+                                                                <input type="hidden" name={`product[${i}].promoStartDate`}
+                                                                    value={item.promoStartDate === null ? '' : item.promoStartDate}
+                                                                    ref={register()}
+                                                                /> :
+                                                                <input type="hidden" name={`product[${i}].promoStartDate`}
+                                                                    ref={register()}
+                                                                />
+                                                            }
+                                                            {countRender === 1 ?
+                                                                <input type="hidden" name={`product[${i}].promoEndDate`}
+                                                                    value={item.promoEndDate === null ? '' : item.promoEndDate}
+                                                                    ref={register()}
+                                                                />
+                                                                :
+                                                                <input type="hidden" name={`product[${i}].promoEndDate`}
+                                                                    ref={register()}
+                                                                />
+                                                            }
                                                         </td>
                                                         <td>
                                                             <span id={`finalprice_${i}`} className="font-weight-bold">{item.finalPrice}</span>
-                                                            <input type="hidden" name={`product[${i}].finalPrice`} defaultValue={item.finalPrice} ref={register()} />
+                                                            {countRender === 1 ?
+                                                                <input type="hidden" name={`product[${i}].finalPrice`}
+                                                                    value={item.finalPrice === null ? '' : item.finalPrice}
+                                                                    ref={register()}
+                                                                />
+                                                                :
+                                                                <input type="hidden" name={`product[${i}].finalPrice`}
+                                                                    ref={register()}
+                                                                />
+                                                            }
                                                         </td>
                                                     </tr>
                                                 ))}
