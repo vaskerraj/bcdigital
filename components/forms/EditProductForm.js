@@ -36,6 +36,7 @@ const EditProductForm = (props) => {
 
     const scrollOnErrorRef = useRef(null);
 
+    const [loading, setLoading] = useState(true);
     const [onOpenChoosenCategory, setOnOpenChoosenCategory] = useState(false);
     const [categoryId, setCategoryId] = useState(productData.category._id);
 
@@ -149,8 +150,8 @@ const EditProductForm = (props) => {
     }, [action]);
 
     useEffect(() => {
-
-    }, [brands, productData]);
+        if (brands.length !== 0) setLoading(false);
+    }, [brands]);
 
 
     const imageValidation = (file) => {
@@ -401,7 +402,8 @@ const EditProductForm = (props) => {
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             <div className="col">
-                <div className="row">
+                <div className={`text-center mt-5 mb-5 ${loading ? 'd-block' : 'd-none'}`}>Loading ...</div>
+                <div className={`row ${!loading ? 'd-block' : 'd-none'}`}>
                     <div className="col-12 position-relative">
                         <label className="cat-label">Cateogry</label>
                         <input name="bannerCategory" className="form-control normal-input-readyonly"
@@ -1061,14 +1063,15 @@ const EditProductForm = (props) => {
                             </div>
                         </div>
                     </div>
+                    <div className="col-12 mt-5">
+                        <button type="submit" className="btn c-btn-primary">
+                            UPDATE PRODUCT
+                        </button>
+                    </div>
                 </div>
                 {/* ../col */}
             </div>
-            <div className="d-block mt-5">
-                <button type="submit" className="btn c-btn-primary">
-                    {action === 'edit_product' ? 'UPDATE PRODUCT' : 'ADD PRODUCT'}
-                </button>
-            </div>
+
         </form >
     )
 };

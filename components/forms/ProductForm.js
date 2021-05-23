@@ -36,6 +36,7 @@ const ProductForm = (props) => {
 
     const scrollOnErrorRef = useRef(null);
 
+    const [loading, setLoading] = useState(true);
     const [onOpenChoosenCategory, setOnOpenChoosenCategory] = useState(false);
     const [categoryId, setCategoryId] = useState('');
 
@@ -87,6 +88,11 @@ const ProductForm = (props) => {
     const { sellerAuth } = useSelector(state => state.sellerAuth);
 
     const { brands } = useSelector(state => state.brandList);
+
+    useEffect(() => {
+        if (brands.length !== 0) setLoading(false);
+    }, [brands]);
+
 
     useEffect(() => {
         dispatch(allBrands());
@@ -346,7 +352,8 @@ const ProductForm = (props) => {
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             <div className="col">
-                <div className="row">
+                <div className={`text-center mt-5 mb-5 ${loading ? 'd-block' : 'd-none'}`}>Loading ...</div>
+                <div className={`row ${!loading ? 'd-block' : 'd-none'}`}>
                     <div className="col-12 position-relative">
                         <label className="cat-label">Cateogry</label>
                         <input name="bannerCategory" className="form-control normal-input-readyonly"
@@ -499,7 +506,7 @@ const ProductForm = (props) => {
                                         </div>
                                     )
                                 }
-                            </div>
+                            </div >
                             {
                                 colorWithImage.filter(item => item !== 'nocolour').map((item, i) => (
                                     <div className="d-block col-sm-6 col-md-4 mt-4" key={i}>
@@ -578,8 +585,8 @@ const ProductForm = (props) => {
                                 ))
                             }
 
-                        </div>
-                    </div>
+                        </div >
+                    </div >
 
                     <div className="col-12 border-top pt-4 mt-4">
                         <div className="row"
@@ -965,14 +972,15 @@ const ProductForm = (props) => {
                             </div>
                         </div>
                     </div>
-                </div>
-                {/* ../col */}
-            </div>
-            <div className="d-block mt-5">
-                <button type="submit" className="btn c-btn-primary">
-                    {action === 'edit_product' ? 'UPDATE PRODUCT' : 'ADD PRODUCT'}
-                </button>
-            </div>
+                    <div className="col-12 mt-5">
+                        <button type="submit" className="btn c-btn-primary">
+                            {action === 'edit_product' ? 'UPDATE PRODUCT' : 'ADD PRODUCT'}
+                        </button>
+                    </div>
+                </div >
+
+            </div >
+
         </form >
     )
 };
