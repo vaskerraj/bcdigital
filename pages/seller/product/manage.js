@@ -10,11 +10,17 @@ import { CloseOutlined, CheckOutlined, EditFilled, DeleteFilled, RollbackOutline
 
 import Wrapper from '../../../components/seller/Wrapper';
 import { ReactTable } from '../../../components/helpers/ReactTable';
+import AvailableModal from '../../../components/models/AvailableModel';
 
 const ManageProduct = ({ productDatas }) => {
     const [products, setProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [activeTab, setActiveTab] = useState('all');
+    
+    // modal
+    const [visibleAvailabelModal, setVisibleAvailabelModal] = useState(false);
+    const [availabelData, setAvailabelData] = useState('');
+    
 
     const dispatch = useDispatch();
     const router = useRouter();
@@ -80,10 +86,12 @@ const ManageProduct = ({ productDatas }) => {
             Header: "Available",
             accessor: row => row.quantity,
             displayValue: " Available ",
-            Cell: ({ row: { original } }) => {
-                const availableProduct = original.quantity - original.sold;
-                return availableProduct;
-            }
+            Cell: ({ row: { original } }) => (
+                <div className="d-block">
+                    <span>{original.quantity - original.sold}</span>
+                    <EditFilled onClick={()=>editAvailableModel(original)} className="text-info ml-2 cp" size={20} />
+                </div>
+                )
         },
         {
             Header: "Approved",
@@ -278,8 +286,22 @@ const ManageProduct = ({ productDatas }) => {
         }
     });
 
+    const handleAvailableModalCancel = () => {
+        setVisibleAvailabelModal(false);
+    }
+    const editAvailableModel = useCallback((product) => {
+        setVisibleAvailabelModal(true);
+        setAvailabelData(product);
+    });
+
     return (
         <Wrapper onActive="manageproduct" breadcrumb={["Product", "Manage Product"]}>
+            <AvailableModal
+                title="Update product availablility"
+                visible={visibleAvailabelModal}
+                handleCancel={handleAvailableModalCancel}
+                data={availabelData}
+            />
             <div className="d-flex" style={{ fontSize: '1.6rem', fontWeight: 600 }}>
                 <div className="filter-tab cp" onClick={() => setActiveTab('all')}>
                     All

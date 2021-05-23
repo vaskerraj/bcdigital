@@ -328,4 +328,15 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Something went wrong. Please try again later." })
         }
     });
+    server.post('/api/product/available', requiredAuth, checkRole(['admin', 'seller']), async (req, res) => {
+        const { productId, action, quantity } = req.body;
+        try {
+            const incOrDecNumber = action === 'decrement' ? `-${quantity}` : quantity;
+
+            await Product.findOneAndUpdate({ 'products._id': productId }, { '$inc': { 'products.$.quantity': incOrDecNumber } });
+            return res.status(200).json({ msg: 'success' });
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
 }
