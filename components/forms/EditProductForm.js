@@ -130,7 +130,7 @@ const EditProductForm = (props) => {
         dangerousMaterials: productData.package.dangerousMaterials,
     }
 
-    const { register, handleSubmit, errors, control, getValues, reset, setError, trigger, clearErrors } = useForm({
+    const { register, unregister, handleSubmit, errors, control, getValues, reset, setValue, trigger, clearErrors } = useForm({
         mode: "onChange",
         defaultValues: defaultValues,
     });
@@ -318,8 +318,21 @@ const EditProductForm = (props) => {
         setDiscountContainerVisible('');
     });
 
-    const handleDiscountVisibleChange = index => {
+    const handleDiscountVisibleChange = (index, preDefineDiscount, preDefinePromoStartDate) => {
         setDiscountContainerVisible(index);
+        if (preDefineDiscount === null && getValues(`product[${index}].rawdiscount`) === "100") {
+            setTimeout(() => {
+                document.querySelector('[name="product[' + index + '].rawdiscount"]').value = "";
+            }, 100);
+        }
+        const predefinedPromoStartDateForCheck = getValues(`product[${index}].rawpromodate`);
+        if (preDefinePromoStartDate === null) {
+            if (predefinedPromoStartDateForCheck === undefined) {
+                setValue("product[" + index + "].rawpromodate", undefined)
+            } else if (predefinedPromoStartDateForCheck[0].format("YYYY-MM-DD") === "2015-01-01") {
+                setValue("product[" + index + "].rawpromodate", undefined)
+            }
+        }
     }
 
     const discountConfirmHandler = (index, discount, promodate) => {
@@ -799,11 +812,13 @@ const EditProductForm = (props) => {
                                                                     index={i}
                                                                     Controller={Controller}
                                                                     register={register}
+                                                                    unregister={unregister}
                                                                     control={control}
                                                                     errors={errors}
                                                                     trigger={trigger}
+                                                                    reset={reset}
                                                                     getValues={getValues}
-                                                                    setError={setError}
+                                                                    setValue={setValue}
                                                                     defineDiscount={item.discount}
                                                                     definePromoStartDate={item.promoStartDate}
                                                                     definePromoEndDate={item.promoEndDate}
@@ -812,7 +827,7 @@ const EditProductForm = (props) => {
                                                                     discountConfirmHandler={discountConfirmHandler}
                                                                 />}
                                                             >
-                                                                <EditOutlined size={16} onClick={() => handleDiscountVisibleChange(i)} />
+                                                                <EditOutlined size={16} onClick={() => handleDiscountVisibleChange(i, item.discount, item.promoStartDate, item.promoEndDate)} />
                                                             </Popover>
                                                             {countRender === 1 ?
                                                                 <input type="hidden" name={`product[${i}].discount`}

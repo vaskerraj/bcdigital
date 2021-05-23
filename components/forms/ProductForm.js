@@ -78,8 +78,9 @@ const ProductForm = (props) => {
 
     const router = useRouter();
 
-    const { register, handleSubmit, errors, control, getValues, reset, setError, trigger, clearErrors } = useForm({
-        mode: "onChange"
+    const { register, unregister, handleSubmit, errors, control, getValues, reset, setValue, trigger, clearErrors } = useForm({
+        mode: "onChange",
+        shouldUnregister: true
     });
 
     const dispatch = useDispatch();
@@ -245,8 +246,20 @@ const ProductForm = (props) => {
         setDiscountContainerVisible('');
     });
 
-    const handleDiscountVisibleChange = index => {
+    const handleDiscountVisibleChange = (index, preDefineDiscount) => {
         setDiscountContainerVisible(index);
+        if (preDefineDiscount === null && getValues(`product[${index}].rawdiscount`) === "100") {
+            setTimeout(() => {
+                document.querySelector('[name="product[' + index + '].rawdiscount"]').value = "";
+            }, 100);
+        }
+
+        const getPromoStartDateForCheck = getValues(`product[${index}].rawpromodate`);
+        if (getPromoStartDateForCheck === undefined) {
+            setValue("product[" + index + "].rawpromodate", undefined)
+        } else if (getPromoStartDateForCheck[0].format("YYYY-MM-DD") === "2015-01-01") {
+            setValue("product[" + index + "].rawpromodate", undefined)
+        }
     }
 
     const discountConfirmHandler = (index, discount, promodate) => {
@@ -699,21 +712,28 @@ const ProductForm = (props) => {
                                                                 placement="top"
                                                                 trigger="click"
                                                                 visible={discountContainerVisible === i}
-                                                                content={<DiscountPopover
-                                                                    index={i}
-                                                                    Controller={Controller}
-                                                                    register={register}
-                                                                    control={control}
-                                                                    errors={errors}
-                                                                    trigger={trigger}
-                                                                    getValues={getValues}
-                                                                    setError={setError}
-                                                                    rangePickerDateFormat={rangePickerDateFormat}
-                                                                    onDiscountCancelHandler={onDiscountCancelHandler}
-                                                                    discountConfirmHandler={discountConfirmHandler}
-                                                                />}
+                                                                content={
+                                                                    <DiscountPopover
+                                                                        index={i}
+                                                                        Controller={Controller}
+                                                                        register={register}
+                                                                        unregister={unregister}
+                                                                        control={control}
+                                                                        reset={reset}
+                                                                        errors={errors}
+                                                                        trigger={trigger}
+                                                                        getValues={getValues}
+                                                                        setValue={setValue}
+                                                                        defineDiscount={null}
+                                                                        definePromoStartDate={null}
+                                                                        definePromoEndDate={null}
+                                                                        rangePickerDateFormat={rangePickerDateFormat}
+                                                                        onDiscountCancelHandler={onDiscountCancelHandler}
+                                                                        discountConfirmHandler={discountConfirmHandler}
+                                                                    />
+                                                                }
                                                             >
-                                                                <EditOutlined size={16} onClick={() => handleDiscountVisibleChange(i)} />
+                                                                <EditOutlined size={16} onClick={() => handleDiscountVisibleChange(i, null)} />
                                                             </Popover>
 
                                                             <input type="hidden" name={`product[${i}].discount`} ref={register()} />

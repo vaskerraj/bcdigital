@@ -4,7 +4,7 @@ import moment from 'moment';
 const { RangePicker } = DatePicker;
 
 const DiscountPopover = ({
-    index, Controller, register, control, errors, trigger, getValues, setError,
+    index, Controller, register, control, errors, trigger, getValues, setValue,
     defineDiscount, definePromoStartDate, definePromoEndDate,
     rangePickerDateFormat, discountConfirmHandler, onDiscountCancelHandler
 }) => {
@@ -49,7 +49,7 @@ const DiscountPopover = ({
                                     moment(definePromoEndDate, rangePickerDateFormat).add(1, 'd')
                                 ]
                                 :
-                                ''
+                                null
                         }
                         control={control}
                         render={({ onChange, value, ref }) => (
@@ -75,8 +75,29 @@ const DiscountPopover = ({
             <div className="d-block text-right mt-3">
                 <button className="btn btn-lg btn-light"
                     onClick={() => {
+                        const getPromoDate = getValues(`product[${index}].rawpromodate`);
+                        const getRawDiscount = getValues(`product[${index}].rawdiscount`);
+                        defineDiscount === null && getRawDiscount === "" || getRawDiscount === "100" ?
+                            setValue("product[" + index + "].rawdiscount", 100)
+                            :
+                            null
+                        // promo date
+                        definePromoStartDate === null && getPromoDate === undefined || getPromoDate === null
+                            ?
+                            setValue("product[" + index + "].rawpromodate",
+                                [
+                                    moment("2015-01-01", rangePickerDateFormat),
+                                    moment("2015-02-02", rangePickerDateFormat)
+                                ]
+                            )
+                            :
+                            getPromoDate[0].format("YYYYMMDD") === "20150101" ?
+                                setValue("product[" + index + "].rawpromodate", undefined)
+                                :
+                                null;
                         onDiscountCancelHandler()
-                    }}
+                    }
+                    }
                 >
                     Cancel
                 </button>
@@ -86,7 +107,7 @@ const DiscountPopover = ({
                     onClick={() => {
                         trigger([`product[${index}].rawdiscount`, `product[${index}].rawpromodate`]),
                             getValues(`product[${index}].rawdiscount`) !== ''
-                                && getValues(`product[${index}].rawpromodate`) !== ''
+                                && getValues(`product[${index}].rawpromodate`) !== '' && getValues(`product[${index}].rawpromodate`) !== undefined
                                 ?
                                 discountConfirmHandler(index, getValues(`product[${index}].rawdiscount`), getValues(`product[${index}].rawpromodate`))
                                 :
