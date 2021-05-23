@@ -34,7 +34,6 @@ export async function getServerSideProps(context) {
             props: {}
         }
     } catch (err) {
-        console.log(err)
         return {
             redirect: {
                 source: '/seller/login',
