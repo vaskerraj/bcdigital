@@ -293,29 +293,10 @@ const EditProductForm = (props) => {
         if (sizes.length === 0) {
             reset({
                 ...getValues(),
-                size: [{ size: '' }]
+                size: []
             });
         }
         setQuntityWithPriceOnSize(sizes);
-    });
-
-    const backToProductSize = useCallback(() => {
-        // reset validation while back from no picture
-        reset({
-            ...getValues(),
-            size: [{ size: '' }]
-        });
-        setQuntityWithPriceOnSize([]);
-    });
-
-    const productWithoutSize = useCallback(() => {
-        setQuntityWithPriceOnSize([{ size: 'nosize' }])
-        // reset size if product doesnt have any size
-        reset({
-            ...getValues(),
-            size: [{ size: 'nosize' }]
-        });
-        setDiscountContainerVisible('');
     });
 
     const handleDiscountVisibleChange = (index, preDefineDiscount, preDefinePromoStartDate) => {
@@ -725,24 +706,12 @@ const EditProductForm = (props) => {
                                 {errors.size && <p className="errorMsg">{errors.size.message}</p>}
                             </div>
                             <div className="col-sm-6 col-md-6 mt-sm-5">
-                                <span className="text-info cp" onClick={productWithoutSize}>Product doesn't have size?</span>
                             </div>
                         </div>
                         <div className="row">
                             <div className="col-12 table-responsive mt-4">
                                 {quntityWithPriceOnSize.length !== 0 &&
                                     <>
-
-                                        <button className="btn btn-light mb-4"
-                                            style={{
-                                                display: quntityWithPriceOnSize[0].size === "nosize" ? "block" : "none"
-                                            }}
-                                            onClick={() => backToProductSize()}
-                                        >
-                                            <ArrowLeftOutlined className="mr-1" />
-                                            Product have size !
-                                        </button>
-
                                         <table className="table">
                                             <thead>
                                                 <tr>
