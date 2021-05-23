@@ -193,7 +193,7 @@ module.exports = function (server) {
 
     server.get('/api/products', async (req, res) => {
         try {
-            const products = await Product.find({}, null, { sort: { order: 1 } })
+            const products = await Product.find({}).sort([['createdAt', -1]])
                 .populate('brand')
                 .populate({
                     path: 'category',
@@ -209,7 +209,7 @@ module.exports = function (server) {
                 })
                 .populate({
                     path: 'createdBy',
-                    select: 'name username role picture, _id',
+                    select: 'name username role sellerRole picture, _id',
                 })
                 .lean();
             if (products) return res.status(200).json(products);
@@ -244,7 +244,7 @@ module.exports = function (server) {
 
     server.get('/api/products/auth', requiredAuth, checkRole(['admin', 'seller']), async (req, res) => {
         try {
-            const products = await Product.find({ createdBy: req.user._id }, null, { sort: { order: 1 } })
+            const products = await Product.find({ createdBy: req.user._id }).sort([['createdAt', -1]])
                 .populate('brand')
                 .populate({
                     path: 'category',

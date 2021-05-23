@@ -98,7 +98,7 @@ const ProductSchema = new mongoose.Schema({
         type: ObjectId,
         ref: 'Users'
     }
-});
+}, { timestamps: true });
 
 mongoose.models.Product || mongoose.model('Product', ProductSchema)
 
