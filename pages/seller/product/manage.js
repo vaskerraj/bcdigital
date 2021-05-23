@@ -331,7 +331,6 @@ export async function getServerSideProps(context) {
             }
         }
     } catch (err) {
-        console.log(err)
         return {
             redirect: {
                 source: '/seller/login',

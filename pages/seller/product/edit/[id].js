@@ -9,7 +9,6 @@ import Wrapper from '../../../../components/seller/Wrapper';
 import EditProductForm from '../../../../components/forms/EditProductForm';
 
 const AddProduct = ({ product }) => {
-    console.log(product);
     const dispatch = useDispatch();
 
     const { sellerAuth } = useSelector(state => state.sellerAuth);
@@ -40,7 +39,6 @@ export async function getServerSideProps(context) {
             }
         }
     } catch (err) {
-        console.log(err)
         return {
             redirect: {
                 source: '/seller/login',
