@@ -3,14 +3,11 @@ import { Layout, Row, Col } from 'antd';
 const { Header, Content, Footer } = Layout;
 
 import MainHeadSection from './nav/MainHeadSection';
-import HeaderMenu from './nav/HeaderMenu';
-
 
 const Wrapper = ({ children }) => {
     return (
-        <div className="main">
+        <div className="main pb-5 pb-md-0">
             <MainHeadSection />
-            <HeaderMenu />
             <Content>
                 {children}
             </Content>
