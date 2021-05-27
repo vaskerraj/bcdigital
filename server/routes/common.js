@@ -110,9 +110,30 @@ module.exports = function (server) {
     });
 
     // banner list 
-    server.get('/api/banner', async (req, res) => {
+    server.get('/api/banner/:position', async (req, res) => {
+        const bannerPostion = req.params.position;
         try {
-            const banner = await Banner.find({}, null, { sort: { order: 1 } }).lean();
+            const banner = await Banner.find({
+                bannerPosition: bannerPostion,
+                $or: [
+                    { validityStart: null },
+                    {
+                        $and: [
+                            { validityStart: { $lte: new Date() } },
+                            { validityEnd: { $gte: new Date() } }
+                        ]
+                    },
+                ]
+            }).populate({
+                path: 'productId',
+                select: 'slug _id',
+            }).populate({
+                path: 'categoryId',
+                select: 'slug _id',
+            }).populate({
+                path: 'sellerId',
+                select: 'sellerRole name _id',
+            }).sort([['order', 1]]).limit(7).lean();
             if (banner) return res.status(200).json(banner);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });

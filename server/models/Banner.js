@@ -19,7 +19,7 @@ const bannerSchema = new mongoose.Schema({
     },
     productId: {
         type: ObjectId,
-        // ref: "Product" // not created product modal yet
+        ref: "Product"
     },
     validityStart: {
         type: Date
