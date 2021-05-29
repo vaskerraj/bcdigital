@@ -668,6 +668,12 @@ body.offcanvas-open {
   color: #9b9b9b;
 }
 
+@media screen and (max-width: 575px){
+  .services .border-left{
+    border-left: none !important;
+  }
+}
+
 /* manage account */
 .account-menu .ant-card-body{
   padding: 0;
