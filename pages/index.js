@@ -8,20 +8,26 @@ import axios from 'axios';
 
 import { listProducts } from '../redux/actions/productListAction';
 import ImageCarousel from '../components/ImageCarousel';
+import LastestProductSlider from '../components/helpers/LastestProductSlider';
 
-const Home = ({ banners }) => {
+const numberOfLatestProduct = 10;
+const numberOfTrendingProduct = 10;
+
+const Home = ({ banners, products }) => {
 
   const dispatch = useDispatch();
-  const productList = useSelector(state => state.productList);
-  const { loading, products, error } = productList;
+
   useEffect(() => {
     dispatch(listProducts());
   }, []);
+
   return (
     <div>
       <Head>
         <title>Home || BC Digital</title>
         <link rel="icon" href="/favicon.ico" />
+        <script defer src="/js/solid.js"></script>
+        <script defer src="/your-path-to-fontawesome/js/fontawesome.js"></script>
       </Head>
       <div>
         <ImageCarousel
@@ -32,6 +38,14 @@ const Home = ({ banners }) => {
           imgHeight={'410px'}
           imgQuality={60}
         />
+        <div className="container mt-5">
+          <div className="text-center">
+            <h2 className="text-capitalize" style={{ fontSize: '3rem' }}>Latest Products</h2>
+          </div>
+          <div className="d-block slide">
+            <LastestProductSlider data={products} />
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -39,9 +53,11 @@ const Home = ({ banners }) => {
 export async function getServerSideProps(context) {
   try {
     const { data: bannerData } = await axios.get(`${process.env.api}/api/banner/position_home`);
+    const { data: productData } = await axios.get(`${process.env.api}/api/products/number/${numberOfLatestProduct}`);
     return {
       props: {
-        banners: bannerData
+        banners: bannerData,
+        products: productData
       }
     }
   } catch (err) {

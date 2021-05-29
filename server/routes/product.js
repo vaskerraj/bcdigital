@@ -339,4 +339,24 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Something went wrong. Please try again later." })
         }
     });
+
+    server.get('/api/products/number/:number', async (req, res) => {
+        const totalNumber = parseInt(req.params.number);
+        try {
+            // later change approved.status to active
+            const products = await Product.find({ 'products.approved.status': 'pending', 'products.status': 'active' })
+                .select('_id name slug brand colour size products createdBy')
+                .populate('brand')
+                .populate({
+                    path: 'createdBy',
+                    select: 'name username role sellerRole picture, _id',
+                })
+                .sort([['createdAt', -1]])
+                .limit(totalNumber)
+                .lean();
+            if (products) return res.status(200).json(products);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
 }
