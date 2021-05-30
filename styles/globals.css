@@ -570,7 +570,7 @@ body.offcanvas-open {
   border: none;
 }
 .slick-next {
-  right: -52px;
+  right: -37px;
 }
 .slick-prev {
   left: -26px;
@@ -593,7 +593,7 @@ body.offcanvas-open {
 
 .slide .product-item{
   width: 19rem;
-  margin: 1rem;
+  margin-right: 1rem;
 }
 
 .product-item:hover{

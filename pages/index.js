@@ -90,6 +90,14 @@ const Home = ({ banners, products }) => {
               </div>
             </div>
           </div>
+          <div className="d-block mt-5">
+            <div className="text-center">
+              <h2 className="text-capitalize" style={{ fontSize: '3rem' }}>Trending Products</h2>
+            </div>
+            <div className="d-block slide">
+
+            </div>
+          </div>
         </div>
       </div >
     </div >
