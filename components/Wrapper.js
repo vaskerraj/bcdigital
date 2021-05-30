@@ -1,8 +1,9 @@
 import React from 'react';
 import { Layout, Row, Col } from 'antd';
-const { Header, Content, Footer } = Layout;
+const { Content } = Layout;
 
 import MainHeadSection from './nav/MainHeadSection';
+import Footer from './nav/Footer';
 
 const Wrapper = ({ children }) => {
     return (
@@ -11,9 +12,7 @@ const Wrapper = ({ children }) => {
             <Content>
                 {children}
             </Content>
-            <Footer>
-
-            </Footer>
+            <Footer />
         </div>
     );
 }

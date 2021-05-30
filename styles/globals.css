@@ -674,6 +674,55 @@ body.offcanvas-open {
   }
 }
 
+/* footer */
+footer {
+  background-color: #172337;
+  color: #fff;
+}
+footer .footer-bottom {
+  padding-top: 6rem;
+  padding-bottom: 3rem;
+}
+
+footer .social-connect li a {
+  display: block;
+  color: #1d1d1d;
+  background: #fff;
+  line-height: 40px;
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  font-size: 16px;
+  border-radius: 50%;
+}
+footer .social-connect li a.facebook:hover {
+  background: #3b5998;
+  color: #fff
+}
+footer .social-connect li a.twitter:hover {
+  background: #00acee;
+  color: #fff;
+}
+footer .section-title:after {
+    background: #f33535;
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 60px;
+    height: 2px;
+    content: "";
+}
+footer .footer-menu li a {
+  font-size: 14px;
+  line-height: 24px;
+  text-transform: capitalize;
+  color: #fff;
+}
+
+footer .footer-menu li:hover>a {
+  color: #f33535;
+}
+
 /* manage account */
 .account-menu .ant-card-body{
   padding: 0;
