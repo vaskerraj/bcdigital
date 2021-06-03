@@ -1,8 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import ProductStarIcon from './helpers/ProductStarIcon';
-
+import ProductStarIcon from './ProductStarIcon';
 const ProductCard = ({ data }) => {
     return (
         <div className="product-item">
@@ -19,7 +18,7 @@ const ProductCard = ({ data }) => {
                     </Link>
                 </div>
             }
-            <Link href={`/product/${data.slug}`}>
+            <Link href={`/product/${data._id}/${data.slug}`}>
                 <a>
                     <div className="product-image">
                         <Image src={`/uploads/products/${data.colour[0].images[0]}`}

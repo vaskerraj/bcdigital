@@ -2,7 +2,7 @@ import React from 'react';
 import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import { SliderNextArrow, SliderPrevArrow } from './SliderArrow';
-import ProductCard from '../ProductCard';
+import ProductCard from './ProductCard';
 
 const LastestProductSlider = ({ data }) => {
     const lastestSliderSettings = {
