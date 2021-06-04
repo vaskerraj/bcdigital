@@ -9,6 +9,7 @@ import axios from 'axios';
 import { Phone, RotateCcw, Shield, Truck } from 'react-feather';
 import { HistoryOutlined } from '@ant-design/icons'
 
+import Wrapper from '../components/Wrapper';
 import { listProducts } from '../redux/actions/productListAction';
 import ImageCarousel from '../components/ImageCarousel';
 import LastestProductSlider from '../components/helpers/LastestProductSlider';
@@ -25,7 +26,7 @@ const Home = ({ banners, products }) => {
   }, []);
 
   return (
-    <div>
+    <Wrapper>
       <Head>
         <title>Home || BC Digital</title>
         <link rel="icon" href="/favicon.ico" />
@@ -100,7 +101,7 @@ const Home = ({ banners, products }) => {
           </div>
         </div>
       </div >
-    </div >
+    </Wrapper>
   )
 }
 export async function getServerSideProps(context) {

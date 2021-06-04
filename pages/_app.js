@@ -36,9 +36,7 @@ function MyApp({ Component, pageProps }) {
     return (
       <Provider store={store}>
         <FirebaseAuthState>
-          <Wrapper>
-            <Component {...pageProps} />
-          </Wrapper>
+          <Component {...pageProps} />
         </FirebaseAuthState>
       </Provider>
     )
