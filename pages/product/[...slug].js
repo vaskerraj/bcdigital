@@ -279,7 +279,7 @@ const ProductDetail = ({ product }) => {
                                         <div className="d-block d-sm-none">
                                             <div className="font16">{product.name}</div>
                                             <div className="col small-screen mt-1 mb-4">
-                                                <div className="row">
+                                                <div className="row align-items-baseline">
                                                     <div className="col-7">
                                                         <div className="d-flex align-items-baseline">
                                                             <div className="product-finalprice">
@@ -290,7 +290,7 @@ const ProductDetail = ({ product }) => {
                                                                     <div className="product-del ml-3">
                                                                         Rs.<span>{changeOnProduct.price}</span>
                                                                     </div>
-                                                                    <div className="product-discount ml-3">
+                                                                    <div className="product-discount ml-2">
                                                                         - {changeOnProduct.discount}%
                                                                     </div>
                                                                 </>

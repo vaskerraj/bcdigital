@@ -745,7 +745,8 @@ body.offcanvas-open {
 .product .small-screen .product-del{
   font-size: 1.4rem;
 }
-.product-price .product-discount {
+.product-price .product-discount,
+.product .small-screen .product-discount{
   background-color: #000;
   color: #fff;
   padding-left: 5px;
