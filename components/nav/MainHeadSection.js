@@ -14,7 +14,7 @@ import styles from '../../styles/Header.module.css';
 
 import HeaderMenu from './HeaderMenu';
 
-const MainHeadSection = () => {
+const MainHeadSection = ({ mobileTabBar }) => {
     const { userInfo } = useSelector(state => state.userAuth);
     const { regUserInfo } = useSelector(state => state.userRegister);
     const loginUser = regUserInfo ? regUserInfo : userInfo;
@@ -63,11 +63,11 @@ const MainHeadSection = () => {
     );
     return (
         <>
-            <Affix >
+            <Affix>
                 <div className="container-fluid" style={{ backgroundColor: '#fff' }}>
                     <div className="container">
                         <div className={`${styles.topnav} row align-items-center`} >
-                            <div className="col-12 col-sm-4 col-lg-3 order-first">
+                            <div className={` ${mobileTabBar !== "hide" ? 'col-12' : 'col-6'} col-sm-4 col-lg-3 order-first`}>
                                 <div className="d-flex">
                                     <div className="mobileMenuToggle d-lg-none">
                                         <div>
@@ -86,7 +86,7 @@ const MainHeadSection = () => {
                                     </Link>
                                 </div>
                             </div>
-                            <div className="d-none d-sm-block col-sm-3 col-lg-3 col-xl-3">
+                            <div className={` ${mobileTabBar !== "hide" ? 'd-none d-sm-block' : 'col-6'} col-sm-3 col-lg-3 col-xl-3`}>
                                 <div className="d-flex fR mr-5" style={{ fontSize: '1.4rem' }}>
                                     <div className="d-block d-sm-none mr-4">
                                         <Search />
@@ -159,11 +159,14 @@ const MainHeadSection = () => {
                                 </form>
                             </div>
 
-                        </div>
-                    </div>
-                </div>
+                        </div >
+                    </div >
+                </div >
             </Affix >
-            <HeaderMenu loginUser={loginUser} />
+            {
+                mobileTabBar !== "hide" &&
+                <HeaderMenu loginUser={loginUser} />
+            }
         </>
     );
 }

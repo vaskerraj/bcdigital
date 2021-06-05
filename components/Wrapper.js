@@ -5,10 +5,11 @@ const { Content } = Layout;
 import MainHeadSection from './nav/MainHeadSection';
 import Footer from './nav/Footer';
 
-const Wrapper = ({ children }) => {
+
+const Wrapper = ({ children, mobileTabBar }) => {
     return (
-        <div className="main pb-5 pb-md-0">
-            <MainHeadSection />
+        <div className="main pb-5 pb-sm-0">
+            <MainHeadSection mobileTabBar={mobileTabBar} />
             <Content>
                 {children}
             </Content>
