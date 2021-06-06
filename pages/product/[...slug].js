@@ -5,11 +5,13 @@ import { useRouter } from 'next/router';
 import Image from 'next/image';
 
 import axios from 'axios';
+import axiosApi from '../../helpers/api';
 
 import SliderImage from 'react-zoom-slider';
 import { Affix, Carousel } from 'antd';
 
 import { Skeleton } from 'antd';
+import { ChevronLeft } from 'react-feather';
 
 import { useForm } from 'react-hook-form';
 import ShowMore from 'react-show-more-button';
@@ -17,7 +19,7 @@ import ShowMore from 'react-show-more-button';
 import Wrapper from '../../components/Wrapper';
 import useWindowDimensions from '../../helpers/useWindowDimensions';
 import ProductStarIcon from '../../components/helpers/ProductStarIcon';
-import { ChevronLeft } from 'react-feather';
+import RelatedProductSlider from '../../components/helpers/RelatedProductSlider';
 
 const ProductDetail = ({ product }) => {
     console.log("product", product)
@@ -61,6 +63,8 @@ const ProductDetail = ({ product }) => {
     const [selectedProductSize, setSelectedProductSize] = useState("");
 
     const [itemLeftText, setItemLeftText] = useState(false);
+
+    const [relatedProduct, setRelatedProduct] = useState([]);
 
     useEffect(() => {
         let sliderImageData = [];
@@ -106,6 +110,14 @@ const ProductDetail = ({ product }) => {
     const { register, handleSubmit, errors, reset, clearErrors, getValues, trigger } = useForm({
         mode: "onChange"
     });
+
+    // related products
+    useEffect(async () => {
+        const { data: relProducts } = await axiosApi.post('/api/products/related', {
+            productId: product._id
+        });
+        setRelatedProduct(relProducts);
+    }, [product]);
 
     const changeProductSize = (product, e) => {
         for (const size of document.querySelectorAll(".sizes.active")) {
@@ -505,6 +517,16 @@ const ProductDetail = ({ product }) => {
                         </ShowMore>
                     </div>
                 </div>
+                {relatedProduct.length !== 0 &&
+                    <div className="col bg-white p-4 mt-4">
+                        <div className="d-block">
+                            <h2 className="font16">You May Also Like</h2>
+                        </div>
+                        <div className="d-block slide mt-1 pb-2 border-top">
+                            <RelatedProductSlider data={relatedProduct} />
+                        </div>
+                    </div>
+                }
                 <div className="col bg-white p-4 mt-4">
                     <div className="d-block">
                         <h2 className="font16">Rating & Review</h2>

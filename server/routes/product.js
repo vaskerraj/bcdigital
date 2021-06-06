@@ -345,7 +345,7 @@ module.exports = function (server) {
         try {
             // later change approved.status to active
             const products = await Product.find({ 'products.approved.status': 'pending', 'products.status': 'active' })
-                .select('_id name slug brand colour size products createdBy')
+                .select('_id name slug brand colour size products rating createdBy')
                 .populate('brand')
                 .populate({
                     path: 'createdBy',
@@ -353,6 +353,34 @@ module.exports = function (server) {
                 })
                 .sort([['createdAt', -1]])
                 .limit(totalNumber)
+                .lean();
+            if (products) return res.status(200).json(products);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    // related product 
+    server.post('/api/products/related', async (req, res) => {
+        const { productId } = req.body;
+        try {
+            const product = await Product.findById(productId).lean();
+            console.log(product);
+            // later change approved.status to active
+            const products = await Product.find(
+                {
+                    _id: { $ne: productId },
+                    category: product.category,
+                    'products.approved.status': 'pending',
+                    'products.status': 'active'
+                }
+            )
+                .select('_id name slug colour products rating createdBy')
+                .populate({
+                    path: 'createdBy',
+                    select: 'name username role sellerRole picture, _id',
+                })
+                .limit(12)
                 .lean();
             if (products) return res.status(200).json(products);
         } catch (error) {
