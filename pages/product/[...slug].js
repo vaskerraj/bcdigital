@@ -12,14 +12,12 @@ import { Affix, Carousel } from 'antd';
 import { Skeleton } from 'antd';
 
 import { useForm } from 'react-hook-form';
-
-// least one positive thing such as family time(33 %), calmer lifestyle(29 %)
+import ShowMore from 'react-show-more-button';
 
 import Wrapper from '../../components/Wrapper';
 import useWindowDimensions from '../../helpers/useWindowDimensions';
 import ProductStarIcon from '../../components/helpers/ProductStarIcon';
 import { ChevronLeft } from 'react-feather';
-
 
 const ProductDetail = ({ product }) => {
     console.log("product", product)
@@ -493,22 +491,25 @@ const ProductDetail = ({ product }) => {
                         <h2 className="font16">Description</h2>
                     </div>
                     <div className="d-block ck-content mt-1 pb-2 border-top">
-                        {renderHTML(product.description)}
-                    </div>
-                </div>
-                <div className="col bg-white p-4 mt-4">
-                    <div className="d-block">
-                        <h2 className="font16">You May Also Like</h2>
-                    </div>
-                    <div className="d-block ck-content mt-1 pb-2 border-top">
 
+                        <ShowMore
+                            maxHeight={600}
+                            styleButton={{
+                                border: 'none',
+                                backgroundColor: '#fff',
+                                color: '#342ead',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            {renderHTML(product.description)}
+                        </ShowMore>
                     </div>
                 </div>
                 <div className="col bg-white p-4 mt-4">
                     <div className="d-block">
                         <h2 className="font16">Rating & Review</h2>
                     </div>
-                    <div className="d-block ck-content mt-1 pb-2 border-top">
+                    <div className="d-block mt-1 pb-2 border-top">
 
                     </div>
                 </div>

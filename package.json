@@ -36,6 +36,7 @@
     "react-loadingg": "^1.7.2",
     "react-redux": "^7.2.2",
     "react-router-dom": "^5.2.0",
+    "react-show-more-button": "^1.0.0",
     "react-slick": "^0.28.1",
     "react-sortable-hoc": "^2.0.0",
     "react-table": "^7.6.3",
@@ -43,7 +44,7 @@
     "react-zoom-slider": "^0.1.0",
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0",
-    "sass": "^1.32.8",
+    "sass": "^1.34.1",
     "slick-carousel": "^1.8.1",
     "slugify": "^1.5.0"
   }
