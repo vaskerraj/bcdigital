@@ -172,6 +172,9 @@ const ProductDetail = ({ product }) => {
         console.log("formdata");
     }
 
+    //description
+    const renderHTML = (rawHTML) => React.createElement("div", { dangerouslySetInnerHTML: { __html: rawHTML } });
+
     return (
         <Wrapper mobileTabBar={mobileTabBarStatus}>
             <Head>
@@ -478,7 +481,36 @@ const ProductDetail = ({ product }) => {
                     </div>
                 </div>
                 <div className="col bg-white p-4 mt-4">
-                    description
+                    <div className="d-block">
+                        <h2 className="font16">Key Highlights</h2>
+                    </div>
+                    <div className="d-block ck-content mt-1 pb-1 border-top">
+                        {renderHTML(product.shortDescription)}
+                    </div>
+                </div>
+                <div className="col bg-white p-4 mt-4">
+                    <div className="d-block">
+                        <h2 className="font16">Description</h2>
+                    </div>
+                    <div className="d-block ck-content mt-1 pb-2 border-top">
+                        {renderHTML(product.description)}
+                    </div>
+                </div>
+                <div className="col bg-white p-4 mt-4">
+                    <div className="d-block">
+                        <h2 className="font16">You May Also Like</h2>
+                    </div>
+                    <div className="d-block ck-content mt-1 pb-2 border-top">
+
+                    </div>
+                </div>
+                <div className="col bg-white p-4 mt-4">
+                    <div className="d-block">
+                        <h2 className="font16">Rating & Review</h2>
+                    </div>
+                    <div className="d-block ck-content mt-1 pb-2 border-top">
+
+                    </div>
                 </div>
             </div>
         </Wrapper>
