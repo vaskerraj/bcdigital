@@ -9,7 +9,12 @@ export const addToCart = (productId, productQty) => async (dispatch, getState) =
         const { data } = await axiosApi.get("api/product/cart/" + productId);
         const available = data.products[0].quantity - data.products[0].sold;
         if (available === 0) {
-            dispatch({ type: ADD_CART_ERROR, payload: "outofstock" });
+            dispatch({
+                type: ADD_CART_ERROR, payload: {
+                    message: 'outofstock',
+                    productId: data.products[0]._id
+                }
+            });
         } else {
             dispatch({
                 type: ADD_CART_SUCCESS, payload: {

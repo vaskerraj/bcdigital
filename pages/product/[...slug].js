@@ -25,6 +25,7 @@ import RelatedProductSlider from '../../components/helpers/RelatedProductSlider'
 
 import { addToCart } from '../../redux/actions/cartAction';
 import Loading from '../../components/Loading';
+import { removeOrderFromCart } from '../../../amazone/frontend/src/redux/action/cartAction';
 
 
 // config antdesign message
@@ -193,7 +194,7 @@ const ProductDetail = ({ product }) => {
     const onProductAddToCart = formdata => {
         dispatch(addToCart(formdata.product, Number(formdata.quantity)));
 
-        if (error === "outofstock") {
+        if (error && error.message === "outofstock") {
             message.warning({
                 content: (
                     <div>
@@ -203,6 +204,10 @@ const ProductDetail = ({ product }) => {
                 ),
                 className: 'message-warning',
             });
+
+            // remove product from cart
+            removeOrderFromCart(error.productId);
+
             setTimeout(() => {
                 router.push(router.asPath);
             }, 2000);
@@ -302,7 +307,7 @@ const ProductDetail = ({ product }) => {
                                 <Carousel>
                                     {
                                         product.colour[0].images.map(item => (
-                                            <Image src={`/uploads/products/${item}`} layout="responsive"
+                                            <Image key={item._id} src={`/uploads/products/${item}`} layout="responsive"
                                                 width=""
                                                 height=""
                                             />
