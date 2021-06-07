@@ -19,6 +19,10 @@ const MainHeadSection = ({ mobileTabBar }) => {
     const { regUserInfo } = useSelector(state => state.userRegister);
     const loginUser = regUserInfo ? regUserInfo : userInfo;
 
+    // cart total
+    const { cartItem } = useSelector(state => state.cartItems);
+    const totalCartItems = cartItem.reduce((a, c) => a + c.productQty, 0);
+
     const dispatch = useDispatch();
 
     const signOutHandler = () => {
@@ -145,7 +149,13 @@ const MainHeadSection = ({ mobileTabBar }) => {
                                     <Link href="/cart">
                                         <a className="text-dark position-relative">
                                             <ShoppingCart />
-                                            <div className={`${styles.topnav_cartBadge} bg-warning`} style={{ fontSize: '1.3rem' }}>0</div>
+                                            {totalCartItems !== 0 &&
+                                                <div className={`${styles.topnav_cartBadge} bg-warning`}
+                                                    style={{ fontSize: '1.3rem' }}
+                                                >
+                                                    {totalCartItems}
+                                                </div>
+                                            }
                                         </a>
                                     </Link>
                                 </div>
@@ -165,7 +175,7 @@ const MainHeadSection = ({ mobileTabBar }) => {
             </Affix >
             {
                 mobileTabBar !== "hide" &&
-                <HeaderMenu loginUser={loginUser} />
+                <HeaderMenu loginUser={loginUser} totalCartItems={totalCartItems} />
             }
         </>
     );

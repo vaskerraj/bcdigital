@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 
+import { useDispatch, useSelector } from 'react-redux';
+
 import axios from 'axios';
 import axiosApi from '../../helpers/api';
 
 import SliderImage from 'react-zoom-slider';
-import { Affix, Carousel } from 'antd';
+import { Affix, Carousel, message } from 'antd';
 
 import { Skeleton } from 'antd';
 import { ChevronLeft } from 'react-feather';
@@ -20,6 +22,16 @@ import Wrapper from '../../components/Wrapper';
 import useWindowDimensions from '../../helpers/useWindowDimensions';
 import ProductStarIcon from '../../components/helpers/ProductStarIcon';
 import RelatedProductSlider from '../../components/helpers/RelatedProductSlider';
+
+import { addToCart } from '../../redux/actions/cartAction';
+import Loading from '../../components/Loading';
+
+
+// config antdesign message
+message.config({
+    top: '19vh',
+    maxCount: 1,
+});
 
 const ProductDetail = ({ product }) => {
     console.log("product", product)
@@ -106,6 +118,9 @@ const ProductDetail = ({ product }) => {
         0;
 
     const router = useRouter();
+    const dispatch = useDispatch();
+
+    const { loading, cartItem, error } = useSelector(state => state.cartItems);
 
     const { register, handleSubmit, errors, reset, clearErrors, getValues, trigger } = useForm({
         mode: "onChange"
@@ -176,7 +191,22 @@ const ProductDetail = ({ product }) => {
     }, [product])
 
     const onProductAddToCart = formdata => {
-        console.log(formdata);
+        dispatch(addToCart(formdata.product, Number(formdata.quantity)));
+
+        if (error === "outofstock") {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Out of stock</div>
+                        Product is out of stock
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+            setTimeout(() => {
+                router.push(router.asPath);
+            }, 2000);
+        }
     }
     const onProductBuyNow = formdata => {
         console.log("formdata");
@@ -285,9 +315,7 @@ const ProductDetail = ({ product }) => {
                             <Skeleton loading={loadingSkeleton} active />
                             <Skeleton loading={loadingSkeleton} active />
                             {!loadingSkeleton &&
-                                <form id="product-detail" onSubmit={handleSubmit(onProductAddToCart)} ref={register()}>
-                                    <input type="hidden" name="product" value={changeOnProduct.id} ref={register()} readOnly />
-
+                                <>
                                     {onlyMobile &&
                                         <div className="d-block d-sm-none">
                                             <div className="font16">{product.name}</div>
@@ -385,68 +413,96 @@ const ProductDetail = ({ product }) => {
                                             </div>
                                         </div>
                                     }
-                                    {product.products[0].size !== "nosize" &&
-                                        <div className="product-size row border-top align-items-center pt-2 mb-4">
-                                            <div className="col-2 col-sm-2 col-md-1 font14 mt-2">Size</div>
-                                            <div className="col-10 col-sm-10 col-md-11 position-relative">
-                                                <div className="clearfix">
-                                                    {product.products.map((item) => (
-                                                        <span
-                                                            key={item._id}
-                                                            onClick={(e) => changeProductSize(item, e)}
-                                                            className={`sizes ${item.quantity - item.sold === 0 && 'out'}`}
-                                                        >
-                                                            {item.size}
-                                                        </span>
-                                                    ))}
+
+                                    <form id="product-detail" onSubmit={handleSubmit(onProductAddToCart)} ref={register()}>
+                                        <input type="hidden" name="product" value={changeOnProduct.id} ref={register()} readOnly />
+                                        {product.products[0].size !== "nosize" &&
+                                            <div className="product-size row border-top align-items-center pt-2 mb-4">
+                                                <div className="col-2 col-sm-2 col-md-1 font14 mt-2">Size</div>
+                                                <div className="col-10 col-sm-10 col-md-11 position-relative">
+                                                    <div className="clearfix">
+                                                        {product.products.map((item) => (
+                                                            <span
+                                                                key={item._id}
+                                                                onClick={(e) => changeProductSize(item, e)}
+                                                                className={`sizes ${item.quantity - item.sold === 0 && 'out'}`}
+                                                            >
+                                                                {item.size}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                    <input type="text" name="productSize"
+                                                        className="hiddenAndFocus"
+                                                        value={selectedProductSize}
+                                                        readOnly
+                                                        ref={register({
+                                                            required: "Please select size."
+                                                        })}
+                                                    />
+                                                    {errors.productSize &&
+                                                        <div className="errorMsg">{errors.productSize.message}</div>
+                                                    }
                                                 </div>
-                                                <input type="text" name="size"
-                                                    className="hiddenAndFocus"
-                                                    value={selectedProductSize}
-                                                    readOnly
-                                                    ref={register({
-                                                        required: "Please select size."
-                                                    })}
-                                                />
-                                                {errors.size &&
-                                                    <div className="errorMsg">{errors.size.message}</div>
+                                            </div>
+                                        }
+                                        <div className="row border-top align-items-center pt-4 mb-4">
+                                            <div className="col-2 col-sm-2 col-md-1">Qty</div>
+                                            <div className="col-10 col-sm-10 col-md-11">
+                                                <div className="product-qty">
+                                                    <div className="decrement" onClick={onQtyDecrementHandler}>-</div>
+                                                    <input type="number" name="quantity" className="quantity" value={productCount}
+                                                        ref={register()}
+                                                        readOnly
+                                                    />
+                                                    <div className="increment" onClick={onQtyIncrementHandler}>+</div>
+                                                </div>
+                                                {itemLeftText &&
+                                                    <>
+                                                        <div className="d-inline-flex ml-3">
+                                                            {
+                                                                changeOnProduct.available < 5 && changeOnProduct.available > 0 &&
+                                                                <span className="text-danger">
+                                                                    Hurry, only {changeOnProduct.available} item left
+                                                        </span>
+                                                            }
+                                                        </div>
+
+                                                        {changeOnProduct.available === 0 &&
+                                                            <div className="d-inline-flex ml-3 text-danger font15">
+                                                                Currently out of stock
+                                                        </div>
+                                                        }
+                                                    </>
                                                 }
                                             </div>
                                         </div>
-                                    }
-                                    <div className="row border-top align-items-center pt-4 mb-4">
-                                        <div className="col-2 col-sm-2 col-md-1">Qty</div>
-                                        <div className="col-10 col-sm-10 col-md-11">
-                                            <div className="product-qty">
-                                                <div className="decrement" onClick={onQtyDecrementHandler}>-</div>
-                                                <input type="number" name="quantity" className="quantity" value={productCount}
-                                                    ref={register()}
-                                                    readOnly
-                                                />
-                                                <div className="increment" onClick={onQtyIncrementHandler}>+</div>
-                                            </div>
-                                            {itemLeftText &&
-                                                <>
-                                                    <div className="d-inline-flex ml-3">
-                                                        {
-                                                            changeOnProduct.available < 5 && changeOnProduct.available > 0 &&
-                                                            <span className="text-danger">
-                                                                Hurry, only {changeOnProduct.available} item left
-                                                        </span>
-                                                        }
-                                                    </div>
-
-                                                    {changeOnProduct.available === 0 &&
-                                                        <div className="d-inline-flex ml-3 text-danger font15">
-                                                            Currently out of stock
+                                        {onlyMobile &&
+                                            <Affix offsetBottom={0}>
+                                                <div className="addtocart-container">
+                                                    <div className="row">
+                                                        <div className="col-6">
+                                                            <button type="button"
+                                                                className="btn btn-lg btn-block btn-primary font16"
+                                                                style={{ padding: '0.7rem 1rem' }}
+                                                                form={"product-detail"}
+                                                                onClick={handleSubmit(onProductBuyNow)}
+                                                            >
+                                                                Buy Now
+                                                    </button>
                                                         </div>
-                                                    }
-                                                </>
-                                            }
-                                        </div>
-                                    </div>
-                                    {onlyMobile &&
-                                        <Affix offsetBottom={0}>
+                                                        <div className="col-6">
+                                                            <button type="submit"
+                                                                className={`btn btn-lg btn-block btn-danger font16 position-relative ${loading ? 'disabled' : ''}`}
+                                                                style={{ padding: '0.7rem 1rem' }}
+                                                            >
+                                                                {loading ? <Loading color="#fff" style={{ padding: '1.2rem' }} /> : ('Add To Cart')}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </Affix>
+                                        }
+                                        {!onlyMobile &&
                                             <div className="addtocart-container">
                                                 <div className="row">
                                                     <div className="col-6">
@@ -460,32 +516,18 @@ const ProductDetail = ({ product }) => {
                                                     </button>
                                                     </div>
                                                     <div className="col-6">
-                                                        <button type="submit" className="btn btn-lg btn-block btn-danger font16" style={{ padding: '0.7rem 1rem' }}>Add To Cart</button>
+                                                        <button type="submit"
+                                                            className={`btn btn-lg btn-block btn-danger font16 position-relative ${loading ? 'disabled' : ''}`}
+                                                            style={{ padding: '0.7rem 1rem' }}
+                                                        >
+                                                            {loading ? <Loading color="#fff" style={{ padding: '1.2rem' }} /> : ('Add To Cart')}
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </Affix>
-                                    }
-                                    {!onlyMobile &&
-                                        <div className="addtocart-container">
-                                            <div className="row">
-                                                <div className="col-6">
-                                                    <button type="button"
-                                                        className="btn btn-lg btn-block btn-primary font16"
-                                                        style={{ padding: '0.7rem 1rem' }}
-                                                        form={"product-detail"}
-                                                        onClick={handleSubmit(onProductBuyNow)}
-                                                    >
-                                                        Buy Now
-                                                    </button>
-                                                </div>
-                                                <div className="col-6">
-                                                    <button type="submit" className="btn btn-lg btn-block btn-danger font16" style={{ padding: '0.7rem 1rem' }}>Add To Cart</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                </form>
+                                        }
+                                    </form>
+                                </>
                             }
                         </div>
                     </div>
@@ -536,7 +578,7 @@ const ProductDetail = ({ product }) => {
                     </div>
                 </div>
             </div>
-        </Wrapper>
+        </Wrapper >
     );
 }
 

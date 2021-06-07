@@ -6,7 +6,7 @@ import { allCategories } from '../../redux/actions/categoryAction';
 import { Home, List, Search, ShoppingCart, User, ChevronDown, ChevronRight } from 'react-feather';
 import MobileMenuDrawer from './MobileMenuDrawer';
 
-const HeaderMenu = ({ loginUser }) => {
+const HeaderMenu = ({ loginUser, totalCartItems }) => {
     const [menuVisible, setMenuVisible] = useState(false);
     const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
     const [cateogoriesList, setCateogoriesList] = useState(false);
@@ -146,8 +146,11 @@ const HeaderMenu = ({ loginUser }) => {
                                 <ShoppingCart />
                             </span>
                             <span className="menu-item-label">Cart</span>
-
-                            <div className="cart-badge bg-warning" style={{ fontSize: '1.3rem' }}>0</div>
+                            {totalCartItems !== 0 &&
+                                <div className="cart-badge bg-warning" style={{ fontSize: '1.3rem' }}>
+                                    {totalCartItems}
+                                </div>
+                            }
                         </a>
                     </Link>
                     <Link href={loginUser ? "/user/profile" : "/login"}>
