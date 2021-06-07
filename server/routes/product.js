@@ -387,4 +387,18 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
+
+    // after add to cart
+    server.get('/api/product/cart/:id', async (req, res) => {
+        const productId = req.params.id;
+        try {
+            const products = await Product.findOne({ 'products._id': productId }, { 'products.$': 1 })
+                .select('_id name slug brand colour size products')
+                .populate('brand')
+                .lean();
+            if (products) return res.status(200).json(products);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
 }
