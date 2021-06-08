@@ -10,10 +10,9 @@
 .topnav_searchProduct {
 	width: 100% !important;
 	height: 4.0rem;
-	font-size: 14px;
 	border-radius: 50px;
+	font-size: 14px;
 	border: none;
-	padding: 0 19px;
 	background: #f0f0f0;
 }
 
@@ -58,4 +57,31 @@
 	top: -1rem;
 	left: 17px;
 	border-radius: 50%;
+}
+
+/* search bar */
+.search {
+	width: 100%;
+  }
+.search_backBtn{
+	position: absolute;
+	top: 0.8rem;
+	left: 0.8rem;
+	width: 2.5rem;
+	z-index: 1;
+}
+.search_searchProduct{
+	width: 100%;
+}
+.search_searchBtn{
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 5.5rem;
+	height: 100%;
+}
+.search_searchBtn:active,
+.search_searchBtn:focus {
+	outline: none;
+	box-shadow: none;
 }

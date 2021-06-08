@@ -41,7 +41,6 @@ const HeaderMenu = ({ loginUser, totalCartItems }) => {
             e.currentTarget.classList.add("active");
         }
     };
-
     return (
         <>
             <div className="bg-white pt-2 pb-2">
@@ -134,12 +133,14 @@ const HeaderMenu = ({ loginUser, totalCartItems }) => {
                         </span>
                         <span className="menu-item-label">Categories</span>
                     </div>
-                    <div className="menu-item">
-                        <span className="menu-icons">
-                            <Search />
-                        </span>
-                        <span className="menu-item-label">Search</span>
-                    </div>
+                    <Link href="/searchbar">
+                        <div className="menu-item">
+                            <span className="menu-icons">
+                                <Search />
+                            </span>
+                            <span className="menu-item-label">Search</span>
+                        </div>
+                    </Link>
                     <Link href="/cart" >
                         <a className="menu-item position-relative">
                             <span className="menu-icons">
@@ -162,7 +163,7 @@ const HeaderMenu = ({ loginUser, totalCartItems }) => {
                         </a>
                     </Link>
                 </nav>
-            </div>
+            </div >
         </>
     );
 }

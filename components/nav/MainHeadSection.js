@@ -13,6 +13,7 @@ import { userSignOut } from '../../redux/actions/userAction';
 import styles from '../../styles/Header.module.css';
 
 import HeaderMenu from './HeaderMenu';
+import SearchBar from '../helpers/SearchBar';
 
 const MainHeadSection = ({ mobileTabBar }) => {
     const { userInfo } = useSelector(state => state.userAuth);
@@ -161,11 +162,12 @@ const MainHeadSection = ({ mobileTabBar }) => {
                                 </div>
                             </div>
                             <div className="topnav_searchBarCol col-sm-5 col-lg-6 col-xl-6 order-sm-first d-none d-sm-block">
-                                <form method="GET" className="form-inline position-relative">
-                                    <input className={`form-control ${styles.topnav_searchProduct}`} type="search" placeholder="Search" />
-                                    <button className={`btn ${styles.topnav_searchBtn}`} >
-                                        <Search />
-                                    </button>
+                                <form method="GET" action="/search" className="form-inline position-relative">
+                                    <SearchBar
+                                        screen="large"
+                                        searchInputClass={styles.topnav_searchProduct}
+                                        searchBtnClass={styles.topnav_searchBtn}
+                                    />
                                 </form>
                             </div>
 
