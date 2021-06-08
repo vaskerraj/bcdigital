@@ -25,7 +25,8 @@ const ProductSchema = new mongoose.Schema({
     name: {
         type: String,
         require: true,
-        trim: true
+        trim: true,
+        text: true
     },
     slug: {
         type: String,
@@ -35,7 +36,8 @@ const ProductSchema = new mongoose.Schema({
     shortDescription: {
         type: String, // highlights/ Product details
         require: true,
-        trim: true
+        trim: true,
+        text: true
     },
     description: {
         type: String, // Specifications/ image list

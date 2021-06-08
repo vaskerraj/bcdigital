@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Product = mongoose.model('Product');
+const SearchTag = mongoose.model('SearchTag');
 const slugify = require('slugify');
 const multer = require('multer');
 const fs = require('fs');
@@ -399,6 +400,26 @@ module.exports = function (server) {
             if (products) return res.status(200).json(products);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    // search and filter
+
+    const handleAutoComplete = async (req, res, searchtext) => {
+        const regex = new RegExp(searchtext, 'i');
+        const products = await SearchTag.find({ tag: regex }, { tag: 1 })
+            .select('tag')
+            .sort([['count', -1]])
+            .limit(10);
+        // const products = await Product.find({ $text: { $search: searchtext } })
+        //     .select('name');
+        res.status(200).json(products);
+    }
+
+    server.post('/api/search/filter', async (req, res) => {
+        const { searchtext } = req.body;
+        if (searchtext) {
+            handleAutoComplete(req, res, searchtext);
         }
     });
 }
