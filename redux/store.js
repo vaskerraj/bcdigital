@@ -9,6 +9,7 @@ import { smsSendReducer } from './reducers/smsReducer';
 import { recoverPsdReducer } from './reducers/authPsdReducer';
 import { categoriesReducer } from './reducers/categoryReducer';
 import { cartItemReducer } from './reducers/cartReducer';
+import { searchTagReducer } from './reducers/searchTagReducer';
 
 const { cartItem: parseCartItems } = parseCookies();
 
@@ -27,6 +28,7 @@ const reducer = combineReducers({
     recoverPsd: recoverPsdReducer,
     categoryList: categoriesReducer,
     cartItems: cartItemReducer,
+    storeSearchTags: searchTagReducer
 });
 
 const store = createStore(reducer, initalState, applyMiddleware(ThunkMiddleware));
