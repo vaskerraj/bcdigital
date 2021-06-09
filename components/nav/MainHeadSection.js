@@ -30,6 +30,19 @@ const MainHeadSection = ({ mobileTabBar }) => {
         dispatch(userSignOut());
     }
     const router = useRouter();
+
+    const handleSearchSubmit = e => {
+        e.preventDefault()
+        const { q } = e.target.elements
+        const searchedQueryValue = q.value;
+        const trimSearchedQueryValue = searchedQueryValue.trim();
+
+        if (trimSearchedQueryValue === " ") {
+            router.push('/search?q=' + trimSearchedQueryValue);
+        } else {
+            router.reload();
+        }
+    }
     const menu = (
         <Menu style={{ fontSize: '1.6rem' }}>
             <Menu.Item className="pl-5 pr-5">
@@ -162,7 +175,7 @@ const MainHeadSection = ({ mobileTabBar }) => {
                                 </div>
                             </div>
                             <div className="topnav_searchBarCol col-sm-5 col-lg-6 col-xl-6 order-sm-first d-none d-sm-block">
-                                <form method="GET" action="/search" className="form-inline position-relative">
+                                <form onSubmit={handleSearchSubmit} className="form-inline position-relative">
                                     <SearchBar
                                         screen="large"
                                         searchInputClass={styles.topnav_searchProduct}
