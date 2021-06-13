@@ -238,12 +238,13 @@ const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice }) =>
         }
     }
 
-    const clearFilterHanlder = () => {
+    const clearAllFilterHandler = () => {
         setFilterTags([]);
         setSliderMinValue(0)
         setSliderMaxValue(maxPrice + 100)
 
         router.push('/search?q=' + searchQuery);
+        location.href = '/search?q=' + searchQuery;
     }
     return (
         <Wrapper mobileTabBar={mobileTabBarStatus}>
@@ -259,7 +260,7 @@ const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice }) =>
                                 <div className="d-flex justify-content-between">
                                     <h3>Filters</h3>
                                     {filterTags.length !== 0 &&
-                                        <div className="text-primary font13 cp" onClick={clearFilterHanlder}>CLEAR ALL</div>
+                                        <div className="text-primary font13 cp" onClick={clearAllFilterHandler}>CLEAR ALL</div>
                                     }
                                 </div>
                                 <div className="d-block">
