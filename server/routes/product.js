@@ -43,7 +43,6 @@ var colorImageTempStorage = multer.diskStorage({
 var uploadImageBaseOnColor = multer({ storage: colorImageTempStorage });
 
 const moveImageAndFile = async (oldPath, newPath) => {
-    console.log(oldPath);
     try {
         if (fs.existsSync(oldPath)) {
             await fs.renameSync(oldPath, newPath);
@@ -57,7 +56,6 @@ const { requiredAuth, checkRole } = require('../middlewares/auth');
 
 module.exports = function (server) {
     server.post('/api/product', requiredAuth, checkRole(['admin', 'seller']), async (req, res) => {
-        console.log(req.body)
         const { inputdata: {
             categoryId,
             productname,
@@ -274,9 +272,7 @@ module.exports = function (server) {
     });
 
     server.post('/api/product/colour/images', uploadImageBaseOnColor.any(), function (req, res) {
-        console.log(req.files);
         var filenames = req.files.map(file => file.filename)
-        console.log(filenames)
         return res.status(200).json({ filename: filenames });
     });
 
@@ -366,7 +362,6 @@ module.exports = function (server) {
         const { productId } = req.body;
         try {
             const product = await Product.findById(productId).lean();
-            console.log(product);
             // later change approved.status to active
             const products = await Product.find(
                 {
@@ -403,23 +398,142 @@ module.exports = function (server) {
         }
     });
 
-    // search and filter
-
-    const handleAutoComplete = async (req, res, searchtext) => {
+    //  for autocomplete
+    server.post('/api/search/filter', async (req, res) => {
+        const { searchtext } = req.body;
         const regex = new RegExp(searchtext, 'i');
         const products = await SearchTag.find({ tag: regex }, { tag: 1 })
             .select('tag')
             .sort([['count', -1]])
             .limit(10);
-        // const products = await Product.find({ $text: { $search: searchtext } })
-        //     .select('name');
-        res.status(200).json(products);
-    }
+        return res.status(200).json(products);
+    });
 
-    server.post('/api/search/filter', async (req, res) => {
-        const { searchtext } = req.body;
-        if (searchtext) {
-            handleAutoComplete(req, res, searchtext);
+
+    server.post('/api/product/search', async (req, res) => {
+        const {
+            query,
+            category,
+            brand,
+            price,
+            page,
+            sort,
+            rating
+        } = req.body;
+        const findCategory = (category) => {
+            if (category !== 'all') {
+                return { category: category };
+            } else {
+                return {}
+            }
+        }
+        const findBrand = (brand) => {
+            if (brand !== 'all') {
+                return {
+                    brand: { $in: brand }
+                }
+            } else {
+                return {};
+            }
+        }
+
+        const findPrice = price => {
+            if (price !== '') {
+                return {
+                    'products.finalPrice': {
+                        $gte: price[0],
+                        $lte: price[1]
+                    }
+                }
+            } else {
+                return {}
+            }
+        }
+
+        const sortBy = sort => {
+            switch (sort) {
+                case 'best':
+                    return {}
+                case 'sold':
+                    return [['products.sold', -1]]
+                case 'price':
+                    return [['products.finalPrice', 1]]
+                case 'dprice':
+                    return [['products.finalPrice', -1]]
+                case 'createdAt':
+                    return [['createdAt', 1]]
+                case 'newest':
+                    return [['createdAt', - 1]]
+                default:
+                    return {}
+            }
+        }
+
+        try {
+            const currentPage = page || 1;
+            const productPerPage = 24;
+
+            const products = await Product.find(
+                {
+                    $text: { $search: query }
+                })
+                .find(findCategory(category))
+                .find(findBrand(brand))
+                .find(findPrice(price))
+                .select('_id name slug brand, category colour products rating createdBy')
+                .populate({
+                    path: 'category',
+                    select: 'name _id',
+                })
+                .populate('brand', 'name slug')
+                .populate({
+                    path: 'createdBy',
+                    select: '_id name username role sellerRole',
+                })
+                .sort(sortBy(sort))
+                .skip((currentPage - 1) * productPerPage)
+                .limit(productPerPage);
+
+            const totalProducts = await Product.countDocuments(
+                {
+                    $text: { $search: query },
+                    category: category !== 'all' ? category : { $exists: true },
+                    brand: brand !== 'all' ? { $in: brand } : { $exists: true },
+                    'products.finalPrice': price !== '' ?
+                        {
+                            $gte: price[0],
+                            $lte: price[1]
+                        }
+                        :
+                        { $exists: true }
+                }
+            );
+
+            const categoryAndBrand = await Product.find(
+                {
+                    $text: { $search: query }
+                })
+                .select('category brand')
+                .populate('brand', '_id name')
+                .populate('category', '_id name')
+
+            const maxPrice = await Product.findOne(
+                {
+                    $text: { $search: query }
+                },
+                {
+                    'products': 1
+                })
+                .select('products')
+                .sort([['products.finalPrice', -1]])
+            return res.status(200).json({
+                total: totalProducts,
+                products,
+                categoryAndBrand,
+                maxPrice: maxPrice.products[0].finalPrice
+            });
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
 }
