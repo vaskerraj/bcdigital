@@ -13,7 +13,6 @@ export const storeSearchTag = (tag) => async (dispatch) => {
     try {
         const { data } = await axiosApi.post('/api/tags', { tag });
         dispatch({ type: SEARCH_TAG_SUCCESS, payload: data });
-        console.log(data);
         if (data.msg === "success") {
 
             const { searchTagHistory } = parseCookies();

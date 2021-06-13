@@ -1,20 +1,34 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import axiosApi from '../../helpers/api';
+import { parseCookies, destroyCookie } from 'nookies';
+
 import { AutoComplete } from 'antd';
 
+import axiosApi from '../../helpers/api';
 import { Search, XCircle } from 'react-feather';
 
 const SearchBar = ({ screen, searchInputClass, searchBtnClass, searchDropdown }) => {
     const [options, setOptions] = useState([]);
     const [closeDropdownAtSmallScreen, setCloseDropdownAtSmallScreen] = useState(false);
 
+    const [destoryCookieAction, setDestoryCookieAction] = useState(false);
+
     const router = useRouter();
+
+    const { searchTagHistory } = parseCookies();
+    const parseSearchTagHistory = searchTagHistory ? JSON.parse(searchTagHistory) : [];
+
+    const clearSearchTagHistory = () => {
+        destroyCookie(null, "searchTagHistory");
+        setDestoryCookieAction(true);
+        // empty option and hide view history after clean cookie
+        setOptions([]);
+    }
 
     const renderTitle = (title) => (
         <div className="d-flex justify-content-between">
             {title}
-            <a className="text-right text-info">
+            <a className="text-right text-info" onClick={clearSearchTagHistory}>
                 Clear
             </a>
         </div>
@@ -45,13 +59,14 @@ const SearchBar = ({ screen, searchInputClass, searchBtnClass, searchDropdown })
     };
 
     const handleSearchHistory = () => {
-        setOptions([
-            {
-                label: renderTitle("View History"),
-                options: [renderItem('For man'), renderItem('Samsung m'), renderItem('Samsung A'), renderItem('Samsung s'), renderItem('Samsung x'), renderItem('Samsung ss'), renderItem('Samsung'), renderItem('Samsung M31')]
-            }
-        ]
-        );
+        if (!destoryCookieAction && parseSearchTagHistory.length !== 0) {
+            setOptions([
+                {
+                    label: renderTitle("View History"),
+                    options: parseSearchTagHistory.map(tag => renderItem(tag))
+                }
+            ]);
+        }
     }
 
     return (
