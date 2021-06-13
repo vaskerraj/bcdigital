@@ -45,7 +45,7 @@ const LastestProductSlider = ({ data }) => {
     return (
         <Slider {...lastestSliderSettings}>
             {data.map(product => (
-                <div key={data._id}>
+                <div key={product._id}>
                     <ProductCard data={product} />
                 </div>
             ))}

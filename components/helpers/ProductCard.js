@@ -6,7 +6,7 @@ const ProductCard = ({ data }) => {
     return (
         <div className="product-item">
 
-            {data.products[0].discount &&
+            {data.products[0].discount !== 0 &&
                 <div className="discount-tag">
                     -{data.products[0].discount + '%'}
                 </div>
@@ -35,7 +35,7 @@ const ProductCard = ({ data }) => {
                         <ProductStarIcon star={3.5} />
                     </div>
                     <div className="product-price d-flex">
-                        {data.products[0].discount &&
+                        {data.products[0].discount !== 0 &&
                             <div className="del mr-2">Rs.{data.products[0].price}</div>
                         }
                         <div className="price"> Rs.{data.products[0].finalPrice}</div>
