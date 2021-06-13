@@ -850,6 +850,24 @@ body.offcanvas-open {
   cursor: pointer;
 }
 
+/* search page */
+.filter-tags{
+  border-right: 1px solid #f0f0f0;
+}
+.related-category{
+  display: block;
+  margin: 1.5rem 0;
+  padding: 0.5rem 0 0.5rem 1.5rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.related-category:hover{
+  color: #f33535;
+}
+.related-category.active{
+  color: #f33535;
+}
+
 /* footer */
 footer {
   background-color: #172337;
