@@ -8,16 +8,17 @@ import axios from 'axios';
 import { Checkbox, Menu, Select, Slider, Pagination, Tag } from 'antd';
 const { Option } = Select;
 
+import { Search } from 'react-feather';
+
 import useWindowDimensions from '../helpers/useWindowDimensions';
 
 import Wrapper from '../components/Wrapper';
 import ProductCard from '../components/helpers/ProductCard';
-
-import { storeSearchTag } from '../redux/actions/searchTagAction';
 import ProductStarIcon from '../components/helpers/ProductStarIcon';
 
-const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice, categoryQuery, priceQuery, brandQuery }) => {
+import { storeSearchTag } from '../redux/actions/searchTagAction';
 
+const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice, categoryQuery, priceQuery, brandQuery }) => {
     const router = useRouter();
     const dispatch = useDispatch();
 
@@ -66,8 +67,10 @@ const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice, cate
     // filter and make unique
     const key = '_id';
 
-    const uniqueRelatedCategories = [...new Map(categoryAndBrand.map(item =>
-        [item.category[key], item.category])).values()];
+    const uniqueRelatedCategories = categoryAndBrand === undefined
+        ? []
+        : [...new Map(categoryAndBrand.map(item =>
+            [item.category[key], item.category])).values()];
 
     const brandsWithName = categoryAndBrand.filter(item => item.brand !== null);
     const uniqueBrands = [...new Map(brandsWithName.map(item =>
@@ -437,23 +440,36 @@ const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice, cate
                                 </div>
                             </div>
                         </div>
-                        <div className="row mt-2">
-                            {products.map(product => (
-                                <div key={product._id} className="col-6 col-sm-4 col-md-3 search-item-list mt-4">
-                                    <ProductCard data={product} />
+                        {products.length !== 0 ?
+                            (
+                                <>
+                                    <div className="row mt-2">
+                                        {products.map(product => (
+                                            <div key={product._id} className="col-6 col-sm-4 col-md-3 search-item-list mt-4">
+                                                <ProductCard data={product} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {total !== 0 &&
+                                        <div className="col text-right mt-5">
+                                            <Pagination
+                                                current={currPage}
+                                                total={total}
+                                                responsive
+                                                defaultPageSize={24}
+                                                onChange={handlePageChange}
+                                            />
+                                        </div>
+                                    }
+                                </>
+                            )
+                            :
+                            (
+                                <div className="row mt-5 mb-5 text-center">
+                                    <Search size={80} className="text-muted mt-5" />
+                                    <div className="mt-2" style={{ fontSize: '1.8rem' }}>No Match Products</div>
                                 </div>
-                            ))}
-                        </div>
-                        {total !== 0 &&
-                            <div className="col text-right mt-5">
-                                <Pagination
-                                    current={currPage}
-                                    total={total}
-                                    responsive
-                                    defaultPageSize={24}
-                                    onChange={handlePageChange}
-                                />
-                            </div>
+                            )
                         }
                     </div>
                 </div>
@@ -493,8 +509,12 @@ export async function getServerSideProps({ query }) {
         }
     } catch (err) {
         return {
-            props: {},
-        };
+            redirect: {
+                source: '/nomatch?q=' + query.q,
+                destination: '/nomatch?q=' + query.q,
+                permanent: false,
+            },
+        }
     }
 }
 
