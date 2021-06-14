@@ -854,6 +854,10 @@ body.offcanvas-open {
 .filter-tags{
   border-right: 1px solid #f0f0f0;
 }
+.filter-tags .tags{
+  background-color: #fff;
+  border-radius: 12px;
+}
 .related-category{
   display: block;
   margin: 1.5rem 0;

@@ -16,7 +16,8 @@ import ProductCard from '../components/helpers/ProductCard';
 import { storeSearchTag } from '../redux/actions/searchTagAction';
 import ProductStarIcon from '../components/helpers/ProductStarIcon';
 
-const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice }) => {
+const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice, categoryQuery, priceQuery, brandQuery }) => {
+
     const router = useRouter();
     const dispatch = useDispatch();
 
@@ -27,7 +28,7 @@ const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice }) =>
     const [onlyMobile, setOnlyMoble] = useState(false);
 
     const [sliderMinValue, setSliderMinValue] = useState(0);
-    const [sliderMaxValue, setSliderMaxValue] = useState(maxPrice + 100);
+    const [sliderMaxValue, setSliderMaxValue] = useState(maxPrice + 200);
     // pagination
     const [currPage, setCurrPage] = useState(1);
 
@@ -62,11 +63,86 @@ const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice }) =>
         }
     }, [searchQuery]);
 
+    // filter and make unique
+    const key = '_id';
+
+    const uniqueRelatedCategories = [...new Map(categoryAndBrand.map(item =>
+        [item.category[key], item.category])).values()];
+
+    const brandsWithName = categoryAndBrand.filter(item => item.brand !== null);
+    const uniqueBrands = [...new Map(brandsWithName.map(item =>
+        [item.brand[key], item.brand])).values()];
+
+    // initial filter tag(if page loaded after filter applied)
+    // Note: alternative ==> use of nookies(store filter tag at cookies);
+    useEffect(() => {
+        let allInitalFilterFromUrl = [];
+        if (categoryQuery !== 'all') {
+            const relatedCategoryFromUrl = uniqueRelatedCategories.find(item => item._id === categoryQuery);
+            if (relatedCategoryFromUrl !== undefined) {
+                allInitalFilterFromUrl.push({
+                    type: 'relatedCategory',
+                    id: categoryQuery,
+                    tag: relatedCategoryFromUrl.name
+                });
+            }
+        }
+        if (priceQuery !== '') {
+            if (priceQuery[0] !== '' && priceQuery[1] !== '') {
+                const removePrevSliderValue = filterTags.filter(item => item.type !== 'priceRange');
+                allInitalFilterFromUrl.push(
+                    ...removePrevSliderValue,
+                    {
+                        type: 'priceRange',
+                        id: 'priceRange_' + Math.random(),
+                        tag: `Rs.${priceQuery[0]} - Rs.${priceQuery[1]}`
+                    }
+                );
+            }
+        }
+
+        if (brandQuery !== 'all' && brandQuery !== '') {
+            if (typeof (brandQuery) === 'string') {
+                const brandNameFromUrl = uniqueBrands.find(item => item._id === brandQuery);
+                allInitalFilterFromUrl.push({
+                    type: 'brands',
+                    id: brandQuery,
+                    tag: brandNameFromUrl.name
+                })
+            } else {
+                let initialBrands = [];
+                brandQuery.map(brand => {
+                    const brandObj = new Object();
+                    const brandNameFromUrl = uniqueBrands.find(item => item._id === brand);
+                    brandObj['type'] = 'brands';
+                    brandObj['id'] = brand;
+                    brandObj['tag'] = brandNameFromUrl.name;
+                    initialBrands.push(brandObj);
+                });
+                const initialFilterWithBrand = [...allInitalFilterFromUrl, ...initialBrands];
+                allInitalFilterFromUrl = initialFilterWithBrand;
+            }
+        }
+        setFilterTags(allInitalFilterFromUrl);
+    }, []);
+
     // update slider value on new search
     useEffect(() => {
         if (maxPrice) {
-            setSliderMinValue(0)
-            setSliderMaxValue(maxPrice + 100)
+            setSliderMinValue(
+                router.query.price !== '' && router.query.price !== undefined
+                    ? router.query.price[0] !== ''
+                        ? router.query.price[0]
+                        : 0
+                    : 0
+            )
+            setSliderMaxValue(
+                router.query.price !== '' && router.query.price !== undefined
+                    ? router.query.price[1] !== ''
+                        ? router.query.price[1]
+                        : maxPrice + 200
+                    : maxPrice + 200
+            )
         }
     }, [maxPrice]);
 
@@ -105,55 +181,13 @@ const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice }) =>
 
     }, [changeCategory, changePrice, changeBrands, changeRating, changeSort, changePage]);
 
-    // filter and make unique
-    const key = '_id';
-
-    const uniqueRelatedCategories = [...new Map(categoryAndBrand.map(item =>
-        [item.category[key], item.category])).values()];
-
-    const brandsWithName = categoryAndBrand.filter(item => item.brand !== null);
-    const uniqueBrands = [...new Map(brandsWithName.map(item =>
-        [item.brand[key], item.brand])).values()];
-
     // handlers to change search parameters
-    const handleCategoryClick = catId => {
+    const handleCategoryClick = useCallback(catId => {
         // set page to 1 on sort change
         setCurrPage(1);
         setChangePage(1);
 
         setChangeCategory(catId);
-    }
-
-    const replaceUrlForBand = (brandLength, brands) => {
-        if (brandLength === 0) {
-            router.query.brand = null;
-            router.replace(router);
-        } else {
-            router.query.brand = brands;
-            router.replace(router);
-
-        }
-    }
-
-    const handleBrandChange = useCallback(event => {
-        // set page to 1 on sort change
-        setCurrPage(1);
-        setChangePage(1);
-
-        let brandList = changeBrands;
-        const brandChecked = event.target.checked;
-        const checkedValue = event.target.value;
-        if (brandChecked) {
-            setChangeBrands([...changeBrands, checkedValue]);
-        } else {
-            var indexOfBrand = brandList.indexOf(checkedValue);
-            if (indexOfBrand > -1) {
-                brandList.splice(indexOfBrand, 1);
-                setChangeBrands(brandList);
-                //problem: useEffect not fire while uncheck input
-                replaceUrlForBand(brandList.length, brandList);
-            }
-        }
     });
 
     const sliderAfterChange = useCallback((value) => {
@@ -198,6 +232,22 @@ const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice }) =>
         router.replace(router);
     });
 
+    const replaceUrlForAtNull = (type) => {
+        if (type === 'brands') {
+            router.query.brand = undefined;
+            router.replace(router);
+        }
+
+        if (type === 'relatedCategory') {
+            router.query.category = undefined;
+            router.replace(router);
+        }
+        if (type === 'priceRange') {
+            router.query.price = undefined;
+            router.replace(router);
+        }
+    }
+
     const clearFilter = (type, id) => {
         // set page to 1 on sort change
         setCurrPage(1);
@@ -207,44 +257,40 @@ const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice }) =>
 
             // clear filter tags to prevent same two tags
             const clearTagByFilter = filterTags.filter(brand => brand.id !== id);
-            setFilterTags(clearTagByFilter)
+            setFilterTags(clearTagByFilter);
 
-            //update state and replace url
-            let brandList = changeBrands;
-            var indexOfBrand = brandList.indexOf(id);
-            if (indexOfBrand > -1) {
-                brandList.splice(indexOfBrand, 1);
-                setChangeBrands(brandList);
-
-                //problem: useEffect not fire while uncheck input
-                replaceUrlForBand(brandList.length, brandList);
-
-            }
+            // brands can be multiple so we just need to pass id only
+            const idOfBrandToPushAtUrl = clearTagByFilter.filter(item => item.type === 'brands').map(i => i.id);
+            if (idOfBrandToPushAtUrl.length === 0) replaceUrlForAtNull('brands');
+            setChangeBrands(idOfBrandToPushAtUrl);
         }
 
         //clear related category's tag
         if (type === 'relatedCategory') {
             // update state without relatedCategory coz there is only one relatedCategory for filter
-            const clearRelatedTag = filterTags.filter(item => item.type !== 'relatedCategory');
-            setFilterTags(clearRelatedTag);
-            setChangeCategory(clearRelatedTag)
+            const clearRelatedTagFromFilterTag = filterTags.filter(item => item.type !== 'relatedCategory');
+            setFilterTags(clearRelatedTagFromFilterTag);
+            replaceUrlForAtNull('relatedCategory');
         }
 
         if (type === 'priceRange') {
             const clearPriceRange = filterTags.filter(item => item.type !== 'priceRange');
-            setChangePrice(clearPriceRange);
+            setFilterTags(clearPriceRange);
             setSliderMinValue(0)
-            setSliderMaxValue(maxPrice + 100)
+            setSliderMaxValue(maxPrice + 200);
+            replaceUrlForAtNull('priceRange');
         }
     }
 
     const clearAllFilterHandler = () => {
         setFilterTags([]);
         setSliderMinValue(0)
-        setSliderMaxValue(maxPrice + 100)
+        setSliderMaxValue(maxPrice + 200)
 
         router.push('/search?q=' + searchQuery);
-        location.href = '/search?q=' + searchQuery;
+        if (typeof window !== "undefined") {
+            location.href = '/search?q=' + searchQuery;
+        }
     }
     return (
         <Wrapper mobileTabBar={mobileTabBarStatus}>
@@ -267,7 +313,7 @@ const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice }) =>
                                     {filterTags.map(filter => (
                                         <Tag key={filter.id} closable={true}
                                             onClose={(e) => clearFilter(filter.type, filter.id)}
-                                            className="mt-3"
+                                            className="tags mt-3"
                                         >
                                             {filter.tag}
                                         </Tag>
@@ -309,7 +355,7 @@ const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice }) =>
                                         <Slider className="ml-4 mr-4 mt-2 mb-2"
                                             range
                                             tipFormatter={v => `Rs.${v}`}
-                                            max={maxPrice + 100}
+                                            max={maxPrice + 200}
                                             value={[sliderMinValue, sliderMaxValue]}
                                             onChange={sliderOnChange}
                                             onAfterChange={sliderAfterChange}
@@ -321,11 +367,14 @@ const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice }) =>
                                         <div className="d-block mt-2 mb-3">
                                             {uniqueBrands && uniqueBrands.map(brand => (
                                                 <>
-                                                    <Checkbox key={brand._id} name="category" className="d-block pl-4 pt-2 pb-2"
-                                                        value={brand._id}
+                                                    <Checkbox key={brand._id}
+                                                        checked={brandQuery.includes(brand._id) === true ? true : false}
+                                                        name="category"
+                                                        className="d-block pl-4 pt-2 pb-2"
                                                         onChange={(e) => {
-                                                            handleBrandChange(e)
+                                                            // handleBrandChange(e)
                                                             if (e.target.checked) {
+                                                                setChangeBrands([...changeBrands, brand._id]);
                                                                 setFilterTags([
                                                                     ...filterTags,
                                                                     {
@@ -436,7 +485,10 @@ export async function getServerSideProps({ query }) {
                 total: results.total,
                 products: results.products,
                 categoryAndBrand: results.categoryAndBrand,
-                maxPrice: results.maxPrice
+                maxPrice: results.maxPrice,
+                categoryQuery: category,
+                priceQuery: price,
+                brandQuery: brand
             }
         }
     } catch (err) {
