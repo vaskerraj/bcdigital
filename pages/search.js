@@ -5,10 +5,10 @@ import { useDispatch } from 'react-redux';
 
 import axios from 'axios';
 
-import { Checkbox, Menu, Select, Slider, Pagination, Tag } from 'antd';
+import { Checkbox, Menu, Select, Slider, Pagination, Tag, Drawer, Affix, Badge } from 'antd';
 const { Option } = Select;
 
-import { Search } from 'react-feather';
+import { Check, Filter, Search } from 'react-feather';
 
 import useWindowDimensions from '../helpers/useWindowDimensions';
 
@@ -43,6 +43,10 @@ const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice, cate
 
     //filter
     const [filterTags, setFilterTags] = useState([]);
+
+    // drawer 
+    const [drawerVisible, setDrawerVisible] = useState(false);
+
 
     useEffect(() => {
         if (width <= 576) {
@@ -295,151 +299,278 @@ const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice, cate
             location.href = '/search?q=' + searchQuery;
         }
     }
+    const filterSection = (screen) => (
+        <div className={`d-block bg-white ${screen === 'large' ? 'mt-4' : ''}`}>
+            <div className={`d-block filter-tags  ${screen === 'large' ? 'large pb-3 p-4' : 'small pb-3 p-1'} `}>
+                <div className="d-flex justify-content-between">
+                    {screen === 'large' &&
+                        <>
+                            <h3>Filters</h3>
+                            {filterTags.length !== 0 &&
+                                <div className="text-primary font13 cp" onClick={clearAllFilterHandler}>CLEAR ALL</div>
+                            }
+                        </>
+                    }
+                </div>
+                <div className="d-block">
+                    {filterTags.map(filter => (
+                        <Tag key={filter.id} closable={true}
+                            onClose={(e) => clearFilter(filter.type, filter.id)}
+                            className="tags mt-3"
+                        >
+                            {filter.tag}
+                        </Tag>
+                    )
+                    )}
+                </div>
+            </div>
+            <Menu mode="inline" defaultOpenKeys={['category', 'slider', 'brand', 'rating']}>
+                {uniqueRelatedCategories.length !== 0 && screen === 'large' &&
+                    <Menu.SubMenu key="category" title={<span className='filter-titile'>Related Categories</span>}>
+                        <div className="d-block mt-2 mb-3">
+                            {uniqueRelatedCategories && uniqueRelatedCategories.map(cat => (
+                                <div key={cat._id}
+                                    className="related-category"
+                                    onClick={() => {
+                                        handleCategoryClick(cat._id);
+                                        // there is only one related category to filter tag
+                                        const removePrevRelatedTag = filterTags.filter(item => item.type !== 'relatedCategory');
+                                        setFilterTags([
+                                            ...removePrevRelatedTag,
+                                            {
+                                                type: 'relatedCategory',
+                                                id: cat._id,
+                                                tag: cat.name
+                                            }
+                                        ]);
+                                    }
+                                    }
+                                >
+                                    {cat.name}
+                                </div>
+                            ))
+                            }
+                        </div>
+                    </Menu.SubMenu>
+                }
+                <Menu.SubMenu key="slider" title={<span className='filter-titile'>Price</span>}>
+                    <div className="pt-3 pb-3">
+                        <Slider className="ml-4 mr-4 mt-2 mb-2"
+                            range
+                            tipFormatter={v => `Rs.${v}`}
+                            max={maxPrice + 200}
+                            value={[sliderMinValue, sliderMaxValue]}
+                            onChange={sliderOnChange}
+                            onAfterChange={sliderAfterChange}
+                        />
+                    </div>
+                </Menu.SubMenu>
+                {uniqueBrands.length !== 0 &&
+                    <Menu.SubMenu key="brand" title={<span className='filter-titile'>Brands</span>}>
+                        <div className="d-block mt-2 mb-3">
+                            {uniqueBrands && uniqueBrands.map(brand => (
+                                <>
+                                    <Checkbox key={brand._id}
+                                        checked={brandQuery.includes(brand._id) === true ? true : false}
+                                        name="category"
+                                        className="d-block pl-4 pt-2 pb-2"
+                                        onChange={(e) => {
+                                            // handleBrandChange(e)
+                                            if (e.target.checked) {
+                                                setChangeBrands([...changeBrands, brand._id]);
+                                                setFilterTags([
+                                                    ...filterTags,
+                                                    {
+                                                        type: 'brands',
+                                                        id: brand._id,
+                                                        tag: brand.name
+                                                    }
+                                                ])
+                                            } else {
+                                                clearFilter('brands', brand._id)
+                                            }
+                                        }
+                                        }
+                                    >
+                                        {brand.name}
+                                    </Checkbox>
+                                    <br />
+                                </>
+                            ))
+                            }
+                        </div>
+                    </Menu.SubMenu>
+                }
+                <Menu.SubMenu key="rating" title={<span className='filter-titile'>Rating</span>}>
+                    <div className="d-block mt-2 mb-3">
+                        <div className="d-block pl-4 pt-3 pb-2 cp" onClick={() => handleRatingClick(5)}>
+                            <ProductStarIcon star={5} />
+                        </div>
+                        <div className="d-block pl-4 pt-2 pb-2 cp" onClick={() => handleRatingClick(4)}>
+                            <ProductStarIcon star={4} />
+                        </div>
+                        <div className="d-block pl-4 pt-2 pb-2 cp" onClick={() => handleRatingClick(3)}>
+                            <ProductStarIcon star={3} />
+                        </div>
+                        <div className="d-block pl-4 pt-2 pb-2 cp" onClick={() => handleRatingClick(2)}>
+                            <ProductStarIcon star={2} />
+                        </div>
+                        <div className="d-block pl-4 pt-2 pb-2 cp" onClick={() => handleRatingClick(1)}>
+                            <ProductStarIcon star={1} />
+                        </div>
+                    </div>
+                </Menu.SubMenu>
+            </Menu>
+        </div >
+    )
+    const onDrawerClose = () => {
+
+    }
     return (
         <Wrapper mobileTabBar={mobileTabBarStatus}>
             <Head>
                 <title>{searchQuery}-Buy Online Product At Best Price In Nepal | BC Digital</title>
                 <link rel="icon" href="/favicon.ico" />
             </Head>
+            <Drawer
+                title="Filter"
+                placement="right"
+                onClose={onDrawerClose}
+                visible={drawerVisible}
+                bodyStyle={{
+                    padding: '0.5rem'
+                }}
+                footer={
+                    <div
+                        style={{
+                            textAlign: 'right',
+                        }}
+                    >
+                        <button
+                            onClick={() => {
+                                setDrawerVisible(false);
+                                clearAllFilterHandler();
+                            }
+                            }
+                            className="btn btn-lg btn-light" style={{ marginRight: 8 }}
+                        >
+                            Reset
+                      </button>
+                        <button onClick={() => setDrawerVisible(false)} className="btn btn-lg btn-danger">
+                            Apply
+                      </button>
+                    </div>
+                }
+            >
+                {filterSection('small')}
+            </Drawer>
             <div className="container">
                 <div className="row">
                     <div className="col-sm-3 d-none d-sm-block">
-                        <div className="d-block bg-white mt-4">
-                            <div className="d-block filter-tags pb-3 p-4">
-                                <div className="d-flex justify-content-between">
-                                    <h3>Filters</h3>
-                                    {filterTags.length !== 0 &&
-                                        <div className="text-primary font13 cp" onClick={clearAllFilterHandler}>CLEAR ALL</div>
-                                    }
-                                </div>
-                                <div className="d-block">
-                                    {filterTags.map(filter => (
-                                        <Tag key={filter.id} closable={true}
-                                            onClose={(e) => clearFilter(filter.type, filter.id)}
-                                            className="tags mt-3"
-                                        >
-                                            {filter.tag}
-                                        </Tag>
-                                    )
-                                    )}
-                                </div>
-                            </div>
-                            <Menu mode="inline" defaultOpenKeys={['category', 'slider', 'brand', 'rating']}>
-                                {uniqueRelatedCategories.length !== 0 &&
-                                    <Menu.SubMenu key="category" title={<span className='filter-titile'>Related Categories</span>}>
-                                        <div className="d-block mt-2 mb-3">
-                                            {uniqueRelatedCategories && uniqueRelatedCategories.map(cat => (
-                                                <div key={cat._id}
-                                                    className="related-category"
-                                                    onClick={() => {
-                                                        handleCategoryClick(cat._id);
-                                                        // there is only one related category to filter tag
-                                                        const removePrevRelatedTag = filterTags.filter(item => item.type !== 'relatedCategory');
-                                                        setFilterTags([
-                                                            ...removePrevRelatedTag,
-                                                            {
-                                                                type: 'relatedCategory',
-                                                                id: cat._id,
-                                                                tag: cat.name
-                                                            }
-                                                        ]);
-                                                    }
-                                                    }
-                                                >
-                                                    {cat.name}
-                                                </div>
-                                            ))
-                                            }
-                                        </div>
-                                    </Menu.SubMenu>
-                                }
-                                <Menu.SubMenu key="slider" title={<span className='filter-titile'>Price</span>}>
-                                    <div className="pt-3 pb-3">
-                                        <Slider className="ml-4 mr-4 mt-2 mb-2"
-                                            range
-                                            tipFormatter={v => `Rs.${v}`}
-                                            max={maxPrice + 200}
-                                            value={[sliderMinValue, sliderMaxValue]}
-                                            onChange={sliderOnChange}
-                                            onAfterChange={sliderAfterChange}
-                                        />
-                                    </div>
-                                </Menu.SubMenu>
-                                {uniqueBrands.length !== 0 &&
-                                    <Menu.SubMenu key="brand" title={<span className='filter-titile'>Brands</span>}>
-                                        <div className="d-block mt-2 mb-3">
-                                            {uniqueBrands && uniqueBrands.map(brand => (
-                                                <>
-                                                    <Checkbox key={brand._id}
-                                                        checked={brandQuery.includes(brand._id) === true ? true : false}
-                                                        name="category"
-                                                        className="d-block pl-4 pt-2 pb-2"
-                                                        onChange={(e) => {
-                                                            // handleBrandChange(e)
-                                                            if (e.target.checked) {
-                                                                setChangeBrands([...changeBrands, brand._id]);
-                                                                setFilterTags([
-                                                                    ...filterTags,
-                                                                    {
-                                                                        type: 'brands',
-                                                                        id: brand._id,
-                                                                        tag: brand.name
-                                                                    }
-                                                                ])
-                                                            } else {
-                                                                clearFilter('brands', brand._id)
-                                                            }
-                                                        }
-                                                        }
-                                                    >
-                                                        {brand.name}
-                                                    </Checkbox>
-                                                    <br />
-                                                </>
-                                            ))
-                                            }
-                                        </div>
-                                    </Menu.SubMenu>
-                                }
-                                <Menu.SubMenu key="rating" title={<span className='filter-titile'>Rating</span>}>
-                                    <div className="d-block mt-2 mb-3">
-                                        <div className="d-block pl-4 pt-3 pb-2 cp" onClick={() => handleRatingClick(5)}>
-                                            <ProductStarIcon star={5} />
-                                        </div>
-                                        <div className="d-block pl-4 pt-2 pb-2 cp" onClick={() => handleRatingClick(4)}>
-                                            <ProductStarIcon star={4} />
-                                        </div>
-                                        <div className="d-block pl-4 pt-2 pb-2 cp" onClick={() => handleRatingClick(3)}>
-                                            <ProductStarIcon star={3} />
-                                        </div>
-                                        <div className="d-block pl-4 pt-2 pb-2 cp" onClick={() => handleRatingClick(2)}>
-                                            <ProductStarIcon star={2} />
-                                        </div>
-                                        <div className="d-block pl-4 pt-2 pb-2 cp" onClick={() => handleRatingClick(1)}>
-                                            <ProductStarIcon star={1} />
-                                        </div>
-                                    </div>
-                                </Menu.SubMenu>
-                            </Menu>
-                        </div>
+                        {filterSection('large')}
                     </div>
                     <div className="col-12 col-sm-9">
-                        <div className="d-block bg-white align-items-center p-3 mt-4">
-                            <div className="row">
-                                <div className="col-6 font14" style={{ paddingTop: '0.7rem' }}>
-                                    {total} Product Found
+                        {!onlyMobile &&
+                            <div className="d-block bg-white align-items-center p-3 mt-4">
+                                <div className="row">
+                                    <div className="col-6 font14" style={{ paddingTop: '0.7rem' }}>
+                                        {total} Product Found
                                 </div>
-                                <div className="col-6 text-right">
-                                    <Select defaultValue="best" className="text-left" style={{ width: 200 }} onChange={handleSortChange}>
-                                        <Option value="best">Recommended</Option>
-                                        <Option value="sold">Best Selling</Option>
-                                        <Option value="newest">Newest</Option>
-                                        <Option value="price">Price(Low to High)</Option>
-                                        <Option value="dprice">Price(High to Low)</Option>
-                                    </Select>
+                                    <div className="col-6 text-right">
+                                        <Select
+                                            defaultValue={
+                                                router.query.sort !== '' && router.query.sort !== undefined
+                                                    ? router.query.sort
+                                                    :
+                                                    'best'
+                                            }
+                                            className="text-left"
+                                            style={{ width: 200 }}
+                                            onChange={handleSortChange}
+                                        >
+                                            <Option value="best">Recommended</Option>
+                                            <Option value="sold">Best Selling</Option>
+                                            <Option value="newest">Newest</Option>
+                                            <Option value="price">Price(Low to High)</Option>
+                                            <Option value="dprice">Price(High to Low)</Option>
+                                        </Select>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        }
+                        {onlyMobile &&
+                            <Affix offsetTop={70}>
+                                <div className="row bg-white backNav-container border-top p-2">
+                                    <div className="d-flex justify-content-between">
+                                        <Select
+                                            defaultValue={
+                                                router.query.category !== '' && router.query.category !== undefined
+                                                    ? router.query.category
+                                                    :
+                                                    'all'
+                                            }
+                                            className="text-left"
+                                            style={{ width: 150 }}
+                                            onSelect={(LabeledValue, option) => {
+                                                if (LabeledValue !== 'all') {
+                                                    handleCategoryClick(LabeledValue);
+                                                    // there is only one related category to filter tag
+                                                    const removePrevRelatedTag = filterTags.filter(item => item.type !== 'relatedCategory');
+                                                    setFilterTags([
+                                                        ...removePrevRelatedTag,
+                                                        {
+                                                            type: 'relatedCategory',
+                                                            id: LabeledValue,
+                                                            tag: option.children
+                                                        }
+                                                    ]);
+                                                } else {
+                                                    clearFilter('relatedCategory', '')
+                                                }
+                                            }
+                                            }
+                                            autoClearSearchValue="Category"
+                                            bordered={false}
+                                            dropdownClassName="mobile-filter-dropdown"
+                                            menuItemSelectedIcon={<Check color={'#f33535'} />}
+                                        >
+                                            <Option value="all">All Categories</Option>
+                                            {uniqueRelatedCategories && uniqueRelatedCategories.map(cat => (
+                                                <Option value={cat._id}>{cat.name}</Option>
+                                            ))
+                                            }
+                                        </Select>
+                                        <div className="d-flex align-items-center justify-content-between">
+                                            <Select
+                                                defaultValue={
+                                                    router.query.sort !== '' && router.query.sort !== undefined
+                                                        ? router.query.sort
+                                                        :
+                                                        'best'
+                                                }
+                                                className="text-left"
+                                                style={{ width: 150 }}
+                                                onChange={handleSortChange}
+                                                bordered={false}
+                                                dropdownClassName="mobile-filter-dropdown"
+                                                menuItemSelectedIcon={<Check color={'#f33535'} />}
+                                            >
+                                                <Option value="best">Recommended</Option>
+                                                <Option value="sold">Best Selling</Option>
+                                                <Option value="newest">Newest</Option>
+                                                <Option value="price">Price(Low to High)</Option>
+                                                <Option value="dprice">Price(High to Low)</Option>
+                                            </Select>
+                                            <div>
+                                                <Badge dot={filterTags.length !== 0 ? true : false}>
+                                                    <Filter className="cp" onClick={() => setDrawerVisible(true)} />
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Affix>
+                        }
                         {products.length !== 0 ?
                             (
                                 <>

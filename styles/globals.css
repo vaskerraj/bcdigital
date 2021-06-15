@@ -851,9 +851,16 @@ body.offcanvas-open {
 }
 
 /* search page */
-.filter-tags{
+.large.filter-tags{
   border-right: 1px solid #f0f0f0;
 }
+.small .ant-menu-inline, .small .ant-menu-vertical, .small .ant-menu-vertical-left{
+  border-right: none;
+}
+.small .filter-titile{
+  font-weight: 500;
+}
+
 .filter-tags .tags{
   background-color: #fff;
   border-radius: 12px;
@@ -871,6 +878,12 @@ body.offcanvas-open {
 .related-category.active{
   color: #f33535;
 }
+
+.mobile-filter-dropdown{
+  width: 100% !important;
+  left: 0px !important;
+}
+
 
 /* footer */
 footer {
