@@ -24,14 +24,14 @@ const search = () => {
         const trimSearchedQueryValue = searchedQueryValue.trim();
 
         if (trimSearchedQueryValue !== " ") {
-            router.push('/search?q=' + trimSearchedQueryValue);
+            router.push('/search?q=' + trimSearchedQueryValue + '&type=search');
         } else {
             router.reload();
         }
     }
 
     const handleTagClick = query => {
-        router.push('/search?q=' + query);
+        router.push('/search?q=' + query + '&type=search');
     }
 
     const clearSearchTagHistory = () => {

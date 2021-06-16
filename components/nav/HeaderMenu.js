@@ -73,9 +73,12 @@ const HeaderMenu = ({ loginUser, totalCartItems }) => {
                                         </a>
                                     ) :
                                     (
-                                        <a href={`/cat/${mainCat.slug}`}> {mainCat.name}
-                                            <i><ChevronRight size={15} /></i>
-                                        </a>
+                                        <Link href={`/search?q=${mainCat.slug}&type=cat`}>
+                                            <a>
+                                                {mainCat.name}
+                                                <i><ChevronRight size={15} /></i>
+                                            </a>
+                                        </Link>
                                     )
                                 }
                                 {
@@ -83,19 +86,23 @@ const HeaderMenu = ({ loginUser, totalCartItems }) => {
                                     <ul className="verticale-mega-menu flex-wrap">
                                         {mainCat.children.map(subCat => (
                                             <li key={subCat._id}>
-                                                <a href={`/cat/${subCat.slug}`}>
-                                                    <span>{subCat.name}</span>
-                                                    {subCat.children.length !== 0 &&
-                                                        <i><ChevronRight size={15} /></i>
-                                                    }
-                                                </a>
+                                                <Link href={`/search?q=${subCat.slug}&type=cat`}>
+                                                    <a>
+                                                        <span>{subCat.name}</span>
+                                                        {subCat.children.length !== 0 &&
+                                                            <i><ChevronRight size={15} /></i>
+                                                        }
+                                                    </a>
+                                                </Link>
                                                 {
                                                     subCat.children.length !== 0 &&
                                                     <ul className="submenu-item">
                                                         {
                                                             subCat.children.map(subSubCat => (
                                                                 <li key={subSubCat._id}>
-                                                                    <a href={`/cat/${subSubCat.slug}`}>{subSubCat.name}</a>
+                                                                    <Link href={`/search?q=${subSubCat.slug}&type=cat`}>
+                                                                        <a>{subSubCat.name}</a>
+                                                                    </Link>
                                                                 </li>
                                                             ))
                                                         }

@@ -55,7 +55,7 @@ const SearchBar = ({ screen, searchInputClass, searchBtnClass, searchDropdown })
     };
 
     const onSelect = (value) => {
-        router.push('/search?q=' + value)
+        router.push('/search?q=' + value + '&type=search')
     };
 
     const handleSearchHistory = () => {

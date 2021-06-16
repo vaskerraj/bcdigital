@@ -18,7 +18,7 @@ import ProductStarIcon from '../components/helpers/ProductStarIcon';
 
 import { storeSearchTag } from '../redux/actions/searchTagAction';
 
-const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice, categoryQuery, priceQuery, brandQuery }) => {
+const search = ({ searchQuery, typeQuery, categoryAndBrand, total, products, maxPrice, categoryQuery, priceQuery, brandQuery }) => {
     const router = useRouter();
     const dispatch = useDispatch();
 
@@ -61,7 +61,7 @@ const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice, cate
     // check serach query at database 
     // if not exist with validate search then insert at database
     useEffect(() => {
-        if (searchQuery) {
+        if (searchQuery && typeQuery === 'search') {
             setTimeout(() => {
                 dispatch(storeSearchTag(searchQuery));
             }, 5000);
@@ -611,6 +611,7 @@ const search = ({ searchQuery, categoryAndBrand, total, products, maxPrice, cate
 export async function getServerSideProps({ query }) {
     try {
         const { q: searchQuery } = query;
+        const type = query.type || '';
         const price = query.price || '';
         const rating = query.rating || '';
         const sort = query.sort || 'best';
@@ -619,6 +620,7 @@ export async function getServerSideProps({ query }) {
         const brand = query.brand || 'all';
         const { data: results } = await axios.post(`${process.env.api}/api/product/search`, {
             query: searchQuery,
+            type,
             category,
             price,
             brand,
@@ -629,6 +631,7 @@ export async function getServerSideProps({ query }) {
         return {
             props: {
                 searchQuery,
+                typeQuery: type,
                 total: results.total,
                 products: results.products,
                 categoryAndBrand: results.categoryAndBrand,

@@ -108,7 +108,11 @@ const MainHeadSection = ({ mobileTabBar }) => {
                             <div className={` ${mobileTabBar !== "hide" ? 'd-none d-sm-block' : 'col-6'} col-sm-3 col-lg-3 col-xl-3`}>
                                 <div className="d-flex fR mr-5" style={{ fontSize: '1.4rem' }}>
                                     <div className="d-block d-sm-none mr-4">
-                                        <Search />
+                                        <Link href="/searchbar">
+                                            <a className="cp">
+                                                <Search />
+                                            </a>
+                                        </Link>
                                     </div>
                                     {
                                         loginUser ? (<>

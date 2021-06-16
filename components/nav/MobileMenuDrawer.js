@@ -16,21 +16,30 @@ const MobileMenuDrawer = ({ categories, cateogoriesList, mobileMenuVisibleHandle
                                 {categories.map(mainCat => (
                                     <li key={mainCat._id} onClick={(e) => showSubmenHandler(e)}>
                                         {mainCat.children.length !== 0 && <span className="menu-expand"></span>}
-                                        <a><span className="menu-text">{mainCat.name}</span></a>
+                                        {mainCat.children.length !== 0 ?
+                                            (
+                                                <a><span className="menu-text">{mainCat.name}</span></a>
+                                            ) :
+                                            (
+                                                <Link href={`/search?q=${subCat.slug}&type=cat`}>
+                                                    <a><span className="menu-text">{subCat.name}</span></a>
+                                                </Link>
+                                            )
+                                        }
                                         {
                                             mainCat.children.length !== 0 &&
                                             <ul className="offcanvas-submenu">
                                                 {mainCat.children.map(subCat => (
                                                     <li key={subCat._id} onClick={(e) => showSubmenHandler(e)}>
                                                         {subCat.children.length !== 0 && <span className="menu-expand"></span>}
-                                                        <Link href={`/cat/${subCat.slug}`}>
+                                                        <Link href={`/search?q=${subCat.slug}&type=cat`}>
                                                             <a><span className="menu-text">{subCat.name}</span></a>
                                                         </Link>
                                                         {subCat.children.length !== 0 &&
                                                             <ul className="offcanvas-submenu">
                                                                 {subCat.children.map(subSubCat => (
                                                                     <li key={subSubCat._id}>
-                                                                        <Link href={`/cat/${subSubCat.slug}`}>
+                                                                        <Link href={`/search?q=${subSubCat.slug}&type=cat`}>
                                                                             <a>{subSubCat.name}</a>
                                                                         </Link>
                                                                     </li>
