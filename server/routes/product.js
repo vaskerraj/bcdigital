@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Product = mongoose.model('Product');
 const SearchTag = mongoose.model('SearchTag');
+const Category = mongoose.model('Category');
 const slugify = require('slugify');
 const multer = require('multer');
 const fs = require('fs');
@@ -413,6 +414,7 @@ module.exports = function (server) {
     server.post('/api/product/search', async (req, res) => {
         const {
             query,
+            type,
             category,
             brand,
             price,
@@ -420,6 +422,18 @@ module.exports = function (server) {
             sort,
             rating
         } = req.body;
+
+        const findBySearchType = (query, searchType) => {
+            if (searchType === 'search') {
+                return {
+                    $text: { $search: query }
+                }
+            } else if (searchType === 'cat') {
+                return { category: query }
+            } else {
+                return {}
+            }
+        }
         const findCategory = (category) => {
             if (category !== 'all') {
                 return { category: category };
@@ -469,14 +483,93 @@ module.exports = function (server) {
             }
         }
 
+        const getTotalProcuts = async (query, type, category, brand, price) => {
+            if (type === 'search') {
+                return await Product.countDocuments(
+                    {
+                        $text: { $search: query },
+                        category: category !== 'all' ? category : { $exists: true },
+                        brand: brand !== 'all' ? { $in: brand } : { $exists: true },
+                        'products.finalPrice': price !== '' ?
+                            {
+                                $gte: price[0],
+                                $lte: price[1]
+                            }
+                            :
+                            { $exists: true }
+                    }
+                );
+            } else if (type === 'cat') {
+                return await Product.countDocuments(
+                    {
+                        category: query,
+                        brand: brand !== 'all' ? { $in: brand } : { $exists: true },
+                        'products.finalPrice': price !== '' ?
+                            {
+                                $gte: price[0],
+                                $lte: price[1]
+                            }
+                            :
+                            { $exists: true }
+                    }
+                );
+            }
+        }
+
+        const getCategoryAndBrand = async (query, type) => {
+            if (type === 'search') {
+                return await Product.find(
+                    {
+                        $text: { $search: query }
+                    })
+                    .select('category brand')
+                    .populate('brand', '_id name')
+                    .populate('category', '_id name');
+            } else if (type === 'cat') {
+                return await Product.find(
+                    {
+                        category: query
+                    })
+                    .select('category brand')
+                    .populate('brand', '_id name')
+                    .populate('category', '_id name');
+            }
+        }
+
+        const getMaxPrice = async (query, type) => {
+            if (type === 'search') {
+                return await Product.findOne(
+                    {
+                        $text: { $search: query }
+                    },
+                    {
+                        'products': 1
+                    })
+                    .select('products')
+                    .sort([['products.finalPrice', -1]])
+            } else if (type === 'cat') {
+                return await Product.findOne(
+                    {
+                        category: query
+                    },
+                    {
+                        'products': 1
+                    })
+                    .select('products')
+                    .sort([['products.finalPrice', -1]])
+
+            }
+        }
+
         try {
             const currentPage = page || 1;
             const productPerPage = 24;
-
-            const products = await Product.find(
-                {
-                    $text: { $search: query }
-                })
+            let categoryId = ''
+            if (type === 'cat') {
+                const category = await Category.findOne({ slug: query });
+                categoryId = category._id;
+            }
+            const products = await Product.find(findBySearchType(type === 'cat' ? categoryId : query, type))
                 .find(findCategory(category))
                 .find(findBrand(brand))
                 .find(findPrice(price))
@@ -494,38 +587,13 @@ module.exports = function (server) {
                 .skip((currentPage - 1) * productPerPage)
                 .limit(productPerPage);
 
-            const totalProducts = await Product.countDocuments(
-                {
-                    $text: { $search: query },
-                    category: category !== 'all' ? category : { $exists: true },
-                    brand: brand !== 'all' ? { $in: brand } : { $exists: true },
-                    'products.finalPrice': price !== '' ?
-                        {
-                            $gte: price[0],
-                            $lte: price[1]
-                        }
-                        :
-                        { $exists: true }
-                }
-            );
+            const totalProducts = await getTotalProcuts(type === 'cat' ? categoryId : query, type, category, brand, price);
 
-            const categoryAndBrand = await Product.find(
-                {
-                    $text: { $search: query }
-                })
-                .select('category brand')
-                .populate('brand', '_id name')
-                .populate('category', '_id name')
+            const categoryAndBrand = await getCategoryAndBrand(type === 'cat' ? categoryId : query, type);
 
-            const maxPrice = await Product.findOne(
-                {
-                    $text: { $search: query }
-                },
-                {
-                    'products': 1
-                })
-                .select('products')
-                .sort([['products.finalPrice', -1]])
+            const maxPrice = await getMaxPrice(type === 'cat' ? categoryId : query, type);
+
+
             return res.status(200).json({
                 total: totalProducts,
                 products,
