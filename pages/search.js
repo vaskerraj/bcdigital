@@ -446,7 +446,7 @@ const search = ({ searchQuery, typeQuery, categoryAndBrand, total, products, max
         </div >
     )
     const onDrawerClose = () => {
-
+        setDrawerVisible(false);
     }
     return (
         <Wrapper mobileTabBar={mobileTabBarStatus}>
