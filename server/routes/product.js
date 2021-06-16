@@ -577,6 +577,14 @@ module.exports = function (server) {
                 .populate({
                     path: 'category',
                     select: 'name _id',
+                    populate: ({
+                        path: 'parentId',
+                        select: 'name _id',
+                        populate: ({
+                            path: 'parentId',
+                            select: 'name _id',
+                        })
+                    })
                 })
                 .populate('brand', 'name slug')
                 .populate({

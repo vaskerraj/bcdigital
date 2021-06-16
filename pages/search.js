@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useDispatch } from 'react-redux';
 
@@ -47,6 +48,10 @@ const search = ({ searchQuery, typeQuery, categoryAndBrand, total, products, max
     // drawer 
     const [drawerVisible, setDrawerVisible] = useState(false);
 
+    //breadcrumb
+    const [firstBreadcrumb, setFirstBreadcrumb] = useState({ name: null, slug: null });
+    const [secondBreadcrumb, setSecondBreadcrumb] = useState({ name: null, slug: null });
+    const [thirdBreadcrumb, setThirdBreadcrumb] = useState({ name: null, slug: null });
 
     useEffect(() => {
         if (width <= 576) {
@@ -67,6 +72,23 @@ const search = ({ searchQuery, typeQuery, categoryAndBrand, total, products, max
             }, 5000);
         }
     }, [searchQuery]);
+
+    //breadcrumb
+    useEffect(() => {
+        if (typeQuery === 'cat') {
+            const categoryData = products[0].category;
+            if (categoryData) {
+                const firstLevelCategory = categoryData.parentId.parentId ? categoryData.parentId.parentId.name : null;
+                setFirstBreadcrumb({ name: firstLevelCategory, slug: categoryData.parentId.slug });
+
+                const secondLevelCategory = categoryData.parentId ? categoryData.parentId.name : null;
+                setSecondBreadcrumb({ name: secondLevelCategory, slug: categoryData.slug });
+
+                const thirdLevelCategory = categoryData.name;
+                setThirdBreadcrumb({ name: thirdLevelCategory, slug: categoryData.slug });
+            }
+        }
+    }, [typeQuery]);
 
     // filter and make unique
     const key = '_id';
@@ -296,11 +318,11 @@ const search = ({ searchQuery, typeQuery, categoryAndBrand, total, products, max
 
         router.push('/search?q=' + searchQuery);
         if (typeof window !== "undefined") {
-            location.href = '/search?q=' + searchQuery;
+            location.href = '/search?q=' + searchQuery + '&type=' + typeQuery;
         }
     }
     const filterSection = (screen) => (
-        <div className={`d-block bg-white ${screen === 'large' ? 'mt-4' : ''}`}>
+        <div className={`d-block bg-white ${screen === 'large' ? typeQuery !== 'cat' ? 'mt-4' : '' : ''}`}>
             <div className={`d-block filter-tags  ${screen === 'large' ? 'large pb-3 p-4' : 'small pb-3 p-1'} `}>
                 <div className="d-flex justify-content-between">
                     {screen === 'large' &&
@@ -466,12 +488,46 @@ const search = ({ searchQuery, typeQuery, categoryAndBrand, total, products, max
             </Drawer>
             <div className="container">
                 <div className="row">
+                    {!onlyMobile && typeQuery === 'cat' &&
+                        <ul className="breadcrumb bg-transparent mt-3">
+                            {firstBreadcrumb.name ?
+                                (
+                                    <>
+                                        <li className="breadcrumb-item">
+                                            {firstBreadcrumb.name}
+                                        </li>
+                                        <li className="breadcrumb-item">
+                                            <Link href={`cat/${secondBreadcrumb.slug}`}>
+                                                <a className="text-info">
+                                                    {secondBreadcrumb.name}
+                                                </a>
+                                            </Link>
+                                        </li>
+                                        <li className="breadcrumb-item">
+                                            {thirdBreadcrumb.name}
+                                        </li>
+                                    </>
+                                )
+                                :
+                                (
+                                    <>
+                                        <li className="breadcrumb-item">
+                                            {secondBreadcrumb.name}
+                                        </li>
+                                        <li className="breadcrumb-item">
+                                            {thirdBreadcrumb.name}
+                                        </li>
+                                    </>
+                                )
+                            }
+                        </ul>
+                    }
                     <div className="col-sm-3 d-none d-sm-block">
                         {filterSection('large')}
                     </div>
                     <div className="col-12 col-sm-9">
                         {!onlyMobile &&
-                            <div className="d-block bg-white align-items-center p-3 mt-4">
+                            <div className={`d-block bg-white align-items-center p-3 ${typeQuery !== 'cat' && 'mt-4'}`}>
                                 <div className="row">
                                     <div className="col-6 font14" style={{ paddingTop: '0.7rem' }}>
                                         {total} Product Found
