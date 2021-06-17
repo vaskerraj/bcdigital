@@ -225,13 +225,13 @@ module.exports = function (server) {
                 .populate('brand')
                 .populate({
                     path: 'category',
-                    select: 'name _id',
+                    select: 'name slug _id',
                     populate: ({
                         path: 'parentId',
-                        select: 'name _id',
+                        select: 'name slug _id',
                         populate: ({
                             path: 'parentId',
-                            select: 'name _id',
+                            select: 'name slug _id',
                         })
                     })
                 })

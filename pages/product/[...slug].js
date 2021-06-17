@@ -35,7 +35,6 @@ message.config({
 });
 
 const ProductDetail = ({ product }) => {
-    console.log("product", product)
 
     // hide mobileTabBar at mobile
     // we gonna implmente hide at HeaderMenu so hide only at small screen(576px)
@@ -242,49 +241,51 @@ const ProductDetail = ({ product }) => {
             <div className="container">
                 <div className="d-block mt-3">
                     {!onlyMobile &&
-                        <ul className="breadcrumb bg-transparent">
-                            {firstBreadcrumb.name ?
-                                (
-                                    <>
-                                        <li className="breadcrumb-item">
-                                            {firstBreadcrumb.name}
-                                        </li>
-                                        <li className="breadcrumb-item">
-                                            <Link href={`cat/${secondBreadcrumb.slug}`}>
-                                                <a className="text-info">
-                                                    {secondBreadcrumb.name}
-                                                </a>
-                                            </Link>
-                                        </li>
-                                        <li className="breadcrumb-item">
-                                            <Link href={`cat/${thirdBreadcrumb.slug}`}>
-                                                <a className="text-info">
-                                                    {thirdBreadcrumb.name}
-                                                </a>
-                                            </Link>
-                                        </li>
-                                    </>
-                                )
-                                :
-                                (
-                                    <>
-                                        <li className="breadcrumb-item">
-                                            {secondBreadcrumb.name}
-                                        </li>
-                                        <li className="breadcrumb-item">
-                                            <Link href={`cat/${thirdBreadcrumb.slug}`}>
-                                                <a className="text-info">
-                                                    {thirdBreadcrumb.name}
-                                                </a>
-                                            </Link>
-                                        </li>
-                                    </>
-                                )
-                            }
-                            <li className="breadcrumb-item text-muted">
-                                {product.name}
-                            </li>
-                        </ul>
+                        <div className="row">
+                            <ul className="breadcrumb bg-transparent">
+                                {firstBreadcrumb.name ?
+                                    (
+                                        <>
+                                            <li className="breadcrumb-item">
+                                                {firstBreadcrumb.name}
+                                            </li>
+                                            <li className="breadcrumb-item">
+                                                <Link href={`/search?q=${secondBreadcrumb.slug}&type=cat`}>
+                                                    <a className="text-info">
+                                                        {secondBreadcrumb.name}
+                                                    </a>
+                                                </Link>
+                                            </li>
+                                            <li className="breadcrumb-item">
+                                                <Link href={`/search?q=${secondBreadcrumb.slug}&type=cat`}>
+                                                    <a className="text-info">
+                                                        {thirdBreadcrumb.name}
+                                                    </a>
+                                                </Link>
+                                            </li>
+                                        </>
+                                    )
+                                    :
+                                    (
+                                        <>
+                                            <li className="breadcrumb-item">
+                                                {secondBreadcrumb.name}
+                                            </li>
+                                            <li className="breadcrumb-item">
+                                                <Link href={`/search?q=${secondBreadcrumb.slug}&type=cat`}>
+                                                    <a className="text-info">
+                                                        {thirdBreadcrumb.name}
+                                                    </a>
+                                                </Link>
+                                            </li>
+                                        </>
+                                    )
+                                }
+                                <li className="breadcrumb-item text-muted">
+                                    {product.name}
+                                </li>
+                            </ul>
+                        </div>
                     }
                 </div>
                 <div className="col bg-white p-4">
@@ -331,7 +332,7 @@ const ProductDetail = ({ product }) => {
                                                             <div className="product-finalprice">
                                                                 Rs.<span>{changeOnProduct.finalPrice}</span>
                                                             </div>
-                                                            {changeOnProduct.discount &&
+                                                            {changeOnProduct.discount || changeOnProduct.discount !== 0 &&
                                                                 <>
                                                                     <div className="product-del ml-3">
                                                                         Rs.<span>{changeOnProduct.price}</span>
@@ -390,7 +391,7 @@ const ProductDetail = ({ product }) => {
                                                 Price
                                             </div>
                                             <div>
-                                                {changeOnProduct.discount &&
+                                                {changeOnProduct.discount !== null && changeOnProduct.discount !== 0 &&
                                                     <div className="product-del">
                                                         Rs.<span>{changeOnProduct.price}</span>
                                                     </div>
@@ -399,7 +400,7 @@ const ProductDetail = ({ product }) => {
                                                     <div className="product-finalprice">
                                                         Rs.<span>{changeOnProduct.finalPrice}</span>
                                                     </div>
-                                                    {changeOnProduct.discount &&
+                                                    {changeOnProduct.discount !== null && changeOnProduct.discount !== 0 &&
                                                         <div className="product-discount ml-3">
                                                             - {changeOnProduct.discount}%
                                                         </div>
