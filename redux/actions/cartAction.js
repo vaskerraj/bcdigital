@@ -39,7 +39,7 @@ export const removeOrderFromCart = (productId) => (dispatch, getState) => {
 
     const { cartItems: { cartItem } } = getState();
     // set cartItem to cookie
-    setCookie(null, "cartItem", cartItem, {
+    setCookie(null, "cartItem", JSON.stringify(cartItem), {
         maxAge: 30 * 24 * 60 * 60,
         path: '/'
     });

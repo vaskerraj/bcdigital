@@ -884,6 +884,36 @@ body.offcanvas-open {
   left: 0px !important;
 }
 
+/* cart */
+.cart-item{
+  padding: 1.5rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.cart-item:last-child{
+  padding-bottom: 2.5rem;
+  border-bottom: none;
+}
+.cart-item .product-finalprice{
+  color: #f33535;
+}
+.cart-item .product-del{
+  text-decoration: line-through;
+  color: #9b9b9b;
+}
+.coupon .ant-collapse .ant-collapse-content{
+  border-top: 1px solid#ddd;
+}
+
+.apply-coupon .btn-apply{
+  padding-left: 3rem;
+  padding-right: 3rem;
+  font-size: 1.6rem;
+}
+
+.summery .grandtotal{
+  color: #f33535;
+}
 
 /* footer */
 footer {
