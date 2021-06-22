@@ -34,7 +34,16 @@ message.config({
     maxCount: 1,
 });
 
-const ProductDetail = ({ product }) => {
+const ProductDetail = ({ product, pr, qty }) => {
+
+    // while unauthorize user try to add product to cart
+    const dispatch = useDispatch();
+    useEffect(() => {
+        if (pr && qty) {
+            dispatch(addToCart(pr, Number(qty)));
+            router.replace(`/product/${product._id}/${product.slug}`);
+        }
+    }, [pr, qty]);
 
     // hide mobileTabBar at mobile
     // we gonna implmente hide at HeaderMenu so hide only at small screen(576px)
@@ -118,9 +127,9 @@ const ProductDetail = ({ product }) => {
         0;
 
     const router = useRouter();
-    const dispatch = useDispatch();
 
     const { loading, cartItem, error } = useSelector(state => state.cartItems);
+    const { userInfo } = useSelector(state => state.userAuth);
 
     const { register, handleSubmit, errors, reset, clearErrors, getValues, trigger } = useForm({
         mode: "onChange"
@@ -191,7 +200,12 @@ const ProductDetail = ({ product }) => {
     }, [product])
 
     const onProductAddToCart = formdata => {
-        dispatch(addToCart(formdata.product, Number(formdata.quantity)));
+        if (userInfo) {
+            dispatch(addToCart(formdata.product, Number(formdata.quantity)));
+        } else {
+            const redirectUrl = encodeURIComponent(`/product/${product._id}/${product.slug}?pr=${formdata.product}&qty=${formdata.quantity}`)
+            router.push(`/login?redirect=${redirectUrl}`);
+        }
 
         if (error && error.message === "outofstock") {
             message.warning({
@@ -469,14 +483,14 @@ const ProductDetail = ({ product }) => {
                                                                 changeOnProduct.available < 5 && changeOnProduct.available > 0 &&
                                                                 <span className="text-danger">
                                                                     Hurry, only {changeOnProduct.available} item left
-                                                        </span>
+                                                                </span>
                                                             }
                                                         </div>
 
                                                         {changeOnProduct.available === 0 &&
                                                             <div className="d-inline-flex ml-3 text-danger font15">
                                                                 Currently out of stock
-                                                        </div>
+                                                            </div>
                                                         }
                                                     </>
                                                 }
@@ -494,7 +508,7 @@ const ProductDetail = ({ product }) => {
                                                                 onClick={handleSubmit(onProductBuyNow)}
                                                             >
                                                                 Buy Now
-                                                    </button>
+                                                            </button>
                                                         </div>
                                                         <div className="col-6">
                                                             <button type="submit"
@@ -519,7 +533,7 @@ const ProductDetail = ({ product }) => {
                                                             onClick={handleSubmit(onProductBuyNow)}
                                                         >
                                                             Buy Now
-                                                    </button>
+                                                        </button>
                                                     </div>
                                                     <div className="col-6">
                                                         <button type="submit"
@@ -590,13 +604,21 @@ const ProductDetail = ({ product }) => {
 
 export async function getServerSideProps(context) {
     try {
+
+        // while unauthorize user try to add product at cart
+        const urlquery = context.query;
+        const pr = urlquery.pr || null;
+        const qty = urlquery.qty || null;
+
         const { slug } = context.params;
         const productId = slug[0];
         const { data } = await axios.get(`${process.env.api}/api/product/${productId}`);
 
         return {
             props: {
-                product: data
+                product: data,
+                pr,
+                qty
             }
         }
     } catch (err) {
