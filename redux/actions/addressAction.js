@@ -9,12 +9,12 @@ import {
 }
     from '../types/addressType';
 
-export const addAddress = (name, mobile, label, region, city, street) => async (dispatch, getState) => {
+export const addAddress = (name, mobile, label, region, area, city, street) => async (dispatch, getState) => {
     dispatch({ type: ADR_ADD_RESPONSE });
 
     try {
         const { userAuth: { userInfo } } = getState();
-        const { data } = await axiosApi.post("api/addresses", { name, mobile, label, region, city, street }, {
+        const { data } = await axiosApi.post("api/addresses", { name, mobile, label, region, city, area, street }, {
             headers: {
                 token: userInfo.token
             }
@@ -27,12 +27,12 @@ export const addAddress = (name, mobile, label, region, city, street) => async (
     }
 }
 
-export const updateAddress = (id, name, mobile, label, region, city, street) => async (dispatch, getState) => {
+export const updateAddress = (id, name, mobile, label, region, city, area, street) => async (dispatch, getState) => {
     dispatch({ type: ADR_UPD_RESPONSE });
 
     try {
         const { userAuth: { userInfo } } = getState();
-        const { data } = await axiosApi.put("api/address", { id, name, mobile, label, region, city, street }, {
+        const { data } = await axiosApi.put("api/address", { id, name, mobile, label, region, city, area, street }, {
             headers: {
                 token: userInfo.token
             }

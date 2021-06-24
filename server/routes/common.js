@@ -163,8 +163,18 @@ module.exports = function (server) {
         }
     });
 
+    server.post('/api/related/defaultaddress', async (req, res) => {
+        const { addressId } = req.body;
+        try {
+            const addresses = await DefaultAddress.find({ parentId: addressId }).lean();
+            return res.status(200).json(addresses);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
     // shipping plan for user
-    server.get('/api/shippingPlans/:cityId', requiredAuth, checkRole(['user']), async (req, res) => {
+    server.get('/api/shippingPlans/:cityId', requiredAuth, checkRole(['subscriber']), async (req, res) => {
         const cityId = req.params.cityId;
         try {
             const shipCost = await ShippingCost.find({ cityId }).lean();

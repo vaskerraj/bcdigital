@@ -15,7 +15,7 @@ import AddressForm from '../../../components/user/AddressForm';
 import AddressList from '../../../components/user/AddressList';
 import { addAddress } from '../../../redux/actions/addressAction';
 
-const Addresses = ({ addresses }) => {
+const Addresses = ({ addresses, defaultAddresses }) => {
     const [addAddressBlock, setAddAddressBlock] = useState(false);
 
     const { register, handleSubmit, errors } = useForm();
@@ -61,6 +61,7 @@ const Addresses = ({ addresses }) => {
             inputdata.addLabel,
             inputdata.region,
             inputdata.city,
+            inputdata.area,
             inputdata.address
         ))
     }
@@ -162,6 +163,7 @@ const Addresses = ({ addresses }) => {
                                                 handleSubmit={handleSubmit(onSubmit)}
                                                 errors={errors}
                                                 onCancel={onCancel}
+                                                addresses={defaultAddresses}
                                             />
                                         }
                                         {!addAddressBlock && addresses.length ? (
@@ -216,9 +218,11 @@ export async function getServerSideProps(context) {
                 token: cookies.token,
             },
         });
+        const { data: defaultAddresses } = await axios.get(`${process.env.api}/api/defaultaddress`);
         return {
             props: {
-                addresses: data
+                addresses: data,
+                defaultAddresses
             }
         }
     } catch (err) {

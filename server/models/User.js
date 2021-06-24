@@ -6,9 +6,9 @@ const addressSchema = mongoose.Schema({
     label: String,
     name: String,
     mobile: String,
-    region: String,
-    city: String,
-    area: String,
+    region: { type: ObjectId, ref: 'DefaultAddress' },
+    city: { type: ObjectId, ref: 'DefaultAddress' },
+    area: { type: ObjectId, ref: 'DefaultAddress' },
     street: String,
     isDefault: {
         type: String,

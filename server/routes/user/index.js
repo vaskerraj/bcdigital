@@ -70,7 +70,7 @@ module.exports = function (server) {
         }
     });
     server.post('/api/addresses', requiredAuth, checkRole(['subscriber']), async (req, res) => {
-        const { name, mobile, label, region, city, street } = req.body;
+        const { name, mobile, label, region, city, area, street } = req.body;
         try {
             const userAddress = await Users.aggregate([
                 { $match: { _id: req.user._id } },
@@ -83,7 +83,7 @@ module.exports = function (server) {
                 isDefault = true;
             }
 
-            const addresses = { name, mobile, label, region, city, street, isDefault }
+            const addresses = { name, mobile, label, region, city, area, street, isDefault }
             const user = await Users.findByIdAndUpdate(req.user.id,
                 {
                     $push: {
@@ -124,9 +124,9 @@ module.exports = function (server) {
     });
 
     server.put('/api/address', requiredAuth, checkRole(['subscriber']), async (req, res) => {
-        const { id, name, mobile, label, region, city, street } = req.body;
+        const { id, name, mobile, label, region, city, area, street } = req.body;
         try {
-            var update = { name, mobile, label, region, city, street };
+            var update = { name, mobile, label, region, city, area, street };
             await Users.findOneAndUpdate({ 'addresses._id': id },
                 {
                     '$set': { 'addresses.$': update },

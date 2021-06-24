@@ -1,6 +1,7 @@
 import React from 'react';
+import AddressSelectPart from '../AddressSelectPart';
 
-const AddressForm = ({ formRegister, handleSubmit, errors, onCancel }) => {
+const AddressForm = ({ formRegister, handleSubmit, errors, onCancel, addresses }) => {
     // console.log(errors)
     return (
         <div className="d-block text-left">
@@ -68,40 +69,11 @@ const AddressForm = ({ formRegister, handleSubmit, errors, onCancel }) => {
                         </div>
                     </div>
                     <div className="col-sm-6">
-                        <div className="d-block">
-                            <label className="font14 font-weight-bold">Region</label>
-                            <div className="form-group">
-                                <input
-                                    type="text"
-                                    name="region"
-                                    className="form-control"
-                                    placeholder="Please enter your region"
-                                    ref={formRegister({
-                                        required: "Provide your region"
-                                    })}
-                                />
-                                <div className="error-continer">
-                                    {errors.region && <p className="errorMsg">{errors.region.message}</p>}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="d-block mt-2">
-                            <label className="font14 font-weight-bold">City</label>
-                            <div className="form-group">
-                                <input
-                                    type="text"
-                                    name="city"
-                                    className="form-control"
-                                    placeholder="Please enter your city"
-                                    ref={formRegister({
-                                        required: "Provide your city"
-                                    })}
-                                />
-                                <div className="error-continer">
-                                    {errors.city && <p className="errorMsg">{errors.city.message}</p>}
-                                </div>
-                            </div>
-                        </div>
+                        <AddressSelectPart
+                            addresses={addresses}
+                            formRegister={formRegister}
+                            errors={errors}
+                        />
                         <div className="d-block mt-2">
                             <label className="font14 font-weight-bold">Address</label>
                             <div className="form-group">
