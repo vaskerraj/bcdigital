@@ -8,7 +8,7 @@ import { parseCookies } from 'nookies';
 import axios from 'axios';
 import axiosApi from '../helpers/api';
 
-import { Select, Collapse, message } from 'antd';
+import { Select, Collapse, message, Radio, Space } from 'antd';
 const { Option } = Select;
 const { Panel } = Collapse;
 
@@ -49,7 +49,7 @@ const cart = ({ parseCartItems, cartProducts }) => {
     }, [width]);
 
     const { cartItem } = useSelector(state => state.cartItems);
-    const { userAuth } = useSelector(state => state.userAuth);
+    const { userInfo } = useSelector(state => state.userAuth);
 
     useEffect(() => {
         if (cartItem) {
@@ -101,6 +101,10 @@ const cart = ({ parseCartItems, cartProducts }) => {
         )
     }
 
+    const onDeliveryChange = e => {
+
+    }
+
     const applyCouponHanlder = async () => {
         setCouponError('');
         try {
@@ -108,7 +112,7 @@ const cart = ({ parseCartItems, cartProducts }) => {
                 {
                     headers:
                     {
-                        token: userAuth.token
+                        token: userInfo.token
                     }
                 }
             );
@@ -168,10 +172,9 @@ const cart = ({ parseCartItems, cartProducts }) => {
                         <div className="col-sm-12 col-md-8 mt-5">
                             <div className="d-block bg-white">
                                 <div className="title border-bottom d-flex justify-content-between p-3 pl-4">
-                                    <h3>CART ({parseCartItems.reduce((a, c) => a + c.productQty, 0)})</h3>
+                                    <h3>CART ({combinedCartItems.reduce((a, c) => a + c.productQty, 0)})</h3>
+                                    <div className="">Delivery Charge: Rs. </div>
                                 </div>
-                                <div className="voucherText"></div>
-                                <div className="couponConfirmed"></div>
                                 {!onlyMobile &&
                                     <div className="col-12">
                                         <ul className="list-unstyled">
@@ -289,13 +292,27 @@ const cart = ({ parseCartItems, cartProducts }) => {
                                     </div>
                                 }
                             </div>
+                            <div className="d-block bg-white mt-5">
+                                <div className="d-flex title border-bottom justify-content-between p-3 pl-4">
+                                    <h4>SELECT DELIVERY OPTION</h4>
+                                </div>
+                                <div className="col-12">
+                                    <Radio.Group onChange={onDeliveryChange} value={1}>
+                                        <Space direction="vertical">
+                                            <Radio value={1}>Plan 1</Radio>
+                                            <Radio value={2}>Plan 2</Radio>
+                                            <Radio value={3}>Plan 3</Radio>
+                                        </Space>
+                                    </Radio.Group>
+                                </div>
+                            </div>
                             <div className="d-block coupon bg-white mt-5">
                                 <Collapse
                                     ghost
                                     defaultActiveKey={[onlyMobile ? '' : '1']}
                                     expandIconPosition={'right'}
                                 >
-                                    <Panel header={<h3>Coupon/Voucher</h3>} key="1" >
+                                    <Panel header={<h4>COUPON/VOUCHER</h4>} key="1" >
                                         <div className="d-flex apply-coupon">
                                             <input className="form-control"
                                                 disabled={validCoupon !== '' ? true : false}
@@ -317,6 +334,7 @@ const cart = ({ parseCartItems, cartProducts }) => {
                                     </Panel>
                                 </Collapse>
                             </div>
+
                         </div>
                         <div className="col-sm-12 col-md-4 mt-5">
                             <div className="summery bg-white p-4">
