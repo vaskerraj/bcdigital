@@ -40,6 +40,11 @@ const couponSchema = new mongoose.Schema({
         type: Number,
         require: true
     },
+    availableVoucher: {
+        type: Number,
+        require: true,
+        default: 0
+    },
     remainingVoucher: {
         type: Number,
     },
@@ -55,7 +60,8 @@ const couponSchema = new mongoose.Schema({
     },
     couponUseIn: {
         type: String, // all/category
-        require: true
+        require: true,
+        default: 'all'
     },
     categoryId: [{
         type: ObjectId,
