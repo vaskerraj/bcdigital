@@ -6,8 +6,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { parseCookies } from 'nookies';
 
 import axios from 'axios';
+import axiosApi from '../helpers/api';
 
-import { Select, Collapse } from 'antd';
+import { Select, Collapse, message } from 'antd';
 const { Option } = Select;
 const { Panel } = Collapse;
 
@@ -19,15 +20,23 @@ import Wrapper from '../components/Wrapper';
 import { addToCart, removeOrderFromCart } from '../redux/actions/cartAction';
 
 const cart = ({ parseCartItems, cartProducts }) => {
-    console.log(parseCartItems);
 
     const [combinedCartItems, setCombinedCartItems] = useState([]);
+    const [grandTotal, setGrandTotal] = useState(0);
 
     // hide mobileTabBar at mobile
     // we gonna implmente hide at HeaderMenu so hide only at small screen(576px)
     const { height, width } = useWindowDimensions();
     const [mobileTabBarStatus, setMobileTabBarStatus] = useState("");
     const [onlyMobile, setOnlyMoble] = useState(false);
+
+
+    //coupon
+    const [coupon, setCoupon] = useState('');
+    const [validCoupon, setValidCoupon] = useState('');
+    const [couponError, setCouponError] = useState('');
+
+    const [couponDiscount, setCouponDiscount] = useState(0);
 
     useEffect(() => {
         if (width <= 768) {
@@ -40,7 +49,7 @@ const cart = ({ parseCartItems, cartProducts }) => {
     }, [width]);
 
     const { cartItem } = useSelector(state => state.cartItems);
-
+    const { userAuth } = useSelector(state => state.userAuth);
 
     useEffect(() => {
         if (cartItem) {
@@ -48,28 +57,32 @@ const cart = ({ parseCartItems, cartProducts }) => {
                 ...item,
                 ...cartItem.find(ele => ele.productId === item.products[0]._id),
             }));
-            console.log(combineProductWithCartItems);
             setCombinedCartItems(combineProductWithCartItems);
+
+            // set grand total
+            const cartTotalOnMerge = combineProductWithCartItems.reduce((a, c) => (a + c.productQty * c.products[0].finalPrice), 0);
+            setGrandTotal(cartTotalOnMerge);
         }
-    }, [cartItem]);
+    }, [cartItem, cartProducts]);
 
-    console.log(combinedCartItems);
+    const cartTotal = combinedCartItems.reduce((a, c) => (a + c.productQty * c.products[0].finalPrice), 0);
 
+    const dispatch = useDispatch();
     const router = useRouter();
+
     const checkoutHandler = () => {
         router.push('/checkout');
     }
 
-    const dispatch = useDispatch();
-
     const removeFromCartHandler = (productId) => {
+        document.querySelector('.item_' + productId).style.display = "none"
         dispatch(removeOrderFromCart(productId));
         router.push(router.asPath);
     }
 
     const cartQtyChangeHandler = (productId, value) => {
         dispatch(addToCart(productId, Number(value)));
-        router.push(router.asPath);
+        router.push('/cart');
     }
 
     const selectAvailableProduct = (product, qty) => {
@@ -87,6 +100,54 @@ const cart = ({ parseCartItems, cartProducts }) => {
             </Select>
         )
     }
+
+    const applyCouponHanlder = async () => {
+        setCouponError('');
+        try {
+            const { data } = await axiosApi.post("/api/apply/coupon", { coupon, cartTotal },
+                {
+                    headers:
+                    {
+                        token: userAuth.token
+                    }
+                }
+            );
+            if (data) {
+                if (data.msg) {
+                    setCouponError(data.msg);
+                } else {
+                    setValidCoupon(data._id);
+                    const discountType = data.discountType;
+
+                    const couponDiscountAmount = discountType === 'flat'
+                        ? Math.round(data.discountAmount)
+                        : Math.round((cartTotal * data.discountAmount) / 100);
+                    setCouponDiscount(couponDiscountAmount);
+
+                    const totalAferCouponDiscount = cartTotal - couponDiscountAmount;
+                    setGrandTotal(totalAferCouponDiscount);
+                }
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
+    }
+
+    const removeCouponHanlder = () => {
+        setCoupon('');
+        setCouponError('');
+        setValidCoupon('');
+        setCouponDiscount(0)
+    }
+
     return (
 
         <Wrapper mobileTabBar={mobileTabBarStatus}>
@@ -116,7 +177,7 @@ const cart = ({ parseCartItems, cartProducts }) => {
                                         <ul className="list-unstyled">
                                             {
                                                 combinedCartItems.map(item => (
-                                                    <li key={item.products[0]._id} className="cart-item">
+                                                    <li key={item.products[0]._id} className={`cart-item item_${item.products[0]._id}`}>
                                                         <div className="row">
                                                             <div className="col-8">
                                                                 <div className="d-flex">
@@ -177,7 +238,7 @@ const cart = ({ parseCartItems, cartProducts }) => {
                                         <ul className="list-unstyled">
                                             {
                                                 combinedCartItems.map(item => (
-                                                    <li key={item.products[0]._id} className="cart-item">
+                                                    <li key={item.products[0]._id} className={`cart-item item_${item.products[0]._id}`}>
                                                         <div className="d-flex">
                                                             <Link href={`/product/${item._id}/${item.slug}`}>
                                                                 <a className="cp">
@@ -208,6 +269,9 @@ const cart = ({ parseCartItems, cartProducts }) => {
                                                                     {item.colour[0].name && item.products[0].size !== 'nosize' && ' | '}
                                                                     {item.products[0].size !== 'nosize' ? item.products[0].size : ''}
                                                                 </div>
+                                                                <div className="d-block mt-1 text-muted">
+                                                                    Brand : {item.brand ? item.brand.name : 'No Brand'}
+                                                                </div>
                                                                 <div className="d-flex justify-content-between align-items-center mt-2">
                                                                     <div className="">
                                                                         {selectAvailableProduct(item.products[0], item.productQty)}
@@ -233,8 +297,22 @@ const cart = ({ parseCartItems, cartProducts }) => {
                                 >
                                     <Panel header={<h3>Coupon/Voucher</h3>} key="1" >
                                         <div className="d-flex apply-coupon">
-                                            <input className="form-control" placeholder="Enter Coupon Code" />
-                                            <button className="btn btn-outline-success btn-apply ml-3">Apply</button>
+                                            <input className="form-control"
+                                                disabled={validCoupon !== '' ? true : false}
+                                                value={coupon}
+                                                onChange={e => setCoupon(e.target.value)}
+                                                onKeyDown={() => setCouponError('')}
+                                                placeholder="Enter Coupon Code"
+                                            />
+                                            {validCoupon === '' &&
+                                                <button className="btn btn-outline-success btn-apply ml-3" onClick={applyCouponHanlder}>Apply</button>
+                                            }
+                                            {validCoupon !== '' &&
+                                                <button className="btn btn-outline-warning btn-apply ml-3" onClick={removeCouponHanlder}>Remove</button>
+                                            }
+                                        </div>
+                                        <div className="d-block font13 text-danger mt-2">
+                                            {couponError}
                                         </div>
                                     </Panel>
                                 </Collapse>
@@ -248,9 +326,15 @@ const cart = ({ parseCartItems, cartProducts }) => {
                                         <span>Product Total</span>
                                         <span>Rs.{combinedCartItems.reduce((a, c) => (a + c.productQty * c.products[0].finalPrice), 0)}</span>
                                     </div>
+                                    {couponDiscount !== 0 &&
+                                        <div className="d-flex justify-content-between mt-3 pt-4 border-top border-gray align-items-center">
+                                            <span>Coupon Discount</span>
+                                            <span>Rs.{couponDiscount}</span>
+                                        </div>
+                                    }
                                     <div className="d-flex justify-content-between mt-4 pt-3 border-top border-gray align-items-center">
                                         <span className="font-weight-bold">Total</span>
-                                        <span className="grandtotal font-weight-normal" style={{ fontSize: '2.0rem' }}>Rs.{combinedCartItems.reduce((a, c) => (a + c.productQty * c.products[0].finalPrice), 0)}</span>
+                                        <span className="grandtotal font-weight-normal" style={{ fontSize: '2.0rem' }}>Rs.{grandTotal}</span>
                                     </div>
                                     <div className="d-block mt-5">
                                         <button onClick={checkoutHandler} className="btn btn-danger btn-block btn-lg" style={{ fontSize: '2.0rem' }}>
@@ -269,14 +353,18 @@ const cart = ({ parseCartItems, cartProducts }) => {
 
 export async function getServerSideProps(context) {
     try {
-        const { cartItem } = parseCookies(context);
-        console.log(cartItem);
-        const parseCartItems = cartItem ? JSON.parse(cartItem) : [];
+        const { cartItem, token } = parseCookies(context);
 
+        const parseCartItems = cartItem ? JSON.parse(cartItem) : [];
         const productIds = parseCartItems.reverse().map(item => item.productId);
-        const { data } = await axios.post(`${process.env.api}/api/cartitems`, {
-            productIds
-        });
+
+        const { data } = await axios.post(`${process.env.api}/api/cartitems`, { productIds },
+            {
+                headers: {
+                    token
+                },
+            },
+        );
         return {
             props: {
                 parseCartItems,
@@ -284,9 +372,12 @@ export async function getServerSideProps(context) {
             }
         }
     } catch (err) {
-        console.log(err)
         return {
-
+            redirect: {
+                source: '/login?redirect=cart',
+                destination: '/login?redirect=cart',
+                permanent: false,
+            },
         };
     }
 }
