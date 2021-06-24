@@ -338,7 +338,12 @@ const CouponForm = (props) => {
                         {errors.applicableOn && <p className="errorMsg">{errors.applicableOn.message}</p>}
                     </div>
                     <div className="col-sm-6 mt-4">
-                        <label className="cat-label">Total No. of Vouchers</label>
+                        <div className="d-flex justify-content-between">
+                            <label className="cat-label">Total No. of Vouchers</label>
+                            {action === "edit_coupon" &&
+                                <span className="text-muted">Available Coupon: {couponData.availableVoucher}</span>
+                            }
+                        </div>
                         <input type="number" name="totalVoucher"
                             className="form-control"
                             ref={register({
@@ -386,13 +391,14 @@ const CouponForm = (props) => {
                         />
                         {errors.validityDate && <p className="errorMsg">{errors.validityDate.message}</p>}
                     </div>
-                    <div className="col-12 mt-4">
+                    <div className="col-12 mt-4 d-none">
                         <span className="cat-label">SELECT COUPON FOR</span>
                         <div className="d-flex mt-3">
                             <div className="">
                                 <label>
                                     <input
                                         type="radio"
+                                        defaultChecked="true"
                                         name="couponUseIn" value="all"
                                         className="mr-1"
                                         onChange={() => couponUseInHandler('all')}
@@ -435,7 +441,7 @@ const CouponForm = (props) => {
                                             />
                                             <label htmlFor="markall_categories">
                                                 Mark All
-                                    </label>
+                                            </label>
                                         </div>
                                     </div>
                                     <ul className="scrollbar list-unstyled mt-1">

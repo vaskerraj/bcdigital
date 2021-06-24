@@ -71,7 +71,12 @@ const CouponList = ({ coupons }) => {
         },
         {
             Header: "Vouchers",
-            accessor: "totalVoucher",
+            accessor: row => row.totalVoucher,
+            Cell: ({ row: { original } }) => (
+                <>
+                    {original.availableVoucher + ' / ' + original.totalVoucher}
+                </>
+            )
         },
         {
             Header: "Remaining Voucher",
