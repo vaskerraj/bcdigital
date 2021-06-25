@@ -25,6 +25,10 @@ const shippingPlanSchema = new mongoose.Schema({
     maxDeliveryTime: {
         type: String,
     },
+    isDefault: {
+        type: Boolean,
+        default: false
+    }
 }, { timestamps: true });
 
 mongoose.models.ShippingPlan || mongoose.model('ShippingPlan', shippingPlanSchema)

@@ -110,4 +110,37 @@ module.exports = function (server) {
             });
         }
     });
+    server.put('/api/shipcost/default/:id/:status', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'contentManager']), async (req, res) => {
+
+        const shipPlanId = req.params.id;
+        const shipPlanStatus = req.params.status;
+        console.log(shipPlanId, shipPlanStatus);
+        try {
+            if (shipPlanStatus === 'true') {
+                console.log("inside true")
+                await ShippingCost.findOneAndUpdate({ '_id': shipPlanId },
+                    {
+                        "isDefault": false
+                    }
+                );
+
+            } else {
+                console.log("inside false")
+                // make prev default shipping plan as false
+                await ShippingCost.findOneAndUpdate({ 'isDefault': 'true' },
+                    {
+                        "isDefault": false
+                    }
+                );
+                await ShippingCost.findOneAndUpdate({ '_id': shipPlanId },
+                    {
+                        "isDefault": true
+                    }
+                );
+            }
+            return res.status(200).json({ msg: 'success' });
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
 };

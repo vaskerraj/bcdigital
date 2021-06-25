@@ -5,8 +5,8 @@ import { parseCookies } from 'nookies';
 import axios from 'axios';
 import axiosApi from '../../../helpers/api';
 
-import { message, Popconfirm } from 'antd';
-import { EditFilled, DeleteFilled } from '@ant-design/icons';
+import { message, Switch, Popconfirm } from 'antd';
+import { CloseOutlined, CheckOutlined, EditFilled, DeleteFilled } from '@ant-design/icons';
 
 import Wrapper from '../../../components/admin/Wrapper';
 import { ReactTable } from '../../../components/helpers/ReactTable';
@@ -61,6 +61,32 @@ const ShippingPlanList = ({ shippingPlan }) => {
             displayValue: " Amount "
         },
         {
+            Header: "Default",
+            show: true,
+            Cell: ({ row: { original } }) => {
+                if (original.isDefault === true) {
+                    return (
+                        <Switch
+                            checkedChildren={<CheckOutlined />}
+                            unCheckedChildren={<CloseOutlined />}
+                            onChange={() => changeIsDefaultHandler(original._id, original.isDefault)}
+                            defaultChecked
+                            disabled={adminAuth === null ? true : false}
+                        />
+                    );
+                } else {
+                    return (
+                        <Switch
+                            checkedChildren={<CheckOutlined />}
+                            unCheckedChildren={<CloseOutlined />}
+                            onChange={() => changeIsDefaultHandler(original._id, original.isDefault)}
+                            disabled={adminAuth === null ? true : false}
+                        />
+                    );
+                }
+            }
+        },
+        {
             Header: "Actions",
             show: true,
             Cell: ({ row: { original } }) => (
@@ -84,6 +110,44 @@ const ShippingPlanList = ({ shippingPlan }) => {
             )
         }
     ]);
+    const changeIsDefaultHandler = useCallback(async (id, status) => {
+        try {
+            const { data } = await axiosApi.put(`/api/shipcost/default/${id}/${status}`, {}, {
+                headers: {
+                    token: adminAuth.token
+                }
+            });
+            if (data) {
+                message.success({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">Success</div>
+                            Shipping default status succssfully changed.
+                            {status === true &&
+                                <div>
+                                    Make sure '<b>one plan as default</b>'. Otherwise it will harm user experience at cart page.
+                                </div>
+                            }
+                        </div>
+                    ),
+                    className: 'message-success',
+                });
+                setTimeout(() => {
+                    router.reload();
+                }, 5000);
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
+    });
 
     const deleteHandler = useCallback(async (id) => {
         try {
