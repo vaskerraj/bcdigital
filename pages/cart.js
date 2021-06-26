@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
 import { parseCookies } from 'nookies';
+import moment from 'moment';
 
 import axios from 'axios';
 import axiosApi from '../helpers/api';
@@ -15,12 +16,11 @@ const { Panel } = Collapse;
 import { Trash2 } from 'react-feather';
 
 import useWindowDimensions from '../helpers/useWindowDimensions';
-
-import Wrapper from '../components/Wrapper';
 import { addToCart, removeOrderFromCart } from '../redux/actions/cartAction';
 
-const cart = ({ parseCartItems, cartProducts }) => {
+import Wrapper from '../components/Wrapper';
 
+const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
     const [combinedCartItems, setCombinedCartItems] = useState([]);
     const [grandTotal, setGrandTotal] = useState(0);
 
@@ -29,6 +29,11 @@ const cart = ({ parseCartItems, cartProducts }) => {
     const { height, width } = useWindowDimensions();
     const [mobileTabBarStatus, setMobileTabBarStatus] = useState("");
     const [onlyMobile, setOnlyMoble] = useState(false);
+
+    // shipping
+    const [shippingCharge, setShippingCharge] = useState(0);
+    const [shippingId, setShippingId] = useState(null);
+    const [packagesForCustomer, setPackagesForCustomer] = useState(1);
 
 
     //coupon
@@ -58,12 +63,35 @@ const cart = ({ parseCartItems, cartProducts }) => {
                 ...cartItem.find(ele => ele.productId === item.products[0]._id),
             }));
             setCombinedCartItems(combineProductWithCartItems);
-
-            // set grand total
-            const cartTotalOnMerge = combineProductWithCartItems.reduce((a, c) => (a + c.productQty * c.products[0].finalPrice), 0);
-            setGrandTotal(cartTotalOnMerge);
         }
-    }, [cartItem, cartProducts]);
+    }, [cartItem, cartProducts, shippingCharge]);
+
+    useEffect(() => {
+        if (combinedCartItems) {
+            // for total number of package to ship to customer
+            const uniqueSellerForPackage = [...new Map(combinedCartItems.map(item =>
+                [item.createdBy['_id'], item.createdBy])).values()];
+
+            const packages = uniqueSellerForPackage.length === 0 ? 1 : uniqueSellerForPackage.length;
+            setPackagesForCustomer(packages);
+
+            const cartTotalAfterCombine = combinedCartItems.reduce((a, c) => (a + c.productQty * c.products[0].finalPrice), 0);
+
+            if (shippingPlans.plans.length !== 0) {
+                setShippingCharge(Number(shippingPlans.plans[0].amount) * Number(packages));
+                setShippingId(shippingPlans.plans[0]._id);
+
+                // set grand Total
+                setGrandTotal(Number(cartTotalAfterCombine) + (Number(shippingPlans.plans[0].amount) * Number(packages)) - Number(couponDiscount));
+            } else {
+                setShippingCharge(0);
+                setShippingId(null);
+
+                // set grand Total
+                setGrandTotal(cartTotalAfterCombine - Number(couponDiscount));
+            }
+        }
+    }, [shippingPlans, combinedCartItems]);
 
     const cartTotal = combinedCartItems.reduce((a, c) => (a + c.productQty * c.products[0].finalPrice), 0);
 
@@ -102,7 +130,19 @@ const cart = ({ parseCartItems, cartProducts }) => {
     }
 
     const onDeliveryChange = e => {
+        if (e.target.checked) {
+            setShippingCharge(Number(e.target.amount) * Number(packagesForCustomer));
+            setShippingId(e.target.value);
 
+            // set grand total
+            setGrandTotal(Number(cartTotal) + (Number(e.target.amount) * Number(packagesForCustomer)) - Number(couponDiscount));
+        } else {
+            setShippingCharge(0);
+            setShippingId(null);
+
+            // set grand Total
+            setGrandTotal(cartTotal - Number(couponDiscount));
+        }
     }
 
     const applyCouponHanlder = async () => {
@@ -128,7 +168,7 @@ const cart = ({ parseCartItems, cartProducts }) => {
                         : Math.round((cartTotal * data.discountAmount) / 100);
                     setCouponDiscount(couponDiscountAmount);
 
-                    const totalAferCouponDiscount = cartTotal - couponDiscountAmount;
+                    const totalAferCouponDiscount = cartTotal + (Number(shippingCharge) * Number(packagesForCustomer)) - couponDiscountAmount;
                     setGrandTotal(totalAferCouponDiscount);
                 }
             }
@@ -292,20 +332,44 @@ const cart = ({ parseCartItems, cartProducts }) => {
                                     </div>
                                 }
                             </div>
-                            <div className="d-block bg-white mt-5">
-                                <div className="d-flex title border-bottom justify-content-between p-3 pl-4">
-                                    <h4>SELECT DELIVERY OPTION</h4>
+                            {shippingPlans.plans.length !== 0 &&
+                                <div className="d-block bg-white mt-5">
+                                    <div className="d-flex title border-bottom justify-content-between p-3 pl-4">
+                                        <h4>SELECT DELIVERY OPTION</h4>
+                                    </div>
+                                    <div className="col-12 p-3">
+                                        <Radio.Group onChange={onDeliveryChange} value={shippingPlans.plans[0]._id}>
+                                            {shippingPlans.plans.map((plan, index) => (
+                                                <Radio value={plan._id} amount={plan.amount}>
+                                                    <div className="d-inline-flex">
+                                                        <div className="d-block">
+                                                            <span className="font-weight-bold">Rs.{plan.amount * Number(packagesForCustomer)}</span> | {plan.name}
+                                                            <div className="mt-1">
+                                                                Estimated Delivery:
+                                                                <span className="font-weight-bold ml-2">
+                                                                    {plan.minDeliveryTime ?
+                                                                        moment().add(plan.minDeliveryTime, 'days').format('D MMM , YYYY')
+                                                                        : moment().add(2, 'days').format('D MMM, YYYY')
+                                                                    }
+                                                                    <span className="ml-2 mr-2">-</span>
+                                                                    {plan.maxDeliveryTime ?
+                                                                        moment().add(plan.maxDeliveryTime, 'days').format('D MMM , YYYY')
+                                                                        : moment().add(5, 'days').format('D MMM, YYYY')
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                            {shippingPlans.as === 'default' &&
+                                                                <div className="mt-1 text-danger">Note: Delivery charge may vary as your address.</div>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </Radio>
+                                            ))
+                                            }
+                                        </Radio.Group>
+                                    </div>
                                 </div>
-                                <div className="col-12">
-                                    <Radio.Group onChange={onDeliveryChange} value={1}>
-                                        <Space direction="vertical">
-                                            <Radio value={1}>Plan 1</Radio>
-                                            <Radio value={2}>Plan 2</Radio>
-                                            <Radio value={3}>Plan 3</Radio>
-                                        </Space>
-                                    </Radio.Group>
-                                </div>
-                            </div>
+                            }
                             <div className="d-block coupon bg-white mt-5">
                                 <Collapse
                                     ghost
@@ -344,6 +408,12 @@ const cart = ({ parseCartItems, cartProducts }) => {
                                         <span>Product Total</span>
                                         <span>Rs.{combinedCartItems.reduce((a, c) => (a + c.productQty * c.products[0].finalPrice), 0)}</span>
                                     </div>
+                                    {shippingCharge !== 0 &&
+                                        <div className="d-flex justify-content-between mt-3 pt-4 border-top border-gray align-items-center">
+                                            <span>Shipping Charge</span>
+                                            <span>Rs.{shippingCharge}</span>
+                                        </div>
+                                    }
                                     {couponDiscount !== 0 &&
                                         <div className="d-flex justify-content-between mt-3 pt-4 border-top border-gray align-items-center">
                                             <span>Coupon Discount</span>
@@ -381,12 +451,17 @@ export async function getServerSideProps(context) {
                 headers: {
                     token
                 },
-            },
-        );
+            });
+        const { data: shippingPlans } = await axios.get(`${process.env.api}/api/shipping`, {
+            headers: {
+                token
+            }
+        });
         return {
             props: {
                 parseCartItems,
-                cartProducts: data
+                cartProducts: data,
+                shippingPlans
             }
         }
     } catch (err) {

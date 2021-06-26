@@ -173,6 +173,40 @@ module.exports = function (server) {
         }
     });
 
+    // shipping plan list (for both user who have address and doesnt have address)
+    // user who have default address
+    server.get('/api/shipping', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        try {
+            const userAddress = await Users.findOne(
+                {
+                    "_id": req.user._id,
+                    $or: [
+                        { 'addresses.isDefault': true },
+                        { 'addresses.isDefault': false }
+                    ]
+                },
+                {
+                    'addresses.$': 1
+                }
+            ).select('addresses');
+
+            if (userAddress) {
+                const shippingPlans = await ShippingCost.find({
+                    cityId: userAddress.city
+                })
+                    .sort([['amount', -1]])
+                    .lean();
+                return res.status(200).json({ plans: shippingPlans, as: 'user' });
+            } else {
+                const defaultCustomPlan = await ShippingCost.find({ isDefault: true })
+                    .lean();
+                return res.status(200).json({ plans: defaultCustomPlan, as: 'default' });
+            }
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
     // shipping plan for user
     server.get('/api/shippingPlans/:cityId', requiredAuth, checkRole(['subscriber']), async (req, res) => {
         const cityId = req.params.cityId;
