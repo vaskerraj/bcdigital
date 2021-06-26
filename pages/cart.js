@@ -9,7 +9,7 @@ import moment from 'moment';
 import axios from 'axios';
 import axiosApi from '../helpers/api';
 
-import { Select, Collapse, message, Radio, Affix } from 'antd';
+import { Select, Collapse, message, Radio, Affix, Popover } from 'antd';
 const { Option } = Select;
 const { Panel } = Collapse;
 
@@ -73,7 +73,6 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
 
             // check out of stock products
             const outOfStockCartProduct = combineProductWithCartItems.find(item => item.products[0].quantity === item.products[0].sold);
-            console.log(outOfStockCartProduct);
             if (outOfStockCartProduct) {
                 setOutOfStockError(true);
             } else {
@@ -145,16 +144,39 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
         const rawAvailableProducts = product.quantity - product.sold;
         const availableProducts = rawAvailableProducts > 6 ? 6 : rawAvailableProducts;
         return (
-            rawAvailableProducts !== 0 ?
-                <Select defaultValue={qty} style={{ width: '100%' }}
-                    onChange={(value) => cartQtyChangeHandler(product._id, value)}
-                >
-                    {
-                        [...Array(availableProducts).keys()].map(x => (
-                            <Option value={x + 1}>{x + 1}</Option>
-                        ))
+            availableProducts !== 0 ?
+                <Popover
+                    placement={onlyMobile ? 'right' : 'top'}
+                    trigger="click"
+                    visible={rawAvailableProducts < qty ? true : false}
+                    title="Quantity Changed !!!"
+                    content={
+                        <div>
+                            Quantity of this product has been change from {qty} to {availableProducts}
+                        </div>
                     }
-                </Select>
+                >
+                    <Select
+                        autoFocus={rawAvailableProducts < qty ? true : false}
+                        defaultValue={rawAvailableProducts < qty ? availableProducts : qty}
+                        onChange={(value) => cartQtyChangeHandler(product._id, value)}
+                        onFocus={() =>
+                            rawAvailableProducts < qty
+                                ?
+                                setTimeout(() => {
+                                    cartQtyChangeHandler(product._id, rawAvailableProducts < qty ? availableProducts : qty)
+                                }, 5000)
+                                : ''
+                        }
+                        style={{ width: '100%' }}
+                    >
+                        {
+                            [...Array(availableProducts).keys()].map(x => (
+                                <Option value={x + 1}>{x + 1}</Option>
+                            ))
+                        }
+                    </Select>
+                </Popover >
                 :
                 <div className="text-danger font font-weight-bold">Out of Stock</div>
         )
