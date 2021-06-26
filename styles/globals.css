@@ -176,7 +176,7 @@ input.hiddenAndFocus{
 }
 
 /* ant message */
-.ant-message-warning, .ant-message-success{
+.ant-message-warning, .ant-message-success, .ant-message-error{
   display:flex  !important;
   text-align: left !important;
 }
@@ -189,6 +189,10 @@ input.hiddenAndFocus{
 .message-success .ant-message-notice-content{
   background-color: #d4edda;
   border-color: #d4edda;
+}
+.message-error .ant-message-notice-content{
+  background-color: #fff3cd;
+  border:1px solid #f82d4f;
 }
 
 /* main menu */

@@ -19,10 +19,17 @@ import useWindowDimensions from '../helpers/useWindowDimensions';
 import { addToCart, removeOrderFromCart } from '../redux/actions/cartAction';
 
 import Wrapper from '../components/Wrapper';
+// config antdesign message
+message.config({
+    top: '25vh',
+    maxCount: 1,
+    duration: 4,
+});
 
 const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
     const [combinedCartItems, setCombinedCartItems] = useState([]);
     const [grandTotal, setGrandTotal] = useState(0);
+    const [outOfStockError, setOutOfStockError] = useState([]);
 
     // hide mobileTabBar at mobile
     // we gonna implmente hide at HeaderMenu so hide only at small screen(576px)
@@ -63,6 +70,15 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
                 ...cartItem.find(ele => ele.productId === item.products[0]._id),
             }));
             setCombinedCartItems(combineProductWithCartItems);
+
+            // check out of stock products
+            const outOfStockCartProduct = combineProductWithCartItems.find(item => item.products[0].quantity === item.products[0].sold);
+            console.log(outOfStockCartProduct);
+            if (outOfStockCartProduct) {
+                setOutOfStockError(true);
+            } else {
+                setOutOfStockError(false);
+            }
         }
     }, [cartItem, cartProducts, shippingCharge]);
 
@@ -98,8 +114,20 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
     const dispatch = useDispatch();
     const router = useRouter();
 
-    const checkoutHandler = () => {
-        router.push('/checkout');
+    const checkoutHandler = async () => {
+        if (outOfStockError) {
+            message.error({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Notice</div>
+                        Some product(s) are out of stock. Please remove those product(s) from cart
+                    </div>
+                ),
+                className: 'message-error',
+            });
+        } else {
+            router.push('/checkout');
+        }
     }
 
     const removeFromCartHandler = (productId) => {
@@ -117,15 +145,18 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
         const rawAvailableProducts = product.quantity - product.sold;
         const availableProducts = rawAvailableProducts > 6 ? 6 : rawAvailableProducts;
         return (
-            <Select defaultValue={qty} style={{ width: '100%' }}
-                onChange={(value) => cartQtyChangeHandler(product._id, value)}
-            >
-                {
-                    [...Array(availableProducts).keys()].map(x => (
-                        <Option value={x + 1}>{x + 1}</Option>
-                    ))
-                }
-            </Select>
+            rawAvailableProducts !== 0 ?
+                <Select defaultValue={qty} style={{ width: '100%' }}
+                    onChange={(value) => cartQtyChangeHandler(product._id, value)}
+                >
+                    {
+                        [...Array(availableProducts).keys()].map(x => (
+                            <Option value={x + 1}>{x + 1}</Option>
+                        ))
+                    }
+                </Select>
+                :
+                <div className="text-danger font font-weight-bold">Out of Stock</div>
         )
     }
 
