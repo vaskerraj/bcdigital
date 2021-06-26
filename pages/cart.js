@@ -9,7 +9,7 @@ import moment from 'moment';
 import axios from 'axios';
 import axiosApi from '../helpers/api';
 
-import { Select, Collapse, message, Radio, Space } from 'antd';
+import { Select, Collapse, message, Radio, Affix } from 'antd';
 const { Option } = Select;
 const { Panel } = Collapse;
 
@@ -110,7 +110,7 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
 
     const cartQtyChangeHandler = (productId, value) => {
         dispatch(addToCart(productId, Number(value)));
-        router.push('/cart');
+        router.push(router.asPath);
     }
 
     const selectAvailableProduct = (product, qty) => {
@@ -189,8 +189,44 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
         setCoupon('');
         setCouponError('');
         setValidCoupon('');
-        setCouponDiscount(0)
+        setCouponDiscount(0);
+
+        // set grand total(coupon discount = 0: so need to sub)
+        setGrandTotal(Number(cartTotal) + + (Number(shippingCharge) * Number(packagesForCustomer)));
     }
+
+    const summerySection = () => (
+        <div className="summery bg-white p-4">
+            <h3>SUMMERY</h3>
+            <div className="clearfix mt-5">
+                <div className="d-flex justify-content-between">
+                    <span>Product Total</span>
+                    <span>Rs.{combinedCartItems.reduce((a, c) => (a + c.productQty * c.products[0].finalPrice), 0)}</span>
+                </div>
+                {shippingCharge !== 0 &&
+                    <div className="d-flex justify-content-between mt-3 pt-4 border-top border-gray align-items-center">
+                        <span>Shipping Charge</span>
+                        <span>Rs.{shippingCharge}</span>
+                    </div>
+                }
+                {couponDiscount !== 0 &&
+                    <div className="d-flex justify-content-between mt-3 pt-4 border-top border-gray align-items-center">
+                        <span>Coupon Discount</span>
+                        <span>Rs.{couponDiscount}</span>
+                    </div>
+                }
+                <div className="d-flex justify-content-between mt-4 pt-3 border-top border-gray align-items-center">
+                    <span className="font-weight-bold">Total</span>
+                    <span className="grandtotal font-weight-normal" style={{ fontSize: '2.0rem' }}>Rs.{grandTotal}</span>
+                </div>
+                <div className="d-block mt-5">
+                    <button onClick={checkoutHandler} className="btn btn-danger btn-block btn-lg" style={{ fontSize: '2.0rem' }}>
+                        Proceed to Checkout
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
 
     return (
 
@@ -213,7 +249,9 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
                             <div className="d-block bg-white">
                                 <div className="title border-bottom d-flex justify-content-between p-3 pl-4">
                                     <h3>CART ({combinedCartItems.reduce((a, c) => a + c.productQty, 0)})</h3>
-                                    <div className="">Delivery Charge: Rs. </div>
+                                    {shippingCharge !== 0 &&
+                                        <div className="">Delivery Charge: Rs.{shippingCharge}</div>
+                                    }
                                 </div>
                                 {!onlyMobile &&
                                     <div className="col-12">
@@ -258,7 +296,7 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
                                                             <div className="col-2">
                                                                 {selectAvailableProduct(item.products[0], item.productQty)}
                                                             </div>
-                                                            <div className="col-2">
+                                                            <div className="col-2 text-right">
                                                                 <div className="product-finalprice font-weight-bold">
                                                                     Rs.{(Number(item.products[0].finalPrice) * Number(item.productQty))}
                                                                 </div>
@@ -401,36 +439,14 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
 
                         </div>
                         <div className="col-sm-12 col-md-4 mt-5">
-                            <div className="summery bg-white p-4">
-                                <h3>SUMMERY</h3>
-                                <div className="clearfix mt-5">
-                                    <div className="d-flex justify-content-between">
-                                        <span>Product Total</span>
-                                        <span>Rs.{combinedCartItems.reduce((a, c) => (a + c.productQty * c.products[0].finalPrice), 0)}</span>
-                                    </div>
-                                    {shippingCharge !== 0 &&
-                                        <div className="d-flex justify-content-between mt-3 pt-4 border-top border-gray align-items-center">
-                                            <span>Shipping Charge</span>
-                                            <span>Rs.{shippingCharge}</span>
-                                        </div>
-                                    }
-                                    {couponDiscount !== 0 &&
-                                        <div className="d-flex justify-content-between mt-3 pt-4 border-top border-gray align-items-center">
-                                            <span>Coupon Discount</span>
-                                            <span>Rs.{couponDiscount}</span>
-                                        </div>
-                                    }
-                                    <div className="d-flex justify-content-between mt-4 pt-3 border-top border-gray align-items-center">
-                                        <span className="font-weight-bold">Total</span>
-                                        <span className="grandtotal font-weight-normal" style={{ fontSize: '2.0rem' }}>Rs.{grandTotal}</span>
-                                    </div>
-                                    <div className="d-block mt-5">
-                                        <button onClick={checkoutHandler} className="btn btn-danger btn-block btn-lg" style={{ fontSize: '2.0rem' }}>
-                                            Proceed to Checkout
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                            {!onlyMobile &&
+                                <Affix offsetTop={70}>
+                                    {summerySection()}
+                                </Affix>
+                            }
+                            {onlyMobile &&
+                                summerySection()
+                            }
                         </div>
                     </div>
                 }
