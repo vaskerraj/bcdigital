@@ -18,8 +18,12 @@ module.exports = function (server) {
                         {
                             'products._id': product
                         }, { 'products.$': 1 })
-                        .select('_id name slug brand colour size products')
-                        .populate('brand');
+                        .select('_id name slug brand colour size products createdBy')
+                        .populate('brand')
+                        .populate({
+                            path: 'createdBy',
+                            select: '_id name username role sellerRole',
+                        });
                     productsList.push(products);
                 })
             );
@@ -76,5 +80,10 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
 
+    });
+
+    // cart to checkout page
+    server.post('/api/cart', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        console.log(req.body);
     });
 }
