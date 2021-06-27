@@ -20,6 +20,7 @@ module.exports = function (server) {
                             'products._id': product
                         }, { 'products.$': 1 })
                         .select('_id name slug brand colour size products createdBy')
+                        .lean()
                         .populate('brand')
                         .populate({
                             path: 'createdBy',
