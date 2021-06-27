@@ -19,6 +19,8 @@ require('./models/Coupon.js');
 require('./models/Product.js');
 require('./models/SearchTag.js');
 
+require('./models/Cart.js');
+
 const port = parseInt(process.env.PORT, 10) || 3000
 const dev = process.env.NODE_ENV !== 'production'
 const app = next({ dev });

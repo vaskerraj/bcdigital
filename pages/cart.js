@@ -19,6 +19,8 @@ import useWindowDimensions from '../helpers/useWindowDimensions';
 import { addToCart, removeOrderFromCart } from '../redux/actions/cartAction';
 
 import Wrapper from '../components/Wrapper';
+import Loading from '../components/Loading';
+
 // config antdesign message
 message.config({
     top: '25vh',
@@ -47,8 +49,9 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
     const [coupon, setCoupon] = useState('');
     const [validCoupon, setValidCoupon] = useState('');
     const [couponError, setCouponError] = useState('');
-
     const [couponDiscount, setCouponDiscount] = useState(0);
+
+    const [checkoutLoading, setCheckoutLoading] = useState(false);
 
     useEffect(() => {
         if (width <= 768) {
@@ -125,7 +128,42 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
                 className: 'message-error',
             });
         } else {
-            router.push('/checkout');
+            setCheckoutLoading(true);
+            try {
+                const { data } = await axiosApi.post('/api/cart', {
+                    products: cartItem,
+                    total: cartTotal,
+                    shipping: shippingId,
+                    shippingCharge,
+                    coupon: validCoupon === '' ? null : validCoupon,
+                    couponDiscount,
+                    grandTotal
+                },
+                    {
+                        headers: {
+                            token: userInfo.token
+                        }
+                    }
+                );
+                if (data.msg === "error") {
+                    setCheckoutLoading(false);
+                    router.reload();
+                } else if (data.msg === "success") {
+                    setCheckoutLoading(false);
+                    router.push('/checkout');
+                }
+            } catch (error) {
+                setCheckoutLoading(false);
+                message.warning({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">Error</div>
+                            {error.response ? error.response.data.error : error.message}
+                        </div>
+                    ),
+                    className: 'message-warning',
+                });
+            }
         }
     }
 
@@ -273,8 +311,8 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
                     <span className="grandtotal font-weight-normal" style={{ fontSize: '2.0rem' }}>Rs.{grandTotal}</span>
                 </div>
                 <div className="d-block mt-5">
-                    <button onClick={checkoutHandler} className="btn btn-danger btn-block btn-lg" style={{ fontSize: '2.0rem' }}>
-                        Proceed to Checkout
+                    <button onClick={checkoutHandler} className={`btn btn-danger btn-block btn-lg position-relative ${checkoutLoading ? 'disabled' : ''}`} style={{ fontSize: '2.0rem' }}>
+                        {checkoutLoading ? <Loading color="#fff" style={{ padding: '1.5rem' }} /> : ('Proceed to Checkout')}
                     </button>
                 </div>
             </div>
