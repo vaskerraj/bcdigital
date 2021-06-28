@@ -63,7 +63,11 @@ module.exports = function (server) {
 
     server.get('/api/addresses', requiredAuth, checkRole(['subscriber']), async (req, res) => {
         try {
-            const user = await Users.findById(req.user._id);
+            const user = await Users.findById(req.user._id)
+                .lean()
+                .populate('addresses.region', 'name')
+                .populate('addresses.city', 'name')
+                .populate('addresses.area', 'name');
             return res.status(200).json(user.addresses);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." })
