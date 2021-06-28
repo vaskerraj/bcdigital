@@ -184,18 +184,15 @@ module.exports = function (server) {
                         { 'addresses.isDefault': true },
                         { 'addresses.isDefault': false }
                     ]
-                },
-                {
-                    'addresses.$': 1
-                }
-            ).select('addresses');
-
+                })
+                .select('addresses')
+                .lean();
             if (userAddress) {
                 const shippingPlans = await ShippingCost.find({
-                    cityId: userAddress.city
+                    cityId: userAddress.addresses[0].city
                 })
-                    .sort([['amount', -1]])
-                    .lean();
+                    .lean()
+                    .sort([['amount', -1]]);
                 return res.status(200).json({ plans: shippingPlans, as: 'user' });
             } else {
                 const defaultCustomPlan = await ShippingCost.find({ isDefault: true })
