@@ -1,7 +1,7 @@
 import React from 'react';
 import AddressSelectPart from '../AddressSelectPart';
 
-const AddressForm = ({ formRegister, handleSubmit, errors, onCancel, addresses }) => {
+const AddressForm = ({ formRegister, handleSubmit, errors, onCancel, addresses, cancelButton }) => {
     // console.log(errors)
     return (
         <div className="d-block text-left">
@@ -91,10 +91,12 @@ const AddressForm = ({ formRegister, handleSubmit, errors, onCancel, addresses }
                                 </div>
                             </div>
                         </div>
-                        <div className="d-block">
-                            <button type="button" onClick={onCancel} className="btn btn-lg c-btn-light font16 mt-4 mr-5">
-                                Cancel
-                            </button>
+                        <div className="d-block text-right">
+                            {cancelButton !== false &&
+                                <button type="button" onClick={onCancel} className="btn btn-lg c-btn-light font16 mt-4 mr-5">
+                                    Cancel
+                                </button>
+                            }
                             <button type="submit" className="btn btn-lg c-btn-primary font16 mt-4">
                                 SAVE ADDRESS
                             </button>
