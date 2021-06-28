@@ -8,12 +8,12 @@ const AddressList = ({ data, onAddressEdit, makeDefault, popConfirm }) => {
         <div className="d-block">
             <div className="row">
                 {data.map(address => (
-                    <div key={address._id} className="col-sm-4 col-md-3 mt-3">
+                    <div key={address._id} className="col-sm-6 col-md-3 mt-3">
                         <div className="address-container">
                             <div className="d-flex justify-content-between">
                                 <span className={`default-address ${address.isDefault === 'true' ? 'show' : 'hide'} `}>
                                     DEFAULT
-                                    </span>
+                                </span>
                                 <div className="address-action mt-2">
                                     <Popconfirm
                                         title="Are you sure to delete this address?"
@@ -44,8 +44,10 @@ const AddressList = ({ data, onAddressEdit, makeDefault, popConfirm }) => {
                                         <div style={{ width: '1.6rem' }}>
                                             <Book size={16} className="text-muted mt-2" />
                                         </div>
-                                        <div className=" ml-2">
-                                            {address.street + ', ' + address.city + ', ' + address.region}
+                                        <div className="ml-2">
+                                            {address.street}
+                                            {address.area ? address.area.city : ''}
+                                            {',' + address.city.name + ', ' + address.region.name}
                                         </div>
                                     </div>
                                 </div>

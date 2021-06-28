@@ -9,7 +9,7 @@ import {
 }
     from '../types/addressType';
 
-export const addAddress = (name, mobile, label, region, area, city, street) => async (dispatch, getState) => {
+export const addAddress = (name, mobile, label, region, city, area, street) => async (dispatch, getState) => {
     dispatch({ type: ADR_ADD_RESPONSE });
 
     try {
