@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 
 const AddressSelectPart = ({ addresses, formRegister, errors }) => {
-    console.log(addresses)
     const [cities, setCities] = useState([]);
     const [areas, setAreas] = useState([]);
 
@@ -17,8 +16,11 @@ const AddressSelectPart = ({ addresses, formRegister, errors }) => {
                 setAreas(JSON.parse(addressesChild));
             }
         } else {
-            setCities([]);
-            setAreas([]);
+            if (type === 'region') {
+                setCities([]);
+                setAreas([]);
+            }
+            if (type === 'city') setAreas([]);
         }
     }
 
@@ -61,6 +63,7 @@ const AddressSelectPart = ({ addresses, formRegister, errors }) => {
                         ref={formRegister({
                             required: "Provide your city"
                         })}
+                        disabled={cities.length ? false : true}
                     >
                         <option value="">Select City</option>
                         {cities.map(city =>
@@ -89,6 +92,7 @@ const AddressSelectPart = ({ addresses, formRegister, errors }) => {
                             ref={formRegister({
                                 required: "Provide your area"
                             })}
+                            disabled={areas.length ? false : true}
                         >
                             <option value="">Select Area</option>
                             {areas.map(area =>
