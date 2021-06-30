@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const AddressSelectPart = ({ addresses, formRegister, errors }) => {
+const AddressSelectPart = ({ addresses, formRegister, errors, reset, getValues }) => {
     const [cities, setCities] = useState([]);
     const [areas, setAreas] = useState([]);
 
@@ -14,6 +14,10 @@ const AddressSelectPart = ({ addresses, formRegister, errors }) => {
                 setCities(JSON.parse(addressesChild));
             } else if (type === 'city') {
                 setAreas(JSON.parse(addressesChild));
+                reset({
+                    ...getValues(),
+                    area: ''
+                });
             }
         } else {
             if (type === 'region') {

@@ -76,7 +76,7 @@ const Checkout = ({ cartDetails, shipping, defaultAddresses, addresses }) => {
 
     const isDefaultAddress = choosenAddress.map(item => item._id)[0];
 
-    const { register, handleSubmit, errors } = useForm();
+    const { register, handleSubmit, errors, reset, getValues } = useForm();
 
     const onSubmit = (inputdata) => {
         dispatch(addAddress(
@@ -158,6 +158,8 @@ const Checkout = ({ cartDetails, shipping, defaultAddresses, addresses }) => {
                     formRegister={register}
                     handleSubmit={handleSubmit(onSubmit)}
                     errors={errors}
+                    reset={reset}
+                    getValues={getValues}
                     addresses={defaultAddresses}
                     cancelButton={true}
                     onCancel={cancelNewAddress}
@@ -178,6 +180,8 @@ const Checkout = ({ cartDetails, shipping, defaultAddresses, addresses }) => {
                                                 formRegister={register}
                                                 handleSubmit={handleSubmit(onSubmit)}
                                                 errors={errors}
+                                                reset={reset}
+                                                getValues={getValues}
                                                 addresses={defaultAddresses}
                                                 cancelButton={false}
                                             />

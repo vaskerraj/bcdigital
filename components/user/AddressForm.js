@@ -1,8 +1,7 @@
 import React from 'react';
 import AddressSelectPart from '../AddressSelectPart';
 
-const AddressForm = ({ formRegister, handleSubmit, errors, onCancel, addresses, cancelButton }) => {
-    // console.log(errors)
+const AddressForm = ({ formRegister, handleSubmit, errors, reset, getValues, onCancel, addresses, cancelButton }) => {
     return (
         <div className="d-block text-left">
             <form onSubmit={handleSubmit}>
@@ -73,6 +72,8 @@ const AddressForm = ({ formRegister, handleSubmit, errors, onCancel, addresses, 
                             addresses={addresses}
                             formRegister={formRegister}
                             errors={errors}
+                            reset={reset}
+                            getValues={getValues}
                         />
                         <div className="d-block mt-2">
                             <label className="font14 font-weight-bold">Address</label>
@@ -91,16 +92,18 @@ const AddressForm = ({ formRegister, handleSubmit, errors, onCancel, addresses, 
                                 </div>
                             </div>
                         </div>
-                        <div className="d-block text-right">
-                            {cancelButton !== false &&
-                                <button type="button" onClick={onCancel} className="btn btn-lg c-btn-light font16 mt-4 mr-5">
-                                    Cancel
-                                </button>
-                            }
-                            <button type="submit" className="btn btn-lg c-btn-primary font16 mt-4">
-                                SAVE ADDRESS
+
+                    </div>
+
+                    <div className="col d-block text-right">
+                        {cancelButton !== false &&
+                            <button type="button" onClick={onCancel} className="btn btn-lg c-btn-light font16 mt-4 mr-5">
+                                Cancel
                             </button>
-                        </div>
+                        }
+                        <button type="submit" className="btn btn-lg c-btn-primary font16 mt-4">
+                            SAVE ADDRESS
+                        </button>
                     </div>
                 </div>
             </form>
