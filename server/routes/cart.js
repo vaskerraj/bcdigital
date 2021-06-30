@@ -18,7 +18,7 @@ module.exports = function (server) {
                     const products = await Product.findOne(
                         {
                             'products._id': product
-                        }, { 'products.$': 1 })
+                        })
                         .select('_id name slug brand colour size products createdBy')
                         .lean()
                         .populate('brand')
@@ -43,9 +43,9 @@ module.exports = function (server) {
                 code: coupon,
                 validityStart: { $lte: new Date() },
                 validityEnd: { $gte: new Date() }
-            });
+            }).lean();
 
-            if (couponValidation) {
+            if (couponValicartdation) {
                 //check coupon for new user or all user
 
                 // if new user : new user mean user who register before 30 days
@@ -100,7 +100,7 @@ module.exports = function (server) {
                     const cartProducts = await Product.findOne(
                         {
                             'products._id': pro
-                        }, { 'products.$': 1 })
+                        })
                         .select('_id products createdBy').lean();
                     productsCartList.push(cartProducts);
                 })

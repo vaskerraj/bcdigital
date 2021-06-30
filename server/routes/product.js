@@ -194,6 +194,7 @@ module.exports = function (server) {
     server.get('/api/products', async (req, res) => {
         try {
             const products = await Product.find({}).sort([['createdAt', -1]])
+                .lean()
                 .populate('brand')
                 .populate({
                     path: 'category',
@@ -210,8 +211,7 @@ module.exports = function (server) {
                 .populate({
                     path: 'createdBy',
                     select: 'name username role sellerRole picture, _id',
-                })
-                .lean();
+                });
             if (products) return res.status(200).json(products);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
@@ -222,6 +222,7 @@ module.exports = function (server) {
         const productId = req.params.id;
         try {
             const products = await Product.findById(productId)
+                .lean()
                 .populate('brand')
                 .populate({
                     path: 'category',
@@ -234,8 +235,7 @@ module.exports = function (server) {
                             select: 'name slug _id',
                         })
                     })
-                })
-                .lean();
+                });
             if (products) return res.status(200).json(products);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
@@ -245,6 +245,7 @@ module.exports = function (server) {
     server.get('/api/products/auth', requiredAuth, checkRole(['admin', 'seller']), async (req, res) => {
         try {
             const products = await Product.find({ createdBy: req.user._id }).sort([['createdAt', -1]])
+                .lean()
                 .populate('brand')
                 .populate({
                     path: 'category',
@@ -257,8 +258,7 @@ module.exports = function (server) {
                             select: 'name _id',
                         })
                     })
-                })
-                .lean();
+                });
             if (products) return res.status(200).json(products);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
@@ -344,6 +344,7 @@ module.exports = function (server) {
             // later change approved.status to active
             const products = await Product.find({ 'products.approved.status': 'pending', 'products.status': 'active' })
                 .select('_id name slug brand colour size products rating createdBy')
+                .lean()
                 .populate('brand')
                 .populate({
                     path: 'createdBy',
@@ -351,7 +352,6 @@ module.exports = function (server) {
                 })
                 .sort([['createdAt', -1]])
                 .limit(totalNumber)
-                .lean();
             if (products) return res.status(200).json(products);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
@@ -373,12 +373,12 @@ module.exports = function (server) {
                 }
             )
                 .select('_id name slug colour products rating createdBy')
+                .lean()
                 .populate({
                     path: 'createdBy',
                     select: 'name username role sellerRole picture, _id',
                 })
-                .limit(12)
-                .lean();
+                .limit(12);
             if (products) return res.status(200).json(products);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
@@ -389,10 +389,10 @@ module.exports = function (server) {
     server.get('/api/product/cart/:id', async (req, res) => {
         const productId = req.params.id;
         try {
-            const products = await Product.findOne({ 'products._id': productId }, { 'products.$': 1 })
+            const products = await Product.findOne({ 'products._id': productId })
                 .select('_id name slug brand colour size products')
-                .populate('brand')
-                .lean();
+                .lean()
+                .populate('brand');
             if (products) return res.status(200).json(products);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
