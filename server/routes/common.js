@@ -180,16 +180,14 @@ module.exports = function (server) {
             const userAddress = await Users.findOne(
                 {
                     "_id": req.user._id,
-                    $or: [
-                        { 'addresses.isDefault': true },
-                        { 'addresses.isDefault': false }
-                    ]
-                })
+                }, { _id: 0 })
                 .select('addresses')
                 .lean();
-            if (userAddress) {
+            //filter default address
+            const defaultAddress = userAddress.addresses.find(add => add.isDefault === 'true');
+            if (defaultAddress) {
                 const shippingPlans = await ShippingCost.find({
-                    cityId: userAddress.addresses[0].city
+                    cityId: defaultAddress.city
                 })
                     .lean()
                     .sort([['amount', -1]]);
