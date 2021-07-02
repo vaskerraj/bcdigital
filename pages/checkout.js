@@ -11,7 +11,7 @@ import axiosApi from '../helpers/api';
 
 import moment from 'moment';
 
-import { Input, Collapse, message, Radio, Affix, Modal } from 'antd';
+import { Input, Collapse, message, Radio, Affix, Modal, Space } from 'antd';
 
 import { MapPin, Phone } from 'react-feather';
 
@@ -41,6 +41,8 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
     const [shippingCharge, setShippingCharge] = useState(0);
     const [shippingId, setShippingId] = useState(cartDetails.shipping);
     const [packagesForCustomer, setPackagesForCustomer] = useState(1);
+
+    const [paymentType, setPaymentType] = useState('');
 
     const [grandTotal, setGrandTotal] = useState(0);
 
@@ -184,6 +186,11 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
 
             // set grand Total
             setGrandTotal(cartDetails.total - Number(cartDetails.couponDiscount));
+        }
+    }
+    const onPaymentChange = e => {
+        if (e.target.checked) {
+            setPaymentType(e.target.value);
         }
     }
     return (
@@ -335,6 +342,35 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
                                         </Radio>
                                     ))
                                     }
+                                </Radio.Group>
+                            </div>
+                        </div>
+                        <div className="d-block bg-white mt-5 mb-4">
+                            <div className="title border-bottom d-flex justify-content-between p-3 pl-4">
+                                <h4>Pay With</h4>
+                            </div>
+                            <div className="col-12 p-3 pb-5">
+                                <Radio.Group onChange={onPaymentChange} value={paymentType} style={{ width: '100%' }}>
+                                    <Space direction="vertical" style={{ width: '100%' }}>
+                                        <Radio value="card" style={{ width: '100%', borderBottom: '1px solid #ddd', paddingBottom: '1.5rem' }}>
+                                            <div className="d-inline-flex align-items-center">
+                                                <span className="font16 mr-2">Credt/Debit Card</span>
+                                                <Image src="/payment-card.png" layout="fixed" width="60" height="33" />
+                                            </div>
+                                        </Radio>
+                                        <Radio value="eswewa" style={{ width: '100%', borderBottom: '1px solid #ddd', paddingBottom: '1.5rem' }}>
+                                            <div className="d-inline-flex align-items-center">
+                                                <span className="font16 mr-2">e-Sewa</span>
+                                                <Image src="/payment-esewa.png" layout="fixed" width="60" height="33" />
+                                            </div>
+                                        </Radio>
+                                        <Radio value="cashondelivery" style={{ width: '100%' }}>
+                                            <div className="d-inline-flex align-items-center">
+                                                <span className="font16 mr-2">Cash On Delivery</span>
+                                                <Image src="/payment-cash.png" layout="fixed" width="60" height="33" />
+                                            </div>
+                                        </Radio>
+                                    </Space>
                                 </Radio.Group>
                             </div>
                         </div>
