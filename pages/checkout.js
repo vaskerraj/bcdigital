@@ -11,7 +11,7 @@ import axiosApi from '../helpers/api';
 
 import moment from 'moment';
 
-import { Select, Collapse, message, Radio, Affix, Popover, Modal } from 'antd';
+import { Input, Collapse, message, Radio, Affix, Modal } from 'antd';
 
 import { MapPin, Phone } from 'react-feather';
 
@@ -77,6 +77,12 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
         }
     }, [addresses]);
 
+    useEffect(() => {
+        if (choosenAddress.length) {
+            setDeliveryMobileNumber(choosenAddress[0].mobile);
+        }
+    }, [choosenAddress]);
+
     const isDefaultAddress = choosenAddress.map(item => item._id)[0];
 
     useEffect(() => {
@@ -114,9 +120,11 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
     // change address
     const onAddressChange = () => {
         setChangeAddress(true);
+        setChangeDeliveryMobile(false);
     }
     const onAddressChangeCancel = () => {
         setChangeAddress(false);
+        setChangeDeliveryMobile(false);
     }
     // shipping address radio change
     const changeShippingAddress = (e) => {
@@ -263,7 +271,7 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
                                                                     </>
                                                                     :
                                                                     <div className="d-flex">
-                                                                        <input name="deliveryMobileNumber" className="form-control"
+                                                                        <Input allowClear
                                                                             value={deliveryMobileNumber}
                                                                             onChange={(e) => setDeliveryMobileNumber(e.target.value)}
                                                                         />
@@ -296,7 +304,7 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
                         </div>
                         <div className="d-block bg-white mt-5">
                             <div className="title border-bottom d-flex justify-content-between p-3 pl-4">
-                                <h4>Delivery Options</h4>
+                                <h4 className="text-uppercase">Delivery Options</h4>
                             </div>
                             <div className="col-12 p-3">
                                 <Radio.Group onChange={onDeliveryChange} value={shippingId} className="mb-1">
