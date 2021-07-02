@@ -21,10 +21,7 @@ import AddressForm from '../components/user/AddressForm';
 import { addAddress } from '../redux/actions/addressAction';
 import ShippingAddress from '../components/ShippingAddress';
 
-const Checkout = ({ cartDetails, shipping, defaultAddresses, addresses }) => {
-    console.log(cartDetails)
-    console.log(shipping)
-    console.log(addresses)
+const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addresses }) => {
 
     // choosenAddress(isDefault : true) if user have address from user pannel
     const [choosenAddress, setChoosenAddress] = useState([]);
@@ -39,6 +36,13 @@ const Checkout = ({ cartDetails, shipping, defaultAddresses, addresses }) => {
     const [newDefaultShippingAddress, setNewDefaultShippingAddress] = useState('');
     // add new address
     const [newAddressVisible, setNewAddressVisible] = useState(false);
+
+    // shipping plan and charges
+    const [shippingCharge, setShippingCharge] = useState(0);
+    const [shippingId, setShippingId] = useState(cartDetails.shipping);
+    const [packagesForCustomer, setPackagesForCustomer] = useState(1);
+
+    const [grandTotal, setGrandTotal] = useState(0);
 
     const router = useRouter();
 
@@ -72,9 +76,27 @@ const Checkout = ({ cartDetails, shipping, defaultAddresses, addresses }) => {
             setChoosenAddress(userDefaultaddress);
         }
     }, [addresses]);
-    console.log(choosenAddress);
 
     const isDefaultAddress = choosenAddress.map(item => item._id)[0];
+
+    useEffect(() => {
+        if (products) {
+            // for total number of package to ship to customer
+            const uniqueSellerForPackage = [...new Map(products.map(item =>
+                [item.createdBy['_id'], item.createdBy])).values()];
+
+            const packages = uniqueSellerForPackage.length === 0 ? 1 : uniqueSellerForPackage.length;
+            setPackagesForCustomer(packages);
+
+            setShippingCharge(Number(shippingPlans.plans[0].amount) * Number(packages));
+            setShippingId(shippingPlans.plans[0]._id);
+
+            // set grand Total
+            setGrandTotal(Number(cartDetails.total) + (Number(shippingPlans.plans[0].amount) * Number(packages)) - Number(cartDetails.couponDiscount));
+
+        }
+    }, [shippingPlans, products, cartDetails]);
+
 
     const { register, handleSubmit, errors, reset, getValues } = useForm();
 
@@ -141,6 +163,21 @@ const Checkout = ({ cartDetails, shipping, defaultAddresses, addresses }) => {
             });
         }
     }
+    const onDeliveryChange = e => {
+        if (e.target.checked) {
+            setShippingCharge(Number(e.target.amount) * Number(packagesForCustomer));
+            setShippingId(e.target.value);
+
+            // set grand total
+            setGrandTotal(Number(cartDetails.total) + (Number(e.target.amount) * Number(packagesForCustomer)) - Number(cartDetails.couponDiscount));
+        } else {
+            setShippingCharge(0);
+            setShippingId(null);
+
+            // set grand Total
+            setGrandTotal(cartDetails.total - Number(cartDetails.couponDiscount));
+        }
+    }
     return (
         <>
             <Head>
@@ -173,7 +210,7 @@ const Checkout = ({ cartDetails, shipping, defaultAddresses, addresses }) => {
                                 <h4>Ship To</h4>
                             </div>
                             <div className="col-12 p-4">
-                                {shipping.as === 'default' ?
+                                {shippingPlans.as === 'default' ?
                                     (
                                         <div className="d-block pb-5">
                                             <AddressForm
@@ -257,6 +294,42 @@ const Checkout = ({ cartDetails, shipping, defaultAddresses, addresses }) => {
                                 }
                             </div>
                         </div>
+                        <div className="d-block bg-white mt-5">
+                            <div className="title border-bottom d-flex justify-content-between p-3 pl-4">
+                                <h4>Delivery Options</h4>
+                            </div>
+                            <div className="col-12 p-3">
+                                <Radio.Group onChange={onDeliveryChange} value={shippingId} className="mb-1">
+                                    {shippingPlans.plans.map((plan, index) => (
+                                        <Radio key={plan._id} value={plan._id} amount={plan.amount}>
+                                            <div className="d-inline-flex">
+                                                <div className="d-block">
+                                                    <span className="font-weight-bold">Rs.{plan.amount * Number(packagesForCustomer)}</span> | {plan.name}
+                                                    <div className="mt-1">
+                                                        Estimated Delivery:
+                                                        <span className="font-weight-bold ml-2">
+                                                            {plan.minDeliveryTime ?
+                                                                moment().add(plan.minDeliveryTime, 'days').format('D MMM , YYYY')
+                                                                : moment().add(2, 'days').format('D MMM, YYYY')
+                                                            }
+                                                            <span className="ml-2 mr-2">-</span>
+                                                            {plan.maxDeliveryTime ?
+                                                                moment().add(plan.maxDeliveryTime, 'days').format('D MMM , YYYY')
+                                                                : moment().add(5, 'days').format('D MMM, YYYY')
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                    {shippingPlans.as === 'default' &&
+                                                        <div className="mt-1 text-danger">Note: Delivery charge may vary as your address.</div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </Radio>
+                                    ))
+                                    }
+                                </Radio.Group>
+                            </div>
+                        </div>
                     </div>
                     <div className="col-sm-12 col-md-4 mt-5">
                         <Affix offsetTop={70}>
@@ -267,10 +340,10 @@ const Checkout = ({ cartDetails, shipping, defaultAddresses, addresses }) => {
                                         <span>Product Total</span>
                                         <span>Rs.{cartDetails.total}</span>
                                     </div>
-                                    {shipping.shippingCharge !== 0 &&
+                                    {cartDetails.shippingCharge !== 0 &&
                                         <div className="d-flex justify-content-between mt-3 pt-4 border-top border-gray align-items-center">
                                             <span>Shipping Charge</span>
-                                            <span>Rs.{shipping.shippingCharge}</span>
+                                            <span>Rs.{shippingCharge}</span>
                                         </div>
                                     }
                                     {cartDetails.couponDiscount !== 0 &&
@@ -281,7 +354,7 @@ const Checkout = ({ cartDetails, shipping, defaultAddresses, addresses }) => {
                                     }
                                     <div className="d-flex justify-content-between mt-4 pt-3 border-top border-gray align-items-center">
                                         <span className="font-weight-bold">Total</span>
-                                        <span className="grandtotal font-weight-normal" style={{ fontSize: '2.0rem' }}>Rs.{cartDetails.grandTotal}</span>
+                                        <span className="grandtotal font-weight-normal" style={{ fontSize: '2.0rem' }}>Rs.{grandTotal}</span>
                                     </div>
                                     <div className="d-block mt-5">
                                         <button onClick={''} className={`btn btn-danger btn-block btn-lg position-relative`} style={{ fontSize: '2.0rem' }}>
@@ -301,7 +374,7 @@ const Checkout = ({ cartDetails, shipping, defaultAddresses, addresses }) => {
 export async function getServerSideProps(context) {
     try {
         const cookies = parseCookies(context);
-        const { data: cartDetails } = await axios.get(`${process.env.api}/api/checkout`, {
+        const { data: checkoutData } = await axios.get(`${process.env.api}/api/checkout`, {
             headers: {
                 token: cookies.token,
             },
@@ -324,8 +397,9 @@ export async function getServerSideProps(context) {
         }
         return {
             props: {
-                cartDetails,
-                shipping,
+                cartDetails: checkoutData.cartDetails,
+                products: checkoutData.products,
+                shippingPlans: shipping,
                 defaultAddresses,
                 addresses: addresses ? addresses.data : null
             }
