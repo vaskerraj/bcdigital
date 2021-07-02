@@ -417,15 +417,24 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
 
 export async function getServerSideProps(context) {
     try {
-        const cookies = parseCookies(context);
+        const { cartItem, token } = parseCookies(context);
+        if (!cartItem) {
+            return {
+                redirect: {
+                    source: '/cart',
+                    destination: 'cart',
+                    permanent: false,
+                }
+            };
+        }
         const { data: checkoutData } = await axios.get(`${process.env.api}/api/checkout`, {
             headers: {
-                token: cookies.token,
+                token,
             },
         });
         const { data: shipping } = await axios.get(`${process.env.api}/api/shipping`, {
             headers: {
-                token: cookies.token,
+                token,
             },
         });
 
@@ -435,7 +444,7 @@ export async function getServerSideProps(context) {
         if (shipping.as === 'user') {
             addresses = await axios.get(`${process.env.api}/api/addresses`, {
                 headers: {
-                    token: cookies.token,
+                    token,
                 },
             });
         }

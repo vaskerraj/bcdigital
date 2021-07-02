@@ -25,7 +25,7 @@ export const addToCart = (productId, productQty) => async (dispatch, getState) =
             const { cartItems: { cartItem } } = getState();
             // set cartItem to cookie
             setCookie(null, "cartItem", JSON.stringify(cartItem), {
-                maxAge: 1 * 24 * 60 * 60,
+                maxAge: 5 * 24 * 60 * 60,
                 path: '/'
             });
         }
