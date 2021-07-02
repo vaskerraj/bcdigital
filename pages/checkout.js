@@ -217,6 +217,18 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
                     onCancel={cancelNewAddress}
                 />
             </Modal>
+
+            <div className="container-fluid" style={{ backgroundColor: '#fff' }}>
+                <div className="container">
+                    <div className="d-flex align-items-center" style={{ height: '7rem' }}>
+                        <Link href="/">
+                            <a className="d-block">
+                                <img src="/logo192.png" height="53px" />
+                            </a>
+                        </Link>
+                    </div>
+                </div>
+            </div>
             <div className="container">
                 <div className="row">
                     <div className="col-sm-12 col-md-8 mt-5">
@@ -376,7 +388,7 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
                         </div>
                     </div>
                     <div className="col-sm-12 col-md-4 mt-5">
-                        <Affix offsetTop={70}>
+                        <Affix offsetTop={0}>
                             <div className="summery bg-white p-4">
                                 <h4>SUMMERY</h4>
                                 <div className="clearfix mt-5">
