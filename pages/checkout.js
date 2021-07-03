@@ -92,6 +92,7 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
         }
     }, [isDefaultAddress]);
 
+    const cartTotal = products.reduce((a, c) => (a + c.productQty * c.products[0].finalPrice), 0);
 
     useEffect(() => {
         if (products) {
@@ -106,7 +107,7 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
             setShippingId(shippingPlans.plans[0]._id);
 
             // set grand Total
-            setGrandTotal(Number(cartDetails.total) + (Number(shippingPlans.plans[0].amount) * Number(packages)) - Number(cartDetails.couponDiscount));
+            setGrandTotal(Number(cartTotal) + (Number(shippingPlans.plans[0].amount) * Number(packages)) - Number(cartDetails.couponDiscount));
 
         }
     }, [shippingPlans, products, cartDetails]);
@@ -194,13 +195,13 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
             setShippingId(e.target.value);
 
             // set grand total
-            setGrandTotal(Number(cartDetails.total) + (Number(e.target.amount) * Number(packagesForCustomer)) - Number(cartDetails.couponDiscount));
+            setGrandTotal(Number(cartTotal) + (Number(e.target.amount) * Number(packagesForCustomer)) - Number(cartDetails.couponDiscount));
         } else {
             setShippingCharge(0);
             setShippingId(null);
 
             // set grand Total
-            setGrandTotal(cartDetails.total - Number(cartDetails.couponDiscount));
+            setGrandTotal(cartTotal - Number(cartDetails.couponDiscount));
         }
     }
     const onPaymentChange = e => {
@@ -510,7 +511,7 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
                                     <div className="clearfix mt-5">
                                         <div className="d-flex justify-content-between">
                                             <span>Product Total</span>
-                                            <span>Rs.{cartDetails.total}</span>
+                                            <span>Rs.{cartTotal}</span>
                                         </div>
                                         {cartDetails.shippingCharge !== 0 &&
                                             <div className="d-flex justify-content-between mt-3 pt-4 border-top border-gray align-items-center">
