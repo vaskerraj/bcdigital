@@ -20,6 +20,7 @@ import { useForm, Controller } from 'react-hook-form';
 import AddressForm from '../components/user/AddressForm';
 import { addAddress } from '../redux/actions/addressAction';
 import ShippingAddress from '../components/ShippingAddress';
+import Loading from '../components/Loading';
 
 const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addresses }) => {
 
@@ -45,6 +46,8 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
     const [paymentType, setPaymentType] = useState('');
 
     const [grandTotal, setGrandTotal] = useState(0);
+
+    const [submitOrderLoading, setSubmitOrderLoading] = useState(false);
 
     const router = useRouter();
 
@@ -211,8 +214,8 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
     }
 
     const onSubmitOrder = async (formdata) => {
-        console.log(cartDetails.products);
         try {
+            setSubmitOrderLoading(true);
             const { data } = await axiosApi.post(`/api/submitorder`, {
                 products: cartDetails.products,
                 total: cartTotal,
@@ -243,6 +246,7 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
 
             }
         } catch (error) {
+            setSubmitOrderLoading(false);
             message.warning({
                 content: (
                     <div>
@@ -504,11 +508,11 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
                                     </button>
                                     :
                                     <button type="submit"
-                                        className={`btn btn-danger btn-block btn-lg position-relative`}
+                                        className={`btn btn-danger btn-block btn-lg position-relative ${submitOrderLoading ? 'disabled' : ''}`}
                                         disabled={changeAddress ? true : false}
                                         style={{ fontSize: '2.0rem' }}
                                     >
-                                        Submit Order
+                                        {submitOrderLoading ? <Loading color="#fff" style={{ padding: '1.5rem' }} /> : ('Submit Order')}
                                     </button>
                                 }
                             </div>
