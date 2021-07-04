@@ -10,7 +10,9 @@ module.exports = function (server) {
     server.get('/api/checkout', requiredAuth, checkRole(['subscriber']), async (req, res) => {
         try {
             const cartDetails = await Cart.findOne({ orderedBy: req.user._id }).lean();
-
+            if (!cartDetails) {
+                return res.status(200).json({ msg: 'error' });
+            }
             const getProductIds = cartDetails.products.map(item => item.productId);
             let productsCartList = [];
             await Promise.all(
