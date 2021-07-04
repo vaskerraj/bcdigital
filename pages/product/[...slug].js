@@ -34,16 +34,18 @@ message.config({
     maxCount: 1,
 });
 
-const ProductDetail = ({ product, pr, qty }) => {
+const ProductDetail = ({ product, pr, qty, as }) => {
 
     // while unauthorize user try to add product to cart
     const dispatch = useDispatch();
     useEffect(() => {
-        if (pr && qty) {
+        if (pr && qty && !as) {
             dispatch(addToCart(pr, Number(qty)));
             router.replace(`/product/${product._id}/${product.slug}`);
+        } else if (pr && qty && as) {
+            productBuyNow(pr, Number(qty));
         }
-    }, [pr, qty]);
+    }, [pr, qty, as]);
 
     // hide mobileTabBar at mobile
     // we gonna implmente hide at HeaderMenu so hide only at small screen(576px)
@@ -86,6 +88,8 @@ const ProductDetail = ({ product, pr, qty }) => {
     const [itemLeftText, setItemLeftText] = useState(false);
 
     const [relatedProduct, setRelatedProduct] = useState([]);
+
+    const [buyNowLoading, setBuyNowLoading] = useState(false);
 
     useEffect(() => {
         let sliderImageData = [];
@@ -142,6 +146,71 @@ const ProductDetail = ({ product, pr, qty }) => {
         });
         setRelatedProduct(relProducts);
     }, [product]);
+
+    const outOfStockError = (productId) => {
+        message.warning({
+            content: (
+                <div>
+                    <div className="font-weight-bold">Out of stock</div>
+                    Product is out of stock
+                </div>
+            ),
+            className: 'message-warning',
+        });
+
+        // remove product from cart
+        if (productId) {
+            removeOrderFromCart(productId);
+        }
+
+        setTimeout(() => {
+            router.push(router.asPath);
+        }, 2000);
+    }
+
+    const productBuyNow = async (productId, quantity) => {
+        try {
+            setBuyNowLoading(true);
+            //check product stock
+            const { data: checkProductQty } = await axiosApi.get("api/product/cart/" + productId);
+            const available = checkProductQty.products[0].quantity - checkProductQty.products[0].sold;
+            if (available === 0) {
+                outOfStockError();
+            } else {
+                const { data } = await axiosApi.post('/api/cart', {
+                    products: { productId, productQty: quantity },
+                    shipping: null,
+                    shippingCharge: 0,
+                    coupon: null,
+                    couponDiscount: 0,
+                    total: changeOnProduct.finalPrice * Number(quantity),
+                    grandTotal: changeOnProduct.finalPrice * Number(quantity)
+                },
+                    {
+                        headers: {
+                            token: userInfo.token
+                        }
+                    }
+                );
+                if (data.msg === "error") {
+                    router.reload();
+                } else if (data.msg === "success") {
+                    return router.push('/checkout');
+                }
+            }
+        } catch (error) {
+            setBuyNowLoading(false);
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
+    }
 
     const changeProductSize = (product, e) => {
         for (const size of document.querySelectorAll(".sizes.active")) {
@@ -227,7 +296,15 @@ const ProductDetail = ({ product, pr, qty }) => {
         }
     }
     const onProductBuyNow = formdata => {
-        console.log("formdata");
+        console.log(formdata);
+        if (userInfo) {
+            productBuyNow(formdata.product, Number(formdata.quantity));
+            // dispatch(addToCart(formdata.product, Number(formdata.quantity)));
+        } else {
+            const redirectUrl = encodeURIComponent(`/product/${product._id}/${product.slug}?pr=${formdata.product}&qty=${formdata.quantity}&as=buy`)
+            router.push(`/login?redirect=${redirectUrl}`);
+        }
+
     }
 
     //description
@@ -502,12 +579,12 @@ const ProductDetail = ({ product, pr, qty }) => {
                                                     <div className="row">
                                                         <div className="col-6">
                                                             <button type="button"
-                                                                className="btn btn-lg btn-block btn-primary font16"
+                                                                className={`btn btn-lg btn-block btn-primary font16 position-relative ${buyNowLoading ? 'disabled' : ''}`}
                                                                 style={{ padding: '0.7rem 1rem' }}
                                                                 form={"product-detail"}
                                                                 onClick={handleSubmit(onProductBuyNow)}
                                                             >
-                                                                Buy Now
+                                                                {buyNowLoading ? <Loading color="#fff" style={{ padding: '1.2rem' }} /> : ('Buy Now')}
                                                             </button>
                                                         </div>
                                                         <div className="col-6">
@@ -527,12 +604,12 @@ const ProductDetail = ({ product, pr, qty }) => {
                                                 <div className="row">
                                                     <div className="col-6">
                                                         <button type="button"
-                                                            className="btn btn-lg btn-block btn-primary font16"
+                                                            className={`btn btn-lg btn-block btn-primary font16 position-relative ${buyNowLoading ? 'disabled' : ''}`}
                                                             style={{ padding: '0.7rem 1rem' }}
                                                             form={"product-detail"}
                                                             onClick={handleSubmit(onProductBuyNow)}
                                                         >
-                                                            Buy Now
+                                                            {buyNowLoading ? <Loading color="#fff" style={{ padding: '1.2rem' }} /> : ('Buy Now')}
                                                         </button>
                                                     </div>
                                                     <div className="col-6">
@@ -609,6 +686,7 @@ export async function getServerSideProps(context) {
         const urlquery = context.query;
         const pr = urlquery.pr || null;
         const qty = urlquery.qty || null;
+        const as = urlquery.as || null;
 
         const { slug } = context.params;
         const productId = slug[0];
@@ -618,7 +696,8 @@ export async function getServerSideProps(context) {
             props: {
                 product: data,
                 pr,
-                qty
+                qty,
+                as
             }
         }
     } catch (err) {

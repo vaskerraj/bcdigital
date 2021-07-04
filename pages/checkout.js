@@ -482,7 +482,7 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
                                 <span>Product Total</span>
                                 <span>Rs.{cartTotal}</span>
                             </div>
-                            {cartDetails.shippingCharge !== 0 &&
+                            {shippingCharge !== 0 &&
                                 <div className="d-flex justify-content-between mt-3 pt-4 border-top border-gray align-items-center">
                                     <span>Shipping Charge</span>
                                     <span>Rs.{shippingCharge}</span>
@@ -576,21 +576,22 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
 
 export async function getServerSideProps(context) {
     try {
-        const { cartItem, token } = parseCookies(context);
-        if (!cartItem) {
-            return {
-                redirect: {
-                    source: '/cart',
-                    destination: 'cart',
-                    permanent: false,
-                }
-            };
-        }
+        const { token } = parseCookies(context);
+
         const { data: checkoutData } = await axios.get(`${process.env.api}/api/checkout`, {
             headers: {
                 token,
             },
         });
+        if (checkoutData.msg === 'error') {
+            return {
+                redirect: {
+                    source: '/',
+                    destination: '/',
+                    permanent: false,
+                }
+            }
+        }
         const { data: shipping } = await axios.get(`${process.env.api}/api/shipping`, {
             headers: {
                 token,
