@@ -131,4 +131,24 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
+
+    server.get('/api/checkorder/:id', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        const orderId = req.params.id;
+        try {
+            const order = await Order.findOne({ _id: orderId, orderedBy: req.user._id }).lean();
+            if (order.paymentStatus === 'notpaid') {
+                if (order.paymentType !== 'cashondelivery') {
+                    console.log("workung")
+                    return res.status(500).json({ error: "Order not found" });
+                }
+                // payementType = cashondelivery
+                return res.status(200).json({ msg: "success" });
+            } else {
+                return res.status(200).json({ msg: "success" });
+            }
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+
+    });
 };
