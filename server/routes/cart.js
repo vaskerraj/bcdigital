@@ -18,6 +18,9 @@ module.exports = function (server) {
                     const products = await Product.findOne(
                         {
                             'products._id': product
+                        },
+                        {
+                            'products.$': 1
                         })
                         .select('_id name slug brand colour size products createdBy')
                         .lean()

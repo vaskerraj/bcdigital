@@ -30,6 +30,9 @@ module.exports = function (server) {
                     const cartProducts = await Product.findOne(
                         {
                             'products._id': pro
+                        },
+                        {
+                            'products.$': 1
                         })
                         .select('_id products createdBy').lean();
                     productsCartList.push(cartProducts);
@@ -138,7 +141,6 @@ module.exports = function (server) {
             const order = await Order.findOne({ _id: orderId, orderedBy: req.user._id }).lean();
             if (order.paymentStatus === 'notpaid') {
                 if (order.paymentType !== 'cashondelivery') {
-                    console.log("workung")
                     return res.status(500).json({ error: "Order not found" });
                 }
                 // payementType = cashondelivery

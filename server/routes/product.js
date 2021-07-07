@@ -389,7 +389,7 @@ module.exports = function (server) {
     server.get('/api/product/cart/:id', async (req, res) => {
         const productId = req.params.id;
         try {
-            const products = await Product.findOne({ 'products._id': productId })
+            const products = await Product.findOne({ 'products._id': productId }, { 'products.$': 1 })
                 .select('_id name slug brand colour size products')
                 .lean()
                 .populate('brand');

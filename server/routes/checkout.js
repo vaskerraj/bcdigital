@@ -20,7 +20,9 @@ module.exports = function (server) {
                     const cartProducts = await Product.findOne(
                         {
                             'products._id': pro
-                        })
+                        },
+                        { 'products.$': 1 }
+                    )
                         .select('_id products createdBy').lean();
                     productsCartList.push(cartProducts);
                 })
