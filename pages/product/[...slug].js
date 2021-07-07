@@ -175,6 +175,7 @@ const ProductDetail = ({ product, pr, qty, as }) => {
             const { data: checkProductQty } = await axiosApi.get("api/product/cart/" + productId);
             const available = checkProductQty.products[0].quantity - checkProductQty.products[0].sold;
             if (available === 0) {
+                setBuyNowLoading(false);
                 outOfStockError();
             } else {
                 const { data } = await axiosApi.post('/api/cart', {
