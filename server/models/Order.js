@@ -10,7 +10,38 @@ const orderSchema = new mongoose.Schema({
         productQty: {
             type: Number,
             require: true
-        }
+        },
+        price: {
+            type: Number,
+            require: true
+        },
+        orderStatus: {
+            type: String,
+            default: 'not_confirmed',
+            enum: [
+                "not_confirmed",
+                "confirmed",
+                "cancelled",
+                "packed",
+                "shipped",
+                "for_delivery",
+                "delivered"
+            ]
+        },
+        orderStatusLog: [{
+            status: {
+                type: String
+            },
+            statusChangeBy: {
+                type: ObjectId,
+                ref: 'Users'
+            }
+        }],
+        paymentStatus: {
+            type: String,
+            require: true,
+            default: 'notpaid'
+        },
     }],
     total: {
         type: Number,
@@ -46,33 +77,6 @@ const orderSchema = new mongoose.Schema({
         type: String,
         require: true
     },
-    paymentStatus: {
-        type: String,
-        require: true,
-        default: 'notpaid'
-    },
-    orderStatus: {
-        type: String,
-        default: 'not_confirmed',
-        enum: [
-            "not_confirmed",
-            "confirmed",
-            "cancelled",
-            "packed",
-            "shipped",
-            "for_delivery",
-            "delivered"
-        ]
-    },
-    orderStatusLog: [{
-        status: {
-            type: String
-        },
-        statusChangeBy: {
-            type: ObjectId,
-            ref: 'Users'
-        }
-    }],
     orderedBy: {
         type: ObjectId,
         ref: "Users"
