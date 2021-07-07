@@ -153,4 +153,93 @@ module.exports = function (server) {
         }
 
     });
+
+    // order list at user pannel
+    server.get('/api/orders/:duration', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        const duration = req.params.duration;
+
+        let fromdate = new Date();
+        switch (duration) {
+            case 1:
+                fromdate.setDate(fromdate.getDate() - 30);
+                break;
+            case 2:
+                fromdate.setMonth(fromdate.getMonth() - 3);
+                break;
+            case 3:
+                fromdate.setFullYear(fromdate.getFullYear(), 0, 1);
+                break;
+            default:
+                fromdate.setMonth(fromdate.getMonth() - 3);
+                break;
+        }
+        try {
+            const orders = await Order.find(
+                {
+                    orderedBy: req.user._id,
+                    $or: [
+                        { paymentType: 'cashondelivery' },
+                        {
+                            $and: [
+                                { paymentType: { $ne: 'cashondelivery' } },
+                                { paymentStatus: 'paid' }
+                            ]
+                        },
+                    ],
+                    createdAt: { $gte: fromdate }
+                })
+                .lean()
+                .sort([['updatedAt', -1]]);
+
+            const getProductDetail = async (products) => {
+
+                const getProductIds = products.map(item => item.productId);
+                let relatedProducts = [];
+                await Promise.all(
+                    getProductIds.map(async (pro) => {
+                        const orderProducts = await Product.findOne(
+                            {
+                                'products._id': pro
+                            },
+                            {
+                                'products.$': 1
+                            })
+                            .select('_id name colour products').lean();
+                        relatedProducts.push(orderProducts);
+                    })
+                );
+
+                const parseProducts = JSON.parse(JSON.stringify(relatedProducts));
+
+                // combine proucts details and productQty
+                const combineProductWithOrderitems = parseProducts.map(item => ({
+                    ...item,
+                    ...products.find(ele => ele.productId == item.products[0]._id)
+                }));
+
+                return combineProductWithOrderitems;
+            }
+
+            let orderProducts = [];
+            await Promise.all(
+                orders.map(async (item) => {
+                    const productObj = new Object();
+                    productObj['_id'] = item._id;
+                    productObj['products'] = await getProductDetail(item.products);
+                    productObj['grandTotal'] = item.grandTotal;
+                    productObj['paymentType'] = item.paymentType;
+                    productObj['paymentStatus'] = item.paymentStatus;
+                    productObj['orderStatus'] = item.orderStatus;
+                    productObj['orderStatusLog'] = item.orderStatusLog;
+                    productObj['createdAt'] = item.createdAt;
+
+                    orderProducts.push(productObj);
+                })
+            )
+            return res.status(200).json(orderProducts);
+
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
 };

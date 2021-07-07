@@ -49,6 +49,8 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
 
     const [submitOrderLoading, setSubmitOrderLoading] = useState(false);
 
+    const [combinedCartItems, setCombinedCartItems] = useState([]);
+
     const router = useRouter();
 
     const dispatch = useDispatch();
@@ -114,6 +116,18 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
 
         }
     }, [shippingPlans, products, cartDetails]);
+
+    // make price fix cause price may varify after discount expired or seller change its price anytime
+    let cartItemWithFixPrice = [];
+    products.map(item => {
+        let productObj = new Object();
+        productObj['productId'] = item.productId;
+        productObj['productQty'] = item.productQty;
+        productObj['price'] = Number(item.products[0].finalPrice) * Number(item.productQty);
+        cartItemWithFixPrice.push(productObj);
+    });
+
+    console.log(cartItemWithFixPrice);
 
 
     const { register, handleSubmit, errors, reset, getValues, trigger, control } = useForm();
@@ -217,7 +231,7 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
         try {
             setSubmitOrderLoading(true);
             const { data } = await axiosApi.post(`/api/submitorder`, {
-                products: cartDetails.products,
+                products: cartItemWithFixPrice,
                 total: cartTotal,
                 shipping: shippingId,
                 shippingCharge,
