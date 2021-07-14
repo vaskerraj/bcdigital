@@ -29,7 +29,9 @@ module.exports = function (server) {
                 .then(function (token) {
                     return res.json({
                         name: user.name,
-                        token
+                        token,
+                        method: user.method,
+                        picture: user.picture
                     });
                 })
                 .catch(function (error) {
