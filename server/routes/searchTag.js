@@ -31,7 +31,7 @@ module.exports = function (server) {
                 }
             }
             catch (error) {
-                return res.status(422).json({ error: "Some error occur. Please try again later." });
+                return res.status(200).json({ error: "Some error occur. Please try again later." });
             }
         } else {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
