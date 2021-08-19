@@ -420,7 +420,8 @@ module.exports = function (server) {
             price,
             page,
             sort,
-            rating
+            rating,
+            limit
         } = req.body;
 
         const findBySearchType = (query, searchType) => {
@@ -429,7 +430,9 @@ module.exports = function (server) {
                     $text: { $search: query }
                 }
             } else if (searchType === 'cat') {
-                return { category: query }
+                return {
+                    category: { $in: query }
+                }
             } else {
                 return {}
             }
@@ -502,7 +505,7 @@ module.exports = function (server) {
             } else if (type === 'cat') {
                 return await Product.countDocuments(
                     {
-                        category: query,
+                        category: { $in: query },
                         brand: brand !== 'all' ? { $in: brand } : { $exists: true },
                         'products.finalPrice': price !== '' ?
                             {
@@ -528,7 +531,7 @@ module.exports = function (server) {
             } else if (type === 'cat') {
                 return await Product.find(
                     {
-                        category: query
+                        category: { $in: query }
                     })
                     .select('category brand')
                     .populate('brand', '_id name')
@@ -550,7 +553,7 @@ module.exports = function (server) {
             } else if (type === 'cat') {
                 return await Product.findOne(
                     {
-                        category: query
+                        category: { $in: query }
                     },
                     {
                         'products': 1
@@ -563,11 +566,19 @@ module.exports = function (server) {
 
         try {
             const currentPage = page || 1;
-            const productPerPage = 24;
+            const productPerPage = limit || 24;
             let categoryId = ''
             if (type === 'cat') {
-                const category = await Category.findOne({ slug: query });
-                categoryId = category._id;
+                const category = await Category.findOne({ slug: query }).select('_id').lean();
+                // get all sub categories if exist under this parent category
+                const subCategoriesBaseOnParent = await Category.find({ parentId: category._id }).select('_id').lean();
+                const getCategoriesIds = subCategoriesBaseOnParent.map(item => item._id);
+                if (getCategoriesIds.length !== 0) {
+                    categoryId = getCategoriesIds;
+                } else {
+                    const caterogryIdArray = new Array(category._id);
+                    categoryId = [...getCategoriesIds, ...caterogryIdArray];
+                }
             }
             const products = await Product.find(findBySearchType(type === 'cat' ? categoryId : query, type))
                 .find(findCategory(category))
