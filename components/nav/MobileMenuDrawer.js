@@ -21,8 +21,8 @@ const MobileMenuDrawer = ({ categories, cateogoriesList, mobileMenuVisibleHandle
                                                 <a><span className="menu-text">{mainCat.name}</span></a>
                                             ) :
                                             (
-                                                <Link href={`/search?q=${subCat.slug}&type=cat`}>
-                                                    <a><span className="menu-text">{subCat.name}</span></a>
+                                                <Link href={`/search?q=${mainCat.slug}&type=cat`}>
+                                                    <a><span className="menu-text">{mainCat.name}</span></a>
                                                 </Link>
                                             )
                                         }

@@ -55,10 +55,12 @@ const MainHeadSection = ({ mobileTabBar }) => {
                 </Link>
             </Menu.Item>
             <Menu.Item className="pl-5 pr-5">
-                <a target="_blank" rel="noopener noreferrer">
-                    <ShoppingOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
-                    Oders
-                </a>
+                <Link href="user/orders">
+                    <a target="_blank" rel="noopener noreferrer">
+                        <ShoppingOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
+                        Oders
+                    </a>
+                </Link>
             </Menu.Item>
             <Menu.Item className="pl-5 pr-5">
                 <a target="_blank" rel="noopener noreferrer" >
@@ -69,7 +71,7 @@ const MainHeadSection = ({ mobileTabBar }) => {
             <Menu.Item className="pl-5 pr-5">
                 <a target="_blank" rel="noopener noreferrer" >
                     <StarOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
-                   Review
+                    Review
                 </a>
             </Menu.Item >
             <Menu.Item className="pl-5 pr-5">
@@ -142,7 +144,7 @@ const MainHeadSection = ({ mobileTabBar }) => {
                                                         }}>
                                                             <a className="text-dark mr-4">
                                                                 Hello, Login
-                                                            <ChevronDown size={14} />
+                                                                <ChevronDown size={14} />
                                                             </a>
                                                         </Link>
                                                     </span>
