@@ -161,7 +161,7 @@ const HeaderMenu = ({ loginUser, totalCartItems }) => {
                             }
                         </a>
                     </Link>
-                    <Link href={loginUser ? "/user/profile" : "/login"}>
+                    <Link href={loginUser ? "/user/account" : "/login?redirect=/user/account"}>
                         <a className="menu-item">
                             <span className="menu-icons">
                                 <User />
