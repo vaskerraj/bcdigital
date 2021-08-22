@@ -112,27 +112,30 @@ const account = () => {
     );
 }
 
-// export async function getServerSideProps(context) {
-//     try {
-//         const { token } = parseCookies(context);
+export async function getServerSideProps(context) {
+    try {
+        const { token } = parseCookies(context);
 
-//         const { data: checkoutData } = await axios.get(`${process.env.api}/api/checkout`, {
-//             headers: {
-//                 token,
-//             },
-//         });
+        await axios.get(`${process.env.api}/api/isuser`, {
+            headers: {
+                token,
+            },
+        });
+        return {
+            props: {}
+        }
 
-
-//     } catch (err) {
-//         return {
-//             redirect: {
-//                 source: '/login?redirect=/user/account',
-//                 destination: '/login?redirect=/user/account',
-//                 permanent: false,
-//             },
-//             props: {},
-//         };
-//     }
-// }
+    } catch (err) {
+        console.log(err)
+        return {
+            redirect: {
+                source: '/login?redirect=/user/account',
+                destination: '/login?redirect=/user/account',
+                permanent: false,
+            },
+            props: {},
+        };
+    }
+}
 
 export default account;
