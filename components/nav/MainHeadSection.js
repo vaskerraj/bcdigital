@@ -63,16 +63,20 @@ const MainHeadSection = ({ mobileTabBar }) => {
                 </Link>
             </Menu.Item>
             <Menu.Item className="pl-5 pr-5">
-                <a target="_blank" rel="noopener noreferrer" >
-                    <CloseCircleOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
-                    Returns & Cancel Order
-                </a>
+                <Link href="user/returnorder">
+                    <a target="_blank" rel="noopener noreferrer" >
+                        <CloseCircleOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
+                        Returns & Cancel Order
+                    </a>
+                </Link>
             </Menu.Item >
             <Menu.Item className="pl-5 pr-5">
-                <a target="_blank" rel="noopener noreferrer" >
-                    <StarOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
-                    Review
-                </a>
+                <Link href="user/reviews">
+                    <a target="_blank" rel="noopener noreferrer" >
+                        <StarOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
+                        Review
+                    </a>
+                </Link>
             </Menu.Item >
             <Menu.Item className="pl-5 pr-5">
                 <a onClick={signOutHandler} target="_blank" rel="noopener noreferrer">

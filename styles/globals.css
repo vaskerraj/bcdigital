@@ -1,5 +1,6 @@
 @import "~antd/dist/antd.css";
 @import "./editorcontent.css";
+/* 0 1px 6px 0 rgb(32 33 36 / 28%) */
 html {
   font-size: 62.5%;
   box-sizing: border-box;
@@ -1035,6 +1036,19 @@ footer .footer-menu li:hover>a {
 .address-container .default-address.hide{
   background-color: transparent;
   visibility: hidden;
+}
+/* review */
+ul.review-products li ul li{
+  padding: 1rem 0;
+  border-bottom: 1px solid #ddd;
+}
+ul.custom-rating-star li{
+  border-bottom: none !important;
+}
+.review-container{
+  padding: 1rem;
+  border-left:0.4rem solid rgb(133, 131, 131);
+  background-color: rgb(240, 239, 239);
 }
 
 /* admin pannel */

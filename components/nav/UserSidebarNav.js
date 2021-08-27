@@ -47,7 +47,7 @@ const UserSidebarNav = ({ onActive }) => {
                             <Link href="/user/orders">Orders</Link>
                         </Menu.Item>
                         <Menu.Item key="return">
-                            <Link href="/user/returns">
+                            <Link href="/user/returnorder">
                                 Returns
                             </Link>
                         </Menu.Item>
@@ -58,7 +58,7 @@ const UserSidebarNav = ({ onActive }) => {
                         </Menu.Item>
                     </SubMenu>
                     <Menu.Item key="reviews" icon={<StarOutlined />}>
-                        <Link href="/user/orders">Reviews</Link>
+                        <Link href="/user/reviews">Reviews</Link>
                     </Menu.Item>
                 </Menu>
             </Sider>
