@@ -58,17 +58,11 @@ const ProductSchema = new mongoose.Schema({
         require: true,
     }],
     products: [Products],
-    rating: [{
-        ratedBy: { type: ObjectId, ref: 'Users' },
-        star: {
-            type: Number,
-            default: 0
-        }
-    }],
+    rating: { type: Number, require: true, default: 0 },
     review: [{
         postedBy: { type: ObjectId, ref: 'Users' },
-        reviewTitle: { type: String, require: true },
-        reviewDes: { type: String },
+        rating: { type: Number, require: true, default: 0 },
+        review: { type: String, require: true },
         createdAt: { type: Date }
     }],
     freeShipping: {
