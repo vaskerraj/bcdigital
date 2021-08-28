@@ -23,9 +23,8 @@ import useWindowDimensions from '../../helpers/useWindowDimensions';
 import ProductStarIcon from '../../components/helpers/ProductStarIcon';
 import RelatedProductSlider from '../../components/helpers/RelatedProductSlider';
 
-import { addToCart } from '../../redux/actions/cartAction';
+import { addToCart, removeOrderFromCart } from '../../redux/actions/cartAction';
 import Loading from '../../components/Loading';
-import { removeOrderFromCart } from '../../../amazone/frontend/src/redux/action/cartAction';
 
 
 // config antdesign message
@@ -122,13 +121,6 @@ const ProductDetail = ({ product, pr, qty, as }) => {
         setLoadingSkeleton(false);
 
     }, [product]);
-
-    // average rating
-    const averageRating = product.rating.length !== 0
-        ?
-        product.rating.reduce((sum, value) => sum + value.star, 0) / product.rating.length
-        :
-        0;
 
     const router = useRouter();
 
@@ -424,7 +416,7 @@ const ProductDetail = ({ product, pr, qty, as }) => {
                                                             <div className="product-finalprice">
                                                                 Rs.<span>{changeOnProduct.finalPrice}</span>
                                                             </div>
-                                                            {changeOnProduct.discount || changeOnProduct.discount !== 0 &&
+                                                            {changeOnProduct.discount || changeOnProduct.discount !== null &&
                                                                 <>
                                                                     <div className="product-del ml-3">
                                                                         Rs.<span>{changeOnProduct.price}</span>
@@ -439,9 +431,9 @@ const ProductDetail = ({ product, pr, qty, as }) => {
                                                     <div className="col-5 text-center">
                                                         <div className="product-rating text-muted">
                                                             <span className="mr-2">
-                                                                <ProductStarIcon star={averageRating} />
+                                                                <ProductStarIcon star={Math.round(product.rating)} />
                                                             </span>
-                                                            {averageRating !== 0 &&
+                                                            {product.rating !== 0 &&
                                                                 <span>({product.review.length})</span>
                                                             }
                                                         </div>
@@ -469,7 +461,7 @@ const ProductDetail = ({ product, pr, qty, as }) => {
                                         </div>
                                         <div className="product-rating text-muted">
                                             <span className="mr-2">
-                                                <ProductStarIcon star={averageRating} />
+                                                <ProductStarIcon star={Math.round(product.rating)} />
                                             </span>
                                             {
                                                 product.review.length === 0 ?
@@ -492,7 +484,7 @@ const ProductDetail = ({ product, pr, qty, as }) => {
                                                     <div className="product-finalprice">
                                                         Rs.<span>{changeOnProduct.finalPrice}</span>
                                                     </div>
-                                                    {changeOnProduct.discount !== null && changeOnProduct.discount !== 0 &&
+                                                    {changeOnProduct.discount !== null && changeOnProduct.discount !== null &&
                                                         <div className="product-discount ml-3">
                                                             - {changeOnProduct.discount}%
                                                         </div>

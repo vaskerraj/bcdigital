@@ -3,7 +3,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import ProductStarIcon from './ProductStarIcon';
 const ProductCard = ({ data }) => {
-    console.log(data.products[0].discount)
     return (
         <div className="product-item">
 
@@ -33,7 +32,7 @@ const ProductCard = ({ data }) => {
                         {data.name}
                     </div>
                     <div className="product-star-rating">
-                        <ProductStarIcon star={3.5} />
+                        <ProductStarIcon star={Math.round(data.rating) || 0} />
                     </div>
                     <div className="product-price d-flex">
                         {data.products[0].discount !== 0 && data.products[0].discount !== null &&
