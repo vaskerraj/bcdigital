@@ -16,6 +16,7 @@ const { Panel } = Collapse;
 import { Trash2 } from 'react-feather';
 
 import useWindowDimensions from '../helpers/useWindowDimensions';
+import { checkProductDiscountValidity, priceSectionFromCombinedCartItems } from '../helpers/productDiscount';
 import { addToCart, removeOrderFromCart } from '../redux/actions/cartAction';
 
 import Wrapper from '../components/Wrapper';
@@ -93,7 +94,7 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
             const packages = uniqueSellerForPackage.length === 0 ? 1 : uniqueSellerForPackage.length;
             setPackagesForCustomer(packages);
 
-            const cartTotalAfterCombine = combinedCartItems.reduce((a, c) => (a + c.productQty * c.products[0].finalPrice), 0);
+            const cartTotalAfterCombine = priceSectionFromCombinedCartItems(combinedCartItems).reduce((a, c) => (a + c.productQty * c.exactPrice), 0);
 
             if (shippingPlans.plans.length !== 0) {
                 setShippingCharge(Number(shippingPlans.plans[0].amount) * Number(packages));
@@ -111,8 +112,8 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
         }
     }, [shippingPlans, combinedCartItems]);
 
-    const cartTotal = combinedCartItems.reduce((a, c) => (a + c.productQty * c.products[0].finalPrice), 0);
-
+    const cartTotal = priceSectionFromCombinedCartItems(combinedCartItems).reduce((a, c) => (a + c.productQty * c.exactPrice), 0);
+    console.log(cartTotal)
     const dispatch = useDispatch();
     const router = useRouter();
 
@@ -292,7 +293,7 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
             <div className="clearfix mt-5">
                 <div className="d-flex justify-content-between">
                     <span>Product Total</span>
-                    <span>Rs.{combinedCartItems.reduce((a, c) => (a + c.productQty * c.products[0].finalPrice), 0)}</span>
+                    <span>Rs.{cartTotal}</span>
                 </div>
                 {shippingCharge !== 0 &&
                     <div className="d-flex justify-content-between mt-3 pt-4 border-top border-gray align-items-center">
@@ -389,9 +390,13 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
                                                             </div>
                                                             <div className="col-2 text-right">
                                                                 <div className="product-finalprice font-weight-bold">
-                                                                    Rs.{(Number(item.products[0].finalPrice) * Number(item.productQty))}
+                                                                    Rs.{(Number(checkProductDiscountValidity(item.products[0].promoStartDate, item.products[0].promoEndDate) === true
+                                                                        ? item.products[0].finalPrice
+                                                                        :
+                                                                        item.products[0].price) * Number(item.productQty))}
                                                                 </div>
                                                                 {item.products[0].discount !== null && item.products[0].discount !== 0 &&
+                                                                    checkProductDiscountValidity(item.products[0].promoStartDate, item.products[0].promoEndDate) === true &&
                                                                     <div className="product-del">
                                                                         Rs.<span>{item.products[0].price}</span>
                                                                     </div>
@@ -427,9 +432,13 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
                                                             <div className="product-detail ml-3">
                                                                 <div className="d-flex align-items-baseline">
                                                                     <div className="product-finalprice font-weight-bold font16" style={{ marginTop: '-0.7rem' }}>
-                                                                        Rs.{(Number(item.products[0].finalPrice) * Number(item.productQty))}
+                                                                        Rs.{(Number(checkProductDiscountValidity(item.products[0].promoStartDate, item.products[0].promoEndDate) === true
+                                                                            ? item.products[0].finalPrice
+                                                                            :
+                                                                            item.products[0].price) * Number(item.productQty))}
                                                                     </div>
                                                                     {item.products[0].discount !== null && item.products[0].discount !== 0 &&
+                                                                        checkProductDiscountValidity(item.products[0].promoStartDate, item.products[0].promoEndDate) === true &&
                                                                         <div className="product-del ml-3">
                                                                             Rs.<span>{item.products[0].price}</span>
                                                                         </div>
@@ -469,7 +478,7 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
                                     <div className="col-12 p-3">
                                         <Radio.Group onChange={onDeliveryChange} value={shippingPlans.plans[0]._id}>
                                             {shippingPlans.plans.map((plan, index) => (
-                                                <Radio value={plan._id} amount={plan.amount}>
+                                                <Radio key={plan._id} value={plan._id} amount={plan.amount}>
                                                     <div className="d-inline-flex">
                                                         <div className="d-block">
                                                             <span className="font-weight-bold">Rs.{plan.amount * Number(packagesForCustomer)}</span> | {plan.name}

@@ -6,6 +6,33 @@ const Coupon = mongoose.model('Coupon');
 
 const { requiredAuth, checkRole } = require('../middlewares/auth');
 
+const checkProductDiscountValidity = (toDate, fromDate) => {
+    // to check discount is valid till today 
+    const today = new Date();
+    const mindate = new Date(toDate);
+    const maxdate = new Date(fromDate);
+
+    return (today.getTime() >= mindate.getTime() && today.getTime() <= maxdate.getTime());
+}
+
+const priceSectionFromCombinedCartItems = (cartItem) => {
+    const cartItemQtyAndPrice = [];
+    cartItem.map(item => {
+        let cartItemQtyAndPriceObj = new Object();
+
+        const finalPrice = checkProductDiscountValidity(item.products[0].promoStartDate, item.products[0].promoEndDate) === true
+            ? item.products[0].finalPrice
+            :
+            item.products[0].price;
+
+        cartItemQtyAndPriceObj['productQty'] = item.productQty;
+        cartItemQtyAndPriceObj['exactPrice'] = finalPrice;
+
+        cartItemQtyAndPrice.push(cartItemQtyAndPriceObj)
+    })
+    return cartItemQtyAndPrice;
+}
+
 module.exports = function (server) {
     server.get('/api/checkout', requiredAuth, checkRole(['subscriber']), async (req, res) => {
         try {
@@ -44,7 +71,7 @@ module.exports = function (server) {
             let shippingChargeBaseOnPackages = 0;
 
             // check total
-            const productTotal = combineProductWithCartItems.reduce((a, c) => (a + c.productQty * c.products[0].finalPrice), 0);
+            const productTotal = priceSectionFromCombinedCartItems(combineProductWithCartItems).reduce((a, c) => (a + c.productQty * c.exactPrice), 0);
             if (productTotal !== cartDetails.total) {
                 return res.status(200).json({ msg: 'error' });
             }

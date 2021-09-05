@@ -17,6 +17,7 @@ import { MapPin, Phone } from 'react-feather';
 
 import { useForm, Controller } from 'react-hook-form';
 
+import { checkProductDiscountValidity, priceSectionFromCombinedCartItems } from '../helpers/productDiscount';
 import AddressForm from '../components/user/AddressForm';
 import { addAddress } from '../redux/actions/addressAction';
 import ShippingAddress from '../components/ShippingAddress';
@@ -97,7 +98,8 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
         }
     }, [isDefaultAddress]);
 
-    const cartTotal = products.reduce((a, c) => (a + c.productQty * c.products[0].finalPrice), 0);
+    const cartTotal = priceSectionFromCombinedCartItems(products).reduce((a, c) =>
+        (a + c.productQty * c.exactPrice), 0);
 
     useEffect(() => {
         if (products) {
@@ -120,14 +122,18 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
     // make price fix cause price may varify after discount expired or seller change its price anytime
     let cartItemWithFixPrice = [];
     products.map(item => {
+
+        const finalPrice = checkProductDiscountValidity(item.products[0].promoStartDate, item.products[0].promoEndDate) === true
+            ? item.products[0].finalPrice
+            :
+            item.products[0].price;
+
         let productObj = new Object();
         productObj['productId'] = item.productId;
         productObj['productQty'] = item.productQty;
-        productObj['price'] = Number(item.products[0].finalPrice) * Number(item.productQty);
+        productObj['price'] = Number(finalPrice) * Number(item.productQty);
         cartItemWithFixPrice.push(productObj);
     });
-
-    console.log(cartItemWithFixPrice);
 
 
     const { register, handleSubmit, errors, reset, getValues, trigger, control } = useForm();

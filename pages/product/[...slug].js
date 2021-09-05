@@ -19,6 +19,7 @@ import { useForm } from 'react-hook-form';
 import ShowMore from 'react-show-more-button';
 
 import Wrapper from '../../components/Wrapper';
+import { checkProductDiscountValidity } from '../../helpers/productDiscount';
 import useWindowDimensions from '../../helpers/useWindowDimensions';
 import ProductStarIcon from '../../components/helpers/ProductStarIcon';
 import RelatedProductSlider from '../../components/helpers/RelatedProductSlider';
@@ -68,6 +69,7 @@ const ProductDetail = ({ product, pr, qty, as }) => {
     const [thirdBreadcrumb, setThirdBreadcrumb] = useState({ name: null, slug: null });
 
     const [loadingSkeleton, setLoadingSkeleton] = useState(true);
+
     const [changeOnProduct, setChangeOnProduct] = useState({
         id: product.products[0]._id,
         quantity: product.products[0].quantity,
@@ -76,7 +78,9 @@ const ProductDetail = ({ product, pr, qty, as }) => {
         discount: product.products[0].discount,
         promoStartDate: product.products[0].promoStartDate,
         promoEndDate: product.products[0].promoEndDate,
-        finalPrice: product.products[0].finalPrice,
+        finalPrice: checkProductDiscountValidity(product.products[0].promoStartDate, product.products[0].promoEndDate) === true ?
+            product.products[0].finalPrice
+            : product.products[0].price,
         available: product.products[0].quantity - product.products[0].sold
     });
 
@@ -90,6 +94,8 @@ const ProductDetail = ({ product, pr, qty, as }) => {
 
     const [buyNowLoading, setBuyNowLoading] = useState(false);
 
+    const isPromoValidate = checkProductDiscountValidity(changeOnProduct.promoStartDate, changeOnProduct.promoEndDate);
+
     useEffect(() => {
         let sliderImageData = [];
         product.colour[0].images.map(item => {
@@ -100,7 +106,6 @@ const ProductDetail = ({ product, pr, qty, as }) => {
         });
         setSliderImages(sliderImageData);
 
-        // mobile zoom slider
 
         // selected category breadcrumb
         if (product) {
@@ -416,7 +421,7 @@ const ProductDetail = ({ product, pr, qty, as }) => {
                                                             <div className="product-finalprice">
                                                                 Rs.<span>{changeOnProduct.finalPrice}</span>
                                                             </div>
-                                                            {changeOnProduct.discount || changeOnProduct.discount !== null &&
+                                                            {changeOnProduct.discount || changeOnProduct.discount !== null && isPromoValidate &&
                                                                 <>
                                                                     <div className="product-del ml-3">
                                                                         Rs.<span>{changeOnProduct.price}</span>
@@ -475,7 +480,7 @@ const ProductDetail = ({ product, pr, qty, as }) => {
                                                 Price
                                             </div>
                                             <div>
-                                                {changeOnProduct.discount !== null && changeOnProduct.discount !== 0 &&
+                                                {changeOnProduct.discount !== null && changeOnProduct.discount !== 0 && isPromoValidate &&
                                                     <div className="product-del">
                                                         Rs.<span>{changeOnProduct.price}</span>
                                                     </div>
@@ -484,7 +489,7 @@ const ProductDetail = ({ product, pr, qty, as }) => {
                                                     <div className="product-finalprice">
                                                         Rs.<span>{changeOnProduct.finalPrice}</span>
                                                     </div>
-                                                    {changeOnProduct.discount !== null && changeOnProduct.discount !== null &&
+                                                    {changeOnProduct.discount !== null && changeOnProduct.discount !== null && isPromoValidate &&
                                                         <div className="product-discount ml-3">
                                                             - {changeOnProduct.discount}%
                                                         </div>

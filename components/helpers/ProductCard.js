@@ -2,11 +2,15 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import ProductStarIcon from './ProductStarIcon';
+import { checkProductDiscountValidity } from '../../helpers/productDiscount';
+
 const ProductCard = ({ data }) => {
+    const isPromoValidate = checkProductDiscountValidity(data.products[0].promoStartDate, data.products[0].promoEndDate);
+
     return (
         <div className="product-item">
 
-            {data.products[0].discount !== 0 && data.products[0].discount !== null &&
+            {data.products[0].discount !== 0 && data.products[0].discount !== null && isPromoValidate &&
                 <div className="discount-tag">
                     -{data.products[0].discount + '%'}
                 </div>
@@ -35,10 +39,14 @@ const ProductCard = ({ data }) => {
                         <ProductStarIcon star={Math.round(data.rating) || 0} />
                     </div>
                     <div className="product-price d-flex">
-                        {data.products[0].discount !== 0 && data.products[0].discount !== null &&
+                        {data.products[0].discount !== 0 && data.products[0].discount !== null && isPromoValidate &&
                             <div className="del mr-2">Rs.{data.products[0].price}</div>
                         }
-                        <div className="price"> Rs.{data.products[0].finalPrice}</div>
+                        <div className="price">
+                            Rs.{isPromoValidate === true ?
+                                data.products[0].finalPrice
+                                : data.products[0].price}
+                        </div>
                     </div>
                 </a>
             </Link >
