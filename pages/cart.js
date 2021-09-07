@@ -17,7 +17,7 @@ import { Trash2 } from 'react-feather';
 
 import useWindowDimensions from '../helpers/useWindowDimensions';
 import { checkProductDiscountValidity, priceSectionFromCombinedCartItems } from '../helpers/productDiscount';
-import { addToCart, removeOrderFromCart } from '../redux/actions/cartAction';
+import { updateCartQty, removeOrderFromCart } from '../redux/actions/cartAction';
 
 import Wrapper from '../components/Wrapper';
 import Loading from '../components/Loading';
@@ -113,7 +113,7 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
     }, [shippingPlans, combinedCartItems]);
 
     const cartTotal = priceSectionFromCombinedCartItems(combinedCartItems).reduce((a, c) => (a + c.productQty * c.exactPrice), 0);
-    console.log(cartTotal)
+
     const dispatch = useDispatch();
     const router = useRouter();
 
@@ -175,7 +175,7 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
     }
 
     const cartQtyChangeHandler = (productId, value) => {
-        dispatch(addToCart(productId, Number(value)));
+        dispatch(updateCartQty(productId, Number(value)));
         router.push(router.asPath);
     }
 
@@ -211,7 +211,7 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
                     >
                         {
                             [...Array(availableProducts).keys()].map(x => (
-                                <Option value={x + 1}>{x + 1}</Option>
+                                <Option key={x} value={x + 1}>{x + 1}</Option>
                             ))
                         }
                     </Select>
