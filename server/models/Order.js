@@ -15,6 +15,9 @@ const orderSchema = new mongoose.Schema({
             type: Number,
             require: true
         },
+        trackingId: {
+            type: String
+        },
         orderStatus: {
             type: String,
             default: 'not_confirmed',
@@ -24,8 +27,19 @@ const orderSchema = new mongoose.Schema({
                 "cancelled",
                 "packed",
                 "shipped",
+                "reached_at_city",
                 "for_delivery",
-                "delivered"
+                "delivered",
+                "return_request",
+                "return_approve",
+                "return_denide",
+                "return_pick",
+                "return_shipped",
+                "return_delivered",
+                "cancel_request",
+                "cancel_approve",
+                "cancel_denide",
+                "cancel_delivered",
             ]
         },
         orderStatusLog: [{
@@ -35,6 +49,9 @@ const orderSchema = new mongoose.Schema({
             statusChangeBy: {
                 type: ObjectId,
                 ref: 'Users'
+            },
+            statusChangeDate: {
+                type: Date
             }
         }],
         paymentStatus: {
