@@ -13,6 +13,7 @@ import {
     BarChartOutlined,
     SettingOutlined,
     ShoppingCartOutlined,
+    ShoppingOutlined
 } from '@ant-design/icons';
 
 import { Truck } from 'react-feather';
@@ -24,7 +25,10 @@ const SlidebarMenu = ({ onActive }) => {
             defaultSelectedKeys={[onActive]}
             defaultOpenKeys={[
                 onActive === 'agents' || onActive === 'shipping' || onActive === 'delivery'
-                    ? 'sub3' : ''
+                    ? 'sub3'
+                    : onActive === 'ownShopOrders' || onActive === 'sellerOrders'
+                        ? 'sub1'
+                        : ''
             ]}
             mode="inline"
         >
@@ -46,6 +50,14 @@ const SlidebarMenu = ({ onActive }) => {
             <Menu.Item key="sellers" icon={<TeamOutlined />}>
                 <Link href="/admin/sellers">Sellers</Link>
             </Menu.Item>
+            <SubMenu key="sub1" icon={<ShoppingOutlined />} title="Oders">
+                <Menu.Item key="ownShopOrders">
+                    <Link href="/admin/orders/own-shop/">Own Shop Orders</Link>
+                </Menu.Item>
+                <Menu.Item key="sellerOrders">
+                    <Link href="/admin/orders/seller">Seller Orders</Link>
+                </Menu.Item>
+            </SubMenu>
             <Menu.Item key="ownShop" icon={<ShoppingCartOutlined />}>
                 <Link href="/admin/own-shop/">Own Shop</Link>
             </Menu.Item>

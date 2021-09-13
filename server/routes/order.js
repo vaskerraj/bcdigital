@@ -5,7 +5,7 @@ const Order = mongoose.model('Order');
 const ShippingCost = mongoose.model('ShippingPlan');
 const Coupon = mongoose.model('Coupon');
 
-const { requiredAuth, checkRole } = require('../middlewares/auth');
+const { requiredAuth, checkRole, checkAdminRole } = require('../middlewares/auth');
 
 const checkProductDiscountValidity = (toDate, fromDate) => {
     // to check discount is valid till today 
@@ -60,7 +60,8 @@ module.exports = function (server) {
                         {
                             'products.$': 1
                         })
-                        .select('_id products createdBy').lean();
+                        .select('_id products createdBy').lean()
+                        .populate('createdBy');
                     productsCartList.push(cartProducts);
                 })
             );
@@ -209,7 +210,7 @@ module.exports = function (server) {
                         {
                             $and: [
                                 { paymentType: { $ne: 'cashondelivery' } },
-                                { paymentStatus: 'paid' }
+                                { 'products.paymentStatus': 'paid' }
                             ]
                         },
                     ],
@@ -269,4 +270,134 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
+
+    // api for admin user
+
+    server.get('/api/admin/orders/own', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
+        try {
+            const orders = await Order.find({
+                'products.sellerRole': 'own',
+                $or: [
+                    { 'products.orderStatus': 'not_confirmed' },
+                    { 'products.orderStatus': 'confirmed' },
+                    { 'products.orderStatus': 'packed' },
+                    { 'products.orderStatus': 'shipped' },
+                    { 'products.orderStatus': 'for_delivery' },
+                    { 'products.orderStatus': 'delivered' },
+                ],
+            })
+                .populate({
+                    path: 'products.seller',
+                    select: 'name username mobile role picture, _id'
+                })
+                .populate({
+                    path: 'shipping',
+                    select: 'name _id amount maxDeliveryTime minDeliveryTime isDefault',
+                    populate: ({
+                        path: 'shipAgentId',
+                        select: 'name _id number email',
+                    })
+                })
+                .populate({
+                    path: 'coupon',
+                    select: 'name _id code availableFor discountType discountAmount minBasket availableVoucher'
+                })
+                .populate('delivery')
+                .populate({
+                    path: 'orderedBy',
+                    select: 'name username role picture, _id',
+                })
+                .lean()
+                .sort([['updatedAt', -1]]);
+            console.log(orders)
+
+            const getProductDetail = async (products) => {
+
+                const getProductIds = products.map(item => item.productId);
+                let relatedProducts = [];
+                await Promise.all(
+                    getProductIds.map(async (pro) => {
+                        const orderProducts = await Product.findOne(
+                            {
+                                'products._id': pro
+                            },
+                            {
+                                'products.$': 1
+                            })
+                            .select('_id name colour products').lean();
+                        relatedProducts.push(orderProducts);
+                    })
+                );
+
+                const parseProducts = JSON.parse(JSON.stringify(relatedProducts));
+
+                // combine proucts details and productQty
+                const combineProductWithOrderitems = parseProducts.map(item => ({
+                    ...item,
+                    ...products.find(ele => ele.productId == item.products[0]._id)
+                }));
+
+                return combineProductWithOrderitems;
+            }
+
+            let orderProducts = [];
+            await Promise.all(
+                orders.map(async (item) => {
+                    const productObj = new Object();
+                    productObj['_id'] = item._id;
+                    productObj['products'] = await getProductDetail(item.products);
+                    productObj['shipping'] = item.shipping;
+                    productObj['shippingCharge'] = item.shippingCharge;
+                    productObj['coupon'] = item.coupon;
+                    productObj['couponDiscount'] = item.couponDiscount;
+                    productObj['grandTotal'] = item.grandTotal;
+                    productObj['delivery'] = item.delivery;
+                    productObj['deliveryMobile'] = item.deliveryMobile;
+                    productObj['paymentType'] = item.paymentType;
+                    productObj['orderedBy'] = item.orderedBy;
+                    productObj['createdAt'] = item.createdAt;
+
+                    orderProducts.push(productObj);
+                })
+            )
+            return res.status(200).json(orderProducts);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.put('/api/admin/orderstatus', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
+        const { status, itemId, tackingId } = req.body;
+        console.log(req.body)
+        try {
+            await Order.findOneAndUpdate({
+                'products._id': itemId,
+            }, {
+                '$set': { "products.$.orderStatus": status }
+            });
+
+            const orderStatusLog = {
+                status,
+                statusChangeBy: req.user._id,
+                statusChangeDate: new Date()
+            }
+            await Order.findOneAndUpdate({ 'products._id': itemId },
+                {
+                    $push: {
+                        'products.$.orderStatusLog': orderStatusLog
+                    }
+                }, {
+                new: true
+            });
+            if (status === 'packed' || status === 'shipped' || status === 'cancelled') {
+                // check app user or web user. if web send email, if app then send notification
+
+            } else {
+                return res.status(200).json({ msg: "success" });
+            }
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
 };
