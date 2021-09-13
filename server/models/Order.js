@@ -42,6 +42,14 @@ const orderSchema = new mongoose.Schema({
             require: true,
             default: 'notpaid'
         },
+        seller: {
+            type: ObjectId,
+            ref: "Users"
+        },
+        sellerRole: {
+            type: String,
+            require: true
+        }
     }],
     total: {
         type: Number,

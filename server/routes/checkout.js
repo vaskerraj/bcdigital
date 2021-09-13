@@ -50,7 +50,11 @@ module.exports = function (server) {
                         },
                         { 'products.$': 1 }
                     )
-                        .select('_id products createdBy').lean();
+                        .select('_id products createdBy').lean()
+                        .populate({
+                            path: 'createdBy',
+                            select: '_id sellerRole',
+                        });
                     productsCartList.push(cartProducts);
                 })
             );

@@ -122,7 +122,6 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
     // make price fix cause price may varify after discount expired or seller change its price anytime
     let cartItemWithFixPrice = [];
     products.map(item => {
-
         const finalPrice = checkProductDiscountValidity(item.products[0].promoStartDate, item.products[0].promoEndDate) === true
             ? item.products[0].finalPrice
             :
@@ -132,6 +131,8 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
         productObj['productId'] = item.productId;
         productObj['productQty'] = item.productQty;
         productObj['price'] = Number(finalPrice) * Number(item.productQty);
+        productObj['seller'] = item.createdBy._id;
+        productObj['sellerRole'] = item.createdBy.sellerRole;
         cartItemWithFixPrice.push(productObj);
     });
 
