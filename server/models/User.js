@@ -47,6 +47,13 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: 'normal'
     },
+    registerMethod: {
+        type: String,
+        enum: [
+            "web",
+            "app"
+        ]
+    },
     cart: {
         type: Array,
         default: []
@@ -56,6 +63,9 @@ const userSchema = new mongoose.Schema({
         type: String,
     },
     // wishlist: [{ type: ObjectId, ref: 'Products' }]
+    notificationToken: {
+        type: String
+    }
 }, { timestamps: true });
 
 

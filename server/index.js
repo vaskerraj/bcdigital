@@ -21,6 +21,7 @@ require('./models/SearchTag.js');
 
 require('./models/Cart.js');
 require('./models/Order.js');
+require('./models/NotificationToken.js');
 
 const port = parseInt(process.env.PORT, 10) || 3000
 const dev = process.env.NODE_ENV !== 'production'
