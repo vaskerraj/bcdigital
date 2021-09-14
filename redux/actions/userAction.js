@@ -52,7 +52,7 @@ export const userGoogleLogin = () => async (dispatch) => {
 
         const phoneNumber = null;
 
-        await axiosApi.post('/api/social', { isNewUser: isNewUserOrNot, phoneNumber },
+        await axiosApi.post('/api/social', { isNewUser: isNewUserOrNot, phoneNumber, registerMethod:'web' },
             {
                 headers: {
                     token
@@ -85,7 +85,7 @@ export const userFacebookLogin = () => async (dispatch) => {
 
         //set for fb account by mobile number
         const phoneNumber = results.user.phoneNumber;
-        await axiosApi.post('/api/social', { isNewUser: isNewUserOrNot, phoneNumber },
+        await axiosApi.post('/api/social', { isNewUser: isNewUserOrNot, phoneNumber, registerMethod:'web' },
             {
                 headers: {
                     token
@@ -120,7 +120,7 @@ export const userSignUp = (fullname, mobile, verificationCode, password) => asyn
     dispatch({ type: USER_SIGNUP_RESPONSE, payload: { mobile } });
 
     try {
-        const { data } = await axiosApi.post("api/signup", { fullname, mobile, verificationCode, password });
+        const { data } = await axiosApi.post("api/signup", { fullname, mobile, verificationCode, password, registerMethod:'web' });
 
         const result = await firebase.auth().signInWithCustomToken(data.token);
 

@@ -6,7 +6,7 @@ const admin = require('../../firebase/firebaseAdmin');
 module.exports = function (server) {
 
     server.post('/api/social', async (req, res) => {
-        const { isNewUser, phoneNumber } = req.body;
+        const { isNewUser, phoneNumber, registerMethod } = req.body;
 
         // predefine password to prevent error(salt error on bcrypt)
         const password = 'social';
@@ -21,8 +21,9 @@ module.exports = function (server) {
                 password,
                 name,
                 picture,
+                fireuid: uid,
                 method: sign_in_provider,
-                fireuid: uid
+                registerMethod
             }).save();
         }
     });

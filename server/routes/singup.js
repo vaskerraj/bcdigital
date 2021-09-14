@@ -7,14 +7,14 @@ const admin = require('../../firebase/firebaseAdmin');
 module.exports = function (server) {
 
     server.post('/api/signup', async (req, res) => {
-        const { fullname, mobile, verificationCode, password } = req.body;
+        const { fullname, mobile, verificationCode, password, registerMethod } = req.body;
         try {
             // Note: checked mobile number at while sending sms so not check mobile number
             const { msg } = await verifySms(mobile, verificationCode, method = 'registration');
             if (msg !== 'verify') {
                 return res.status(422).json({ error: 'Invalid SMS Verification Code' });
             }
-            const user = new Users({ name: fullname, username: mobile, mobile, password, method: 'custom' });
+            const user = new Users({ name: fullname, username: mobile, mobile, password, method: 'custom', registerMethod });
             await user.save();
 
             // Note: auto login after successfully sign up(registration)
