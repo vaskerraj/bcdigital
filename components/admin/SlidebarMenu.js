@@ -13,7 +13,8 @@ import {
     BarChartOutlined,
     SettingOutlined,
     ShoppingCartOutlined,
-    ShoppingOutlined
+    ShoppingOutlined,
+    ShopOutlined
 } from '@ant-design/icons';
 
 import { Truck } from 'react-feather';
@@ -28,7 +29,9 @@ const SlidebarMenu = ({ onActive }) => {
                     ? 'sub3'
                     : onActive === 'ownShopOrders' || onActive === 'sellerOrders'
                         ? 'sub1'
-                        : ''
+                        : onActive === 'pendingProduct' || onActive === 'liveactiveProduct' || onActive === 'liveunactiveProduct' || onActive === 'unapprovedProduct'
+                            ? 'sub2'
+                            : ''
             ]}
             mode="inline"
         >
@@ -47,10 +50,7 @@ const SlidebarMenu = ({ onActive }) => {
             <Menu.Item key="coupon" icon={<GiftOutlined />}>
                 <Link href="/admin/coupon/">Coupon</Link>
             </Menu.Item>
-            <Menu.Item key="sellers" icon={<TeamOutlined />}>
-                <Link href="/admin/sellers">Sellers</Link>
-            </Menu.Item>
-            <SubMenu key="sub1" icon={<ShoppingOutlined />} title="Oders">
+            <SubMenu key="sub1" icon={<ShoppingCartOutlined />} title="Oders">
                 <Menu.Item key="ownShopOrders">
                     <Link href="/admin/orders/own-shop/">Own Shop Orders</Link>
                 </Menu.Item>
@@ -58,7 +58,24 @@ const SlidebarMenu = ({ onActive }) => {
                     <Link href="/admin/orders/seller">Seller Orders</Link>
                 </Menu.Item>
             </SubMenu>
-            <Menu.Item key="ownShop" icon={<ShoppingCartOutlined />}>
+            <SubMenu key="sub2" icon={<ShoppingOutlined />} title="Products">
+                <Menu.Item key="pendingProduct">
+                    <Link href="/admin/products/pending">Pending</Link>
+                </Menu.Item>
+                <Menu.Item key="liveactiveProduct">
+                    <Link href="/admin/products/liveactive">Live & Active</Link>
+                </Menu.Item>
+                <Menu.Item key="liveunactiveProduct">
+                    <Link href="/admin/products/liveunactive">Live but Unactive</Link>
+                </Menu.Item>
+                <Menu.Item key="unapprovedProduct">
+                    <Link href="/admin/products/unapproved">Unapproved</Link>
+                </Menu.Item>
+            </SubMenu>
+            <Menu.Item key="sellers" icon={<TeamOutlined />}>
+                <Link href="/admin/sellers">Sellers</Link>
+            </Menu.Item>
+            <Menu.Item key="ownShop" icon={<ShopOutlined />}>
                 <Link href="/admin/own-shop/">Own Shop</Link>
             </Menu.Item>
             <Menu.Item key="report" icon={<PieChartOutlined />}>
