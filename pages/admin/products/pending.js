@@ -114,7 +114,7 @@ const PendingProducts = ({ productData, total }) => {
             title: 'Name',
             dataIndex: 'name',
             key: 'name',
-            render: (text, record) => <a href={`/admin/products/${record._id}`}>{text}</a>,
+            render: (text, record) => <a href={`/admin/products/${record._id}?status=pendingProduct`}>{text}</a>,
         },
         {
             title: 'Item Id',

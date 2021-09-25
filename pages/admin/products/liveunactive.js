@@ -111,7 +111,7 @@ const LiveUnactiveProducts = ({ productData, total }) => {
             title: 'Name',
             dataIndex: 'name',
             key: 'name',
-            render: (text, record) => <a href={`/admin/products/${record._id}`}>{text}</a>,
+            render: (text, record) => <a href={`/admin/products/${record._id}?status=liveunactiveProduct`}>{text}</a>,
         },
         {
             title: 'Item Id',

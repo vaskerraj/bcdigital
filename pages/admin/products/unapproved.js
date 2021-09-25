@@ -50,7 +50,6 @@ const UnapprovedProducts = ({ productData, total }) => {
     // pagation
     const [pagination, setPagination] = useState({ position: ['none', 'none'], defaultPageSize: sizePerPage });
 
-
     const { adminAuth } = useSelector(state => state.adminAuth);
 
     const recallProductList = async (filterByname, filterByProductId, filterByBrand, filterByseller) => {
@@ -111,7 +110,7 @@ const UnapprovedProducts = ({ productData, total }) => {
             title: 'Name',
             dataIndex: 'name',
             key: 'name',
-            render: (text, record) => <a href={`/admin/products/${record._id}`}>{text}</a>,
+            render: (text, record) => <a href={`/admin/products/${record._id}?status=unapprovedProduct`}>{text}</a>,
         },
         {
             title: 'Item Id',
