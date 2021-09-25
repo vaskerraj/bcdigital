@@ -517,13 +517,17 @@ const ProductDetail = ({ product, pr, qty, as }) => {
                                                 <div className="col-10 col-sm-10 col-md-11 position-relative">
                                                     <div className="clearfix">
                                                         {product.products.map((item) => (
-                                                            <span
-                                                                key={item._id}
-                                                                onClick={(e) => changeProductSize(item, e)}
-                                                                className={`sizes ${item.quantity - item.sold === 0 && 'out'}`}
-                                                            >
-                                                                {item.size}
-                                                            </span>
+                                                            <>
+                                                                {item.approved.status === 'approved' && item.status === 'active' &&
+                                                                    <span
+                                                                        key={item._id}
+                                                                        onClick={(e) => changeProductSize(item, e)}
+                                                                        className={`sizes ${item.quantity - item.sold === 0 && 'out'}`}
+                                                                    >
+                                                                        {item.size}
+                                                                    </span>
+                                                                }
+                                                            </>
                                                         ))}
                                                     </div>
                                                     <input type="text" name="productSize"

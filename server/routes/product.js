@@ -342,7 +342,7 @@ module.exports = function (server) {
         const totalNumber = parseInt(req.params.number);
         try {
             // later change approved.status to active
-            const products = await Product.find({ 'products.approved.status': 'pending', 'products.status': 'active' })
+            const products = await Product.find({ 'products.approved.status': 'approved', 'products.status': 'active' })
                 .select('_id name slug brand colour size products rating createdBy')
                 .lean()
                 .populate('brand')
@@ -368,7 +368,7 @@ module.exports = function (server) {
                 {
                     _id: { $ne: productId },
                     category: product.category,
-                    'products.approved.status': 'pending',
+                    'products.approved.status': 'approved',
                     'products.status': 'active'
                 }
             )
@@ -427,11 +427,19 @@ module.exports = function (server) {
         const findBySearchType = (query, searchType) => {
             if (searchType === 'search') {
                 return {
-                    $text: { $search: query }
+                    $text: { $search: query },
+                    $and: [
+                        { 'products.approved.status': 'approved' },
+                        { 'products.status': 'active' }
+                    ]
                 }
             } else if (searchType === 'cat') {
                 return {
-                    category: { $in: query }
+                    category: { $in: query },
+                    $and: [
+                        { 'products.approved.status': 'approved' },
+                        { 'products.status': 'active' }
+                    ]
                 }
             } else {
                 return {}
