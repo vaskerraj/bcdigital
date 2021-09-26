@@ -40,6 +40,21 @@ export const signin = (mobile, password) => async (dispatch) => {
         dispatch({ type: SELLER_SIGIN_ERROR, payload: error.response.data });
     }
 }
+
+export const signUp = (name, mobile, verificationCode, password, email) => async (dispatch) => {
+    dispatch({ type: SELLER_SIGNUP_RESPONSE, payload: { mobile } });
+
+    try {
+        const { data } = await axiosApi.post("api/seller/register", { name, mobile, verificationCode, password, email, registerMethod: 'web' });
+
+        dispatch({ type: SELLER_SIGNUP_SUCCESS, payload: { data } });
+
+    } catch (error) {
+        const d_error = error.response.data ? error.response.data : error.message;
+        dispatch({ type: SELLER_SIGNUP_ERROR, payload: d_error });
+    }
+}
+
 export const signout = () => async (dispatch) => {
     dispatch({ type: SELLER_SIGNOUT });
     await firebase.auth().signOut().then(

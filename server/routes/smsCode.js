@@ -23,7 +23,14 @@ module.exports = function (server) {
                     return res.status(422).json({ error: 'User not exists with this mobile number' });
                 }
                 smsText = process.env.SMS_PASS_RECOVER_TEMP
+            } else if (method === 'seller_registration') {
+                const user = await Users.findOne({ username: mobile, method: 'custom', role: 'seller' });
+                if (user) {
+                    return res.status(422).json({ error: 'Seller alerady exists with this mobile number' });
+                }
+                smsText = process.env.SMS_REGISTER_TEMP
             }
+
             const sms = new SMS({ mobile, code, method, staus: 'active' });
             await sms.save();
 
