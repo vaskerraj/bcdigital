@@ -30,6 +30,7 @@ export const signin = (mobile, password) => async (dispatch) => {
         const token = await user.getIdToken(true);
         const dispatchData = {
             user: data.name,
+            picture: data.picture,
             token
         }
 

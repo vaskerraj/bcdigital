@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useDispatch, useSelector } from 'react-redux';
-import { Layout, Menu, Breadcrumb, Dropdown } from 'antd';
+import { Layout, Menu, Breadcrumb, Dropdown, Avatar } from 'antd';
 const { Header, Content, Footer, Sider } = Layout;
 import {
     MenuOutlined,
@@ -40,8 +40,8 @@ const MainSlider = ({ onActive, breadcrumb, children }) => {
                 <Link href="/seller/acccount-setting">
                     <a rel="noopener noreferrer">
                         <SettingOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
-                    Account Setting
-                </a>
+                        Account Setting
+                    </a>
                 </Link>
             </Menu.Item>
             <Menu.Item className="pl-5 pr-5">
@@ -56,7 +56,7 @@ const MainSlider = ({ onActive, breadcrumb, children }) => {
         <Layout className="admin-wrapper" style={{ minHeight: '100vh' }}>
             <Sider trigger={null} collapsible collapsed={collapsed}>
                 <Link href="/seller/">
-                    <div className="logo">BC Digital</div>
+                    <div className="logo" style={{ height: 'auto' }}>BC Seller Center</div>
                 </Link>
                 <SlidebarMenu onActive={onActive} />
             </Sider>
@@ -68,10 +68,23 @@ const MainSlider = ({ onActive, breadcrumb, children }) => {
                         </div>
                         <div className="position-relative mr-5" style={{ marginTop: '2.1rem' }}>
                             {sellerAuth &&
-                                <Dropdown overlay={dropdownMenu} trigger={['click']} placement="bottomRight" arrow style={{ top: '4.5rem' }}>
+                                <Dropdown overlay={dropdownMenu} trigger={['click']} placement="bottomRight" arrow style={{ top: '3rem' }}>
                                     <a className="ant-dropdown-link text-dark mr-4" onClick={e => e.preventDefault()}>
                                         <span className="d-none d-md-block">
-                                            {sellerAuth.user ? sellerAuth.user.split(" ")[0] : sellerAuth.user}
+                                            {sellerAuth.picture ?
+                                                <Avatar
+                                                    src={`/sellers/${sellerAuth.picture}`}
+                                                    className="mr-2"
+                                                />
+                                                :
+                                                <Avatar
+                                                    className="mr-2"
+                                                    style={{ backgroundColor: '#87d068' }}
+                                                >
+                                                    {sellerAuth.user.charAt(0).toUpperCase()}
+                                                </Avatar>
+                                            }
+                                            {sellerAuth.user}
                                             <ChevronDown size={14} />
                                         </span>
                                         <span className="d-block d-md-none">
