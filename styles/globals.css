@@ -986,6 +986,10 @@ footer .footer-menu li:hover>a {
   height: auto;
 }
 
+.custom-dropdown{
+  top: 4rem !important;
+}
+
 /* manage account */
 .account-menu .ant-card-body{
   padding: 0;

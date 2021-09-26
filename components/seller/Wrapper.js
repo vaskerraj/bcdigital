@@ -68,7 +68,13 @@ const MainSlider = ({ onActive, breadcrumb, children }) => {
                         </div>
                         <div className="position-relative mr-5" style={{ marginTop: '2.1rem' }}>
                             {sellerAuth &&
-                                <Dropdown overlay={dropdownMenu} trigger={['click']} placement="bottomRight" arrow style={{ top: '3rem' }}>
+                                <Dropdown
+                                    overlay={dropdownMenu}
+                                    trigger={['click']}
+                                    arrow
+                                    placement="bottomCenter"
+                                    overlayClassName="custom-dropdown"
+                                >
                                     <a className="ant-dropdown-link text-dark mr-4" onClick={e => e.preventDefault()}>
                                         <span className="d-none d-md-block">
                                             {sellerAuth.picture ?
