@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Users = mongoose.model('Users');
+const Seller = mongoose.model('Seller');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
@@ -162,6 +163,49 @@ module.exports = function (server) {
             await user.save();
 
             return res.status(200).json({ msg: "success" });
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
+
+    server.get('/api/admin/seller/verify', requiredAuth, checkRole(['admin']), async (req, res) => {
+        try {
+            const seller = await Seller.find(
+                {
+                    $or: [
+                        { documentVerify: 'pending' },
+                        { documentVerify: 're_uploaded' },
+                        { 'account.bankVerify': 'pending' },
+                        { 'account.bankVerify': 're_uploaded' },
+                    ]
+                })
+                .lean()
+                .populate('userId', 'name mobile email status createdAt')
+                .populate('addresses.region', '_id name')
+                .populate('addresses.city', '_id name')
+                .populate('addresses.area', '_id name');
+            return res.status(200).json(seller);
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
+    server.put('/api/admin/seller/verify', requiredAuth, checkRole(['admin']), async (req, res) => {
+        const { sellerId, type, status } = req.body;
+        try {
+            if (type === "doc") {
+                await Seller.findByIdAndUpdate(sellerId,
+                    {
+                        documentVerify: status,
+                    }
+                );
+            } else if (type === "bank") {
+                await Seller.findByIdAndUpdate(sellerId,
+                    {
+                        $set: { 'account.bankVerify': status },
+                    }
+                );
+            }
+            return res.status(200).json({ msg: 'success' });
         } catch (error) {
             return res.status(422).json({ error: "Something went wrong. Please try again later." })
         }

@@ -31,7 +31,10 @@ const SlidebarMenu = ({ onActive }) => {
                         ? 'sub1'
                         : onActive === 'pendingProduct' || onActive === 'liveactiveProduct' || onActive === 'liveunactiveProduct' || onActive === 'unapprovedProduct'
                             ? 'sub2'
-                            : ''
+                            : onActive === 'sellers' || onActive === 'verify'
+                                ?
+                                'sub4'
+                                : ''
             ]}
             mode="inline"
         >
@@ -72,9 +75,14 @@ const SlidebarMenu = ({ onActive }) => {
                     <Link href="/admin/products/unapproved">Unapproved</Link>
                 </Menu.Item>
             </SubMenu>
-            <Menu.Item key="sellers" icon={<TeamOutlined />}>
-                <Link href="/admin/sellers">Sellers</Link>
-            </Menu.Item>
+            <SubMenu key="sub4" icon={<TeamOutlined />} title="Sellers">
+                <Menu.Item key="sellers">
+                    <Link href="/admin/sellers">Lists</Link>
+                </Menu.Item>
+                <Menu.Item key="verify">
+                    <Link href="/admin/sellers/verification">Pending Verification</Link>
+                </Menu.Item>
+            </SubMenu>
             <Menu.Item key="ownShop" icon={<ShopOutlined />}>
                 <Link href="/admin/own-shop/">Own Shop</Link>
             </Menu.Item>
