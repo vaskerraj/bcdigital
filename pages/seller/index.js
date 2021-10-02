@@ -27,8 +27,38 @@ export async function getServerSideProps(context) {
                 token: cookies.sell_token,
             },
         });
-        return {
-            props: {}
+        if (data) {
+            if (data.stepComplete) {
+                return {
+                    props: {}
+                }
+            } else {
+                if (data.step === 'company') {
+                    return {
+                        redirect: {
+                            source: '/seller/start/addresses',
+                            destination: '/seller/start/addresses',
+                            permanent: false,
+                        }
+                    }
+                } else if (data.step === 'addresses') {
+                    return {
+                        redirect: {
+                            source: '/seller/start/bank',
+                            destination: '/seller/start/bank',
+                            permanent: false,
+                        }
+                    }
+                }
+            }
+        } else {
+            return {
+                redirect: {
+                    source: '/seller/start/company',
+                    destination: '/seller/start/company',
+                    permanent: false,
+                }
+            }
         }
     } catch (err) {
         console.log(err)
