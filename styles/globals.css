@@ -990,6 +990,16 @@ footer .footer-menu li:hover>a {
   top: 4rem !important;
 }
 
+.help-info{
+  display: inline-block;
+  background-color: #f3f3f3;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  height: 1.6rem;
+  width: 1.6rem;
+  margin-left: 0.4rem;
+}
+
 /* manage account */
 .account-menu .ant-card-body{
   padding: 0;

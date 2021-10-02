@@ -12,7 +12,7 @@ import { User as UserIcon, ChevronDown, LogOut } from 'react-feather';
 import { signout } from '../../redux/actions/sellerAuthAction';
 import SlidebarMenu from './SlidebarMenu';
 
-const MainSlider = ({ onActive, breadcrumb, children }) => {
+const MainSlider = ({ onActive, breadcrumb, planView, children }) => {
     const [collapsed, setCollapsed] = useState(false);
 
     const onCollapse = () => {
@@ -54,18 +54,29 @@ const MainSlider = ({ onActive, breadcrumb, children }) => {
     );
     return (
         <Layout className="admin-wrapper" style={{ minHeight: '100vh' }}>
-            <Sider trigger={null} collapsible collapsed={collapsed}>
-                <Link href="/seller/">
-                    <div className="logo" style={{ height: 'auto' }}>BC Seller Center</div>
-                </Link>
-                <SlidebarMenu onActive={onActive} />
-            </Sider>
+            {!planView &&
+                <Sider trigger={null} collapsible collapsed={collapsed}>
+                    <Link href="/seller/">
+                        <div className="logo" style={{ height: 'auto' }}>BC Seller Center</div>
+                    </Link>
+                    <SlidebarMenu onActive={onActive} />
+                </Sider>
+            }
             <Layout className="site-layout">
                 <Header className="site-layout-background" style={{ padding: 0 }}>
                     <div className="d-flex justify-content-between align-items-center" style={{ height: '6rem' }}>
-                        <div className="trigger" onClick={onCollapse}>
-                            <MenuOutlined />
-                        </div>
+                        {!planView
+                            ?
+                            <div className="trigger" onClick={onCollapse}>
+                                <MenuOutlined />
+                            </div>
+                            :
+                            <Link href="/">
+                                <a className="d-block ml-4">
+                                    <img src="/logo192.png" height="53px" />
+                                </a>
+                            </Link>
+                        }
                         <div className="position-relative mr-5" style={{ marginTop: '2.1rem' }}>
                             {sellerAuth &&
                                 <Dropdown
@@ -104,12 +115,14 @@ const MainSlider = ({ onActive, breadcrumb, children }) => {
                     </div>
                 </Header>
                 <Content style={{ margin: '0 16px' }}>
-                    <Breadcrumb style={{ margin: '16px 0' }}>
-                        {breadcrumb.map(breadList =>
-                            <Breadcrumb.Item key={breadList}>{breadList}</Breadcrumb.Item>
-                        )}
-                    </Breadcrumb>
-                    <div className="site-layout-background" style={{ padding: 24, minHeight: 360 }}>
+                    {!planView &&
+                        <Breadcrumb style={{ margin: '16px 0' }}>
+                            {breadcrumb.map(breadList =>
+                                <Breadcrumb.Item key={breadList}>{breadList}</Breadcrumb.Item>
+                            )}
+                        </Breadcrumb>
+                    }
+                    <div className={`site-layout-background ${planView ? 'mt-4' : ''}`} style={{ padding: 24, minHeight: 360 }}>
                         {children}
                     </div>
                 </Content>
