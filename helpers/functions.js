@@ -40,3 +40,18 @@ export const generateTrackingId = (id) => {
     }
     document.getElementById(id).value = process.env.TRACKINGID_PREFIX + str;
 }
+
+export const sellerStatusText = (status) => {
+    switch (status) {
+        case 'pending':
+            return 'Under Review';
+        case 'verified':
+            return 'Verified';
+        case 'not_verified':
+            return 'Not Verified';
+        case 're_uploaded':
+            return 'Under Review';
+        default:
+            return status;
+    }
+}
