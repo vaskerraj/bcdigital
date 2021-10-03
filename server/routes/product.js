@@ -235,7 +235,8 @@ module.exports = function (server) {
                             select: 'name slug _id',
                         })
                     })
-                });
+                })
+                .populate('review.postedBy', 'name');
             if (products) return res.status(200).json(products);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });

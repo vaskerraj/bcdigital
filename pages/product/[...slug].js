@@ -10,7 +10,8 @@ import axios from 'axios';
 import axiosApi from '../../helpers/api';
 
 import SliderImage from 'react-zoom-slider';
-import { Affix, Carousel, message } from 'antd';
+import { Affix, Carousel, message, Progress } from 'antd';
+import { StarFilled } from '@ant-design/icons';
 
 import { Skeleton } from 'antd';
 import { ChevronLeft } from 'react-feather';
@@ -22,10 +23,12 @@ import Wrapper from '../../components/Wrapper';
 import { checkProductDiscountValidity } from '../../helpers/productDiscount';
 import useWindowDimensions from '../../helpers/useWindowDimensions';
 import ProductStarIcon from '../../components/helpers/ProductStarIcon';
+import StarFillIcon from '../../components/helpers/StarFillIcon';
 import RelatedProductSlider from '../../components/helpers/RelatedProductSlider';
 
 import { addToCart, removeOrderFromCart } from '../../redux/actions/cartAction';
 import Loading from '../../components/Loading';
+import moment from 'moment';
 
 
 // config antdesign message
@@ -35,7 +38,7 @@ message.config({
 });
 
 const ProductDetail = ({ product, pr, qty, as }) => {
-
+    console.log(product)
     // while unauthorize user try to add product to cart
     const dispatch = useDispatch();
     useEffect(() => {
@@ -307,6 +310,14 @@ const ProductDetail = ({ product, pr, qty, as }) => {
 
     //description
     const renderHTML = (rawHTML) => React.createElement("div", { dangerouslySetInnerHTML: { __html: rawHTML } });
+
+    // rating
+    const reviewProgressPercent = (rating) => {
+        return (rating / product.review.length) * 100;
+    }
+    const reviewBaseRating = (rating) => {
+        return product.review.filter(el => el.rating === rating).length;
+    }
 
     return (
         <Wrapper mobileTabBar={mobileTabBarStatus}>
@@ -672,8 +683,112 @@ const ProductDetail = ({ product, pr, qty, as }) => {
                     <div className="d-block">
                         <h2 className="font16">Rating & Review</h2>
                     </div>
-                    <div className="d-block mt-1 pb-2 border-top">
-
+                    <div className="col mt-1 pb-4 border-top border-bottom">
+                        <div className="row">
+                            <div className="col-12 col-sm-4 text-center mt-4">
+                                <h1 style={{ fontSize: '6rem', fontWeight: 300, marginBottom: 0 }}>{product.rating}</h1>
+                                <ProductStarIcon star={Math.round(product.rating) || 0} />
+                                <div className="font16">1 Ratings</div>
+                            </div>
+                            <div className="col-12 col-sm-4 mt-4">
+                                <div className="d-flex justify-content-around ">
+                                    <div className="d-flex align-items-center mr-2">
+                                        5
+                                        <StarFillIcon classes={'star-size14'} currentColor={'#ffc854'} />
+                                    </div>
+                                    <Progress percent={reviewProgressPercent(reviewBaseRating(5))}
+                                        showInfo={false}
+                                        strokeLinecap="square"
+                                        strokeColor={'#ffc854'}
+                                        trailColor={'#dfe1e5'}
+                                    />
+                                    <div className="ml-2">
+                                        {reviewBaseRating(5)}
+                                    </div>
+                                </div>
+                                <div className="d-flex mt-1">
+                                    <div className="d-flex align-items-center mr-2">
+                                        4
+                                        <StarFillIcon classes={'star-size14'} currentColor={'#ffc854'} />
+                                    </div>
+                                    <Progress percent={reviewProgressPercent(reviewBaseRating(4))}
+                                        showInfo={false}
+                                        strokeLinecap="square"
+                                        strokeColor={'#ffc854'}
+                                        trailColor={'#dfe1e5'}
+                                    />
+                                    <div className="ml-2">
+                                        {reviewBaseRating(4)}
+                                    </div>
+                                </div>
+                                <div className="d-flex mt-1">
+                                    <div className="d-flex align-items-center mr-2">
+                                        3
+                                        <StarFillIcon classes={'star-size14'} currentColor={'#ffc854'} />
+                                    </div>
+                                    <Progress percent={reviewProgressPercent(reviewBaseRating(3))}
+                                        showInfo={false}
+                                        strokeLinecap="square"
+                                        strokeColor={'#ffc854'}
+                                        trailColor={'#dfe1e5'}
+                                    />
+                                    <div className="ml-2">
+                                        {reviewBaseRating(3)}
+                                    </div>
+                                </div>
+                                <div className="d-flex mt-1">
+                                    <div className="d-flex align-items-center mr-2">
+                                        2
+                                        <StarFillIcon classes={'star-size14'} currentColor={'#ffc854'} />
+                                    </div>
+                                    <Progress percent={reviewProgressPercent(reviewBaseRating(2))}
+                                        showInfo={false}
+                                        strokeLinecap="square"
+                                        strokeColor={'#ffc854'}
+                                        trailColor={'#dfe1e5'}
+                                    />
+                                    <div className="ml-2">
+                                        {reviewBaseRating(2)}
+                                    </div>
+                                </div>
+                                <div className="d-flex mt-1">
+                                    <div className="d-flex align-items-center mr-2">
+                                        1
+                                        <StarFillIcon classes={'star-size14'} currentColor={'#ffc854'} />
+                                    </div>
+                                    <Progress percent={reviewProgressPercent(reviewBaseRating(1))}
+                                        showInfo={false}
+                                        strokeLinecap="square"
+                                        strokeColor={'#ffc854'}
+                                        trailColor={'#dfe1e5'}
+                                    />
+                                    <div className="ml-2">
+                                        {reviewBaseRating(1)}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-1">
+                        {product.review.map(review =>
+                            <div key={review._id} className="pt-3 pb-3 pl-2 pr-2 border-bottom">
+                                <div className="d-flex justify-content-between">
+                                    <div>
+                                        <div className="d-block">
+                                            By
+                                            <strong className="ml-2">{review.postedBy.name}</strong>
+                                        </div>
+                                        <ProductStarIcon star={Math.round(review.rating)} />
+                                    </div>
+                                    <div>
+                                        {moment(review.createdAt).format('DD MMM YYYY')}
+                                    </div>
+                                </div>
+                                <div className="mt-2">
+                                    {review.review}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

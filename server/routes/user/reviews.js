@@ -75,7 +75,8 @@ module.exports = function (server) {
                 review: {
                     rating,
                     review,
-                    postedBy: req.user._id
+                    postedBy: req.user._id,
+                    createdAt: new Date()
                 }
             });
             if (updateReview) {
