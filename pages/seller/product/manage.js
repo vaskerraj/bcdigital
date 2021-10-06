@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import {useRouter} from 'next/router';
+import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
@@ -16,11 +16,11 @@ const ManageProduct = ({ productDatas }) => {
     const [products, setProducts] = useState([]);
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [activeTab, setActiveTab] = useState('all');
-    
+
     // modal
     const [visibleAvailabelModal, setVisibleAvailabelModal] = useState(false);
     const [availabelData, setAvailabelData] = useState('');
-    
+
 
     const dispatch = useDispatch();
     const router = useRouter();
@@ -89,9 +89,9 @@ const ManageProduct = ({ productDatas }) => {
             Cell: ({ row: { original } }) => (
                 <div className="d-block">
                     <span>{original.quantity - original.sold}</span>
-                    <EditFilled onClick={()=>editAvailableModel(original)} className="text-info ml-2 cp" size={20} />
+                    <EditFilled onClick={() => editAvailableModel(original)} className="text-info ml-2 cp" size={20} />
                 </div>
-                )
+            )
         },
         {
             Header: "Approved",
@@ -111,8 +111,8 @@ const ManageProduct = ({ productDatas }) => {
             Header: "Status",
             show: true,
             Cell: ({ row: { original } }) => {
-                if(original.status === 'active'){
-                    return(
+                if (original.status === 'active') {
+                    return (
                         <Switch
                             checkedChildren={<CheckOutlined />}
                             unCheckedChildren={<CloseOutlined />}
@@ -120,16 +120,16 @@ const ManageProduct = ({ productDatas }) => {
                             defaultChecked
                         />
                     )
-                }else if(original.status === 'inactive'){
-                    return(
+                } else if (original.status === 'inactive') {
+                    return (
                         <Switch
                             checkedChildren={<CheckOutlined />}
                             unCheckedChildren={<CloseOutlined />}
                             onChange={() => changeProductStatusHandler(original.product_id, original.status)}
                         />
                     )
-                }else if(original.status === 'deleted'){
-                    return(<span className="badge bg-danger">Deleted</span>)
+                } else if (original.status === 'deleted') {
+                    return (<span className="badge bg-danger">Deleted</span>)
                 }
             }
         },
@@ -142,29 +142,29 @@ const ManageProduct = ({ productDatas }) => {
                     >
                         <EditFilled />
                     </a>
-                    {original.status !== 'deleted' 
-                    ?
-                    <Popconfirm
-                        title="Are you sure to delete this product?"
-                        onConfirm={() => deleteProductHandler(original.product_id)}
-                        okText="Yes"
-                        cancelText="No"
-                    >
-                        <button className="btn btn-warning">
-                            <DeleteFilled />
-                        </button>
-                    </Popconfirm>
-                    : 
-                    <Popconfirm
-                        title="Are you sure to restore this deleted product?"
-                        onConfirm={() => restoreProductHandler(original.product_id)}
-                        okText="Yes"
-                        cancelText="No"
-                    >
-                         <button className="btn btn-warning">
-                            <RollbackOutlined />
-                         </button>
-                    </Popconfirm>
+                    {original.status !== 'deleted'
+                        ?
+                        <Popconfirm
+                            title="Are you sure to delete this product?"
+                            onConfirm={() => deleteProductHandler(original.product_id)}
+                            okText="Yes"
+                            cancelText="No"
+                        >
+                            <button className="btn btn-warning">
+                                <DeleteFilled />
+                            </button>
+                        </Popconfirm>
+                        :
+                        <Popconfirm
+                            title="Are you sure to restore this deleted product?"
+                            onConfirm={() => restoreProductHandler(original.product_id)}
+                            okText="Yes"
+                            cancelText="No"
+                        >
+                            <button className="btn btn-warning">
+                                <RollbackOutlined />
+                            </button>
+                        </Popconfirm>
                     }
 
                 </>
@@ -173,20 +173,20 @@ const ManageProduct = ({ productDatas }) => {
     ]);
 
     useEffect(() => {
-        if(activeTab === 'active' || activeTab === 'inactive'){
+        if (activeTab === 'active' || activeTab === 'inactive') {
             var filteredData = products.filter(data => data.status === activeTab || data.status === undefined);
             setFilteredProducts(filteredData);
-        }else if(activeTab === 'live'){
-            var filteredData = products.filter(data => data.status === 'active' &&  data.approved === 'approved' || data.status === undefined);
+        } else if (activeTab === 'live') {
+            var filteredData = products.filter(data => data.status === 'active' && data.approved === 'approved' || data.status === undefined);
             setFilteredProducts(filteredData);
         }
-        else if(activeTab === 'approved' ){
+        else if (activeTab === 'approved') {
             var filteredData = products.filter(data => data.approved === activeTab || data.approved === undefined);
             setFilteredProducts(filteredData);
-        }else if( activeTab === 'unapproved'){
+        } else if (activeTab === 'unapproved') {
             var filteredData = products.filter(data => data.approved === activeTab || data.approved === "pending" || data.approved === undefined);
             setFilteredProducts(filteredData);
-        }else if(activeTab === 'all'){
+        } else if (activeTab === 'all') {
             setFilteredProducts(products);
         }
     }, [activeTab, products]);
@@ -198,7 +198,7 @@ const ManageProduct = ({ productDatas }) => {
                     token: sellerAuth.token
                 }
             });
-            if (data) {            
+            if (data) {
                 message.success({
                     content: (
                         <div>
