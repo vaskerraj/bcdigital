@@ -54,7 +54,7 @@ const addressListWithSubs = (addresses, parentId = null) => {
 }
 
 module.exports = function (server) {
-    server.post('/api/changePwd', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+    server.post('/api/changePwd', requiredAuth, checkRole(['subscriber', 'seller']), async (req, res) => {
         const { current, password, method, role } = req.body;
         try {
             const user = await Users.findOne({ _id: req.user._id, method, role });
