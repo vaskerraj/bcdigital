@@ -5,8 +5,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { message, Select, Upload, DatePicker, Popover } from 'antd';
 const { Option } = Select;
 const { Dragger } = Upload;
-const { RangePicker } = DatePicker;
-import { InboxOutlined, EditOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+
+import { InboxOutlined, CameraOutlined, EditOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 
 import { useForm, Controller } from 'react-hook-form';
 
@@ -16,6 +16,7 @@ import axiosApi from '../../helpers/api';
 import baseUrl from '../../helpers/baseUrl';
 
 import ChooseCategory from '../ChooseCategory';
+import MobileChooseCategory from '../MobileChooseCategory';
 import Editor from '../Editor';
 import { allBrands } from '../../redux/actions/brandAction';
 import { addClass, removeClass } from '../../helpers/addRemoveClass';
@@ -32,7 +33,7 @@ message.config({
 const useMountEffect = fun => useEffect(fun, []);
 
 const ProductForm = (props) => {
-    const { action, productData } = props;
+    const { action, productData, platform } = props;
 
     const scrollOnErrorRef = useRef(null);
 
@@ -204,9 +205,11 @@ const ProductForm = (props) => {
                             maxCount={6}
                         >
                             <p className="ant-upload-drag-icon">
-                                <InboxOutlined />
+                                {!platform ? <InboxOutlined /> : <CameraOutlined />}
                             </p>
-                            <p className="ant-upload-text">Click or drag file to this area to upload</p>
+                            {!platform &&
+                                <p className="ant-upload-text">Click or drag file to this area to upload</p>
+                            }
                             <p className="ant-upload-hint">
                                 <b>Upload at least 2 and upto 6 pictures of your product</b>.
                                 Strictly prohibit from uploading other company data and obscene images
@@ -375,13 +378,27 @@ const ProductForm = (props) => {
                         {errors.bannerCategory && <p className="errorMsg">{errors.bannerCategory.message}</p>}
                         {errors.categoryId && <p className="errorMsg d-none">{errors.categoryId.message}</p>}
                         {onOpenChoosenCategory &&
-                            <div className="select-subcate-container pt-3 pr-3 pl-3 border">
-                                <ChooseCategory
-                                    catLevel={3}
-                                    setConfirmCategory={setConfirmCategory}
-                                    handleCancel={setOnOpenChoosenCategory}
-                                />
-                            </div>
+                            <>
+                                {
+                                    platform === 'mobile'
+                                        ?
+                                        <div className="select-subcate-mdcontainer pt-3 pr-3 pl-3">
+                                            <MobileChooseCategory
+                                                catLevel={3}
+                                                setConfirmCategory={setConfirmCategory}
+                                                handleCancel={setOnOpenChoosenCategory}
+                                            />
+                                        </div>
+                                        :
+                                        <div className="select-subcate-container pt-3 pr-3 pl-3 border">
+                                            <ChooseCategory
+                                                catLevel={3}
+                                                setConfirmCategory={setConfirmCategory}
+                                                handleCancel={setOnOpenChoosenCategory}
+                                            />
+                                        </div>
+                                }
+                            </>
                         }
                     </div>
                     <div className="col-12 mt-4">
@@ -489,9 +506,11 @@ const ProductForm = (props) => {
                                                         maxCount={6}
                                                     >
                                                         <p className="ant-upload-drag-icon">
-                                                            <InboxOutlined />
+                                                            {!platform ? <InboxOutlined /> : <CameraOutlined />}
                                                         </p>
-                                                        <p className="ant-upload-text">Click or drag file to this area to upload</p>
+                                                        {!platform &&
+                                                            <p className="ant-upload-text">Click or drag file to this area to upload</p>
+                                                        }
                                                         <p className="ant-upload-hint">
                                                             <b>Upload at least 2 and upto 6 pictures of your product</b>.
                                                             Strictly prohibit from uploading other company data and obscene images
@@ -570,9 +589,11 @@ const ProductForm = (props) => {
                                                         maxCount={6}
                                                     >
                                                         <p className="ant-upload-drag-icon">
-                                                            <InboxOutlined />
+                                                            {!platform ? <InboxOutlined /> : <CameraOutlined />}
                                                         </p>
-                                                        <p className="ant-upload-text">Click or drag file to this area to upload</p>
+                                                        {!platform &&
+                                                            <p className="ant-upload-text">Click or drag file to this area to upload</p>
+                                                        }
                                                         <p className="ant-upload-hint">
                                                             <b>Upload at least 2 and upto 6 pictures of your product</b>.
                                                             Strictly prohibit from uploading other company data and obscene images
@@ -670,7 +691,7 @@ const ProductForm = (props) => {
                                                     }}
                                                     >
                                                         Size
-                                                </th>
+                                                    </th>
                                                     <th>Quntity</th>
                                                     <th>Price(Rs)</th>
                                                     <th>Discount(%)</th>

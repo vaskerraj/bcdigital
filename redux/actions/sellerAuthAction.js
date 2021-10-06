@@ -14,7 +14,7 @@ export const sellerInputOnChange = () => async (dispatch) => {
     dispatch({ type: SELLER_SIGIN_ERROR, payload: null });
 }
 
-export const signin = (mobile, password) => async (dispatch) => {
+export const signin = (mobile, password, platform) => async (dispatch) => {
     dispatch({ type: SELLER_SIGIN_RESPONSE, payload: { mobile, password } });
 
     try {
@@ -32,6 +32,10 @@ export const signin = (mobile, password) => async (dispatch) => {
             user: data.name,
             picture: data.picture,
             token
+        }
+
+        if (platform) {
+            localStorage.setItem('authUser', JSON.stringify({ mobile, password }));
         }
 
         dispatch({ type: SELLER_SIGIN_SUCCESS, payload: dispatchData });
@@ -55,9 +59,15 @@ export const signUp = (name, mobile, verificationCode, password, email) => async
     }
 }
 
-export const signout = () => async (dispatch) => {
+export const signout = (platform) => async (dispatch) => {
     dispatch({ type: SELLER_SIGNOUT });
-    await firebase.auth().signOut().then(
-        Router.push('/seller/login')
-    );
+    if (platform === 'mobile') {
+        localStorage.removeItem('authUser');
+        await firebase.auth().signOut().then(
+            Router.push('/seller/mobile/login')
+        );
+    } else
+        await firebase.auth().signOut().then(
+            Router.push('/seller/login')
+        );
 }
