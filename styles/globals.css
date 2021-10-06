@@ -838,7 +838,10 @@ body.offcanvas-open {
   margin-right: -25px;
   box-shadow: 0 0 6px 0 rgb(0 0 0 / 30%), 0 15px 30px 0 rgb(52 46 173 / 40%);
 }
-
+/* rating progress bar */
+.ant-progress-bg{
+  height: 1.3rem !important;
+}
 /* search bar small screen */
 .search-custom-dropdown{
 	box-shadow: none;
