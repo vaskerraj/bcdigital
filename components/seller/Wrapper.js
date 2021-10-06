@@ -5,7 +5,8 @@ import { Layout, Menu, Breadcrumb, Dropdown, Avatar } from 'antd';
 const { Header, Content, Footer, Sider } = Layout;
 import {
     MenuOutlined,
-    SettingOutlined
+    LockOutlined,
+    CameraOutlined
 } from '@ant-design/icons';
 import { User as UserIcon, ChevronDown, LogOut } from 'react-feather';
 
@@ -20,6 +21,7 @@ const MainSlider = ({ onActive, breadcrumb, planView, children }) => {
     };
 
     const { sellerAuth } = useSelector(state => state.sellerAuth);
+    console.log(sellerAuth);
 
     const dispatch = useDispatch();
     const signOutHandler = () => {
@@ -37,10 +39,18 @@ const MainSlider = ({ onActive, breadcrumb, planView, children }) => {
                 </Link>
             </Menu.Item>
             <Menu.Item className="pl-5 pr-5">
-                <Link href="/seller/acccount-setting">
+                <Link href="/seller/logo">
                     <a rel="noopener noreferrer">
-                        <SettingOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
-                        Account Setting
+                        <CameraOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
+                        Your Logo
+                    </a>
+                </Link>
+            </Menu.Item>
+            <Menu.Item className="pl-5 pr-5">
+                <Link href="/seller/change-password">
+                    <a rel="noopener noreferrer">
+                        <LockOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
+                        Change Password
                     </a>
                 </Link>
             </Menu.Item>
