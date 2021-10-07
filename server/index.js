@@ -21,6 +21,7 @@ require('./models/SearchTag.js');
 
 require('./models/Cart.js');
 require('./models/Order.js');
+require('./models/Package.js');
 require('./models/NotificationToken.js');
 require('./models/Seller.js');
 
