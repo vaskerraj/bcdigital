@@ -2,10 +2,15 @@ const mongoose = require('mongoose');
 const Product = mongoose.model('Product');
 const Cart = mongoose.model('Cart');
 const Order = mongoose.model('Order');
+const Package = mongoose.model('Package');
 const ShippingCost = mongoose.model('ShippingPlan');
 const Coupon = mongoose.model('Coupon');
+const User = mongoose.model('Users');
 
 const { requiredAuth, checkRole, checkAdminRole } = require('../middlewares/auth');
+
+const { orderConfirm, orderShipped } = require('../../email/templets');
+const { oderStatusEmailHandler } = require('../../email');
 
 const checkProductDiscountValidity = (toDate, fromDate) => {
     // to check discount is valid till today 
@@ -36,6 +41,7 @@ const priceSectionFromCombinedCartItems = (cartItem) => {
 module.exports = function (server) {
     server.post('/api/submitorder', requiredAuth, checkRole(['subscriber']), async (req, res) => {
         const {
+            packages,
             products,
             total,
             shipping,
@@ -136,7 +142,6 @@ module.exports = function (server) {
 
             // save data to database
             const newOrder = new Order({
-                products,
                 total,
                 shipping,
                 shippingCharge,
@@ -154,6 +159,22 @@ module.exports = function (server) {
             if (order && paymentType === 'cashondelivery') {
                 await Cart.deleteOne({ 'orderedBy': req.user._id });
             }
+
+            // save packages base on unique seller
+            packages.map(async package => {
+                const newPackages = new Package({
+                    orderId: order._id,
+                    products: package.products,
+                    seller: package.seller,
+                    sellerRole: package.sellerRole,
+                    shippingCharge: package.shippingCharge,
+                    packageTotal: package.packageTotal,
+                    paymentType
+                });
+                await newPackages.save();
+            })
+
+
             return res.status(201).json({
                 id: order._id,
                 price: grandTotal,
@@ -270,134 +291,4 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
-
-    // api for admin user
-
-    server.get('/api/admin/orders/own', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
-        try {
-            const orders = await Order.find({
-                'products.sellerRole': 'own',
-                $or: [
-                    { 'products.orderStatus': 'not_confirmed' },
-                    { 'products.orderStatus': 'confirmed' },
-                    { 'products.orderStatus': 'packed' },
-                    { 'products.orderStatus': 'shipped' },
-                    { 'products.orderStatus': 'for_delivery' },
-                    { 'products.orderStatus': 'delivered' },
-                ],
-            })
-                .populate({
-                    path: 'products.seller',
-                    select: 'name username mobile role picture, _id'
-                })
-                .populate({
-                    path: 'shipping',
-                    select: 'name _id amount maxDeliveryTime minDeliveryTime isDefault',
-                    populate: ({
-                        path: 'shipAgentId',
-                        select: 'name _id number email',
-                    })
-                })
-                .populate({
-                    path: 'coupon',
-                    select: 'name _id code availableFor discountType discountAmount minBasket availableVoucher'
-                })
-                .populate('delivery')
-                .populate({
-                    path: 'orderedBy',
-                    select: 'name username role picture, _id',
-                })
-                .lean()
-                .sort([['updatedAt', -1]]);
-            console.log(orders)
-
-            const getProductDetail = async (products) => {
-
-                const getProductIds = products.map(item => item.productId);
-                let relatedProducts = [];
-                await Promise.all(
-                    getProductIds.map(async (pro) => {
-                        const orderProducts = await Product.findOne(
-                            {
-                                'products._id': pro
-                            },
-                            {
-                                'products.$': 1
-                            })
-                            .select('_id name colour products').lean();
-                        relatedProducts.push(orderProducts);
-                    })
-                );
-
-                const parseProducts = JSON.parse(JSON.stringify(relatedProducts));
-
-                // combine proucts details and productQty
-                const combineProductWithOrderitems = parseProducts.map(item => ({
-                    ...item,
-                    ...products.find(ele => ele.productId == item.products[0]._id)
-                }));
-
-                return combineProductWithOrderitems;
-            }
-
-            let orderProducts = [];
-            await Promise.all(
-                orders.map(async (item) => {
-                    const productObj = new Object();
-                    productObj['_id'] = item._id;
-                    productObj['products'] = await getProductDetail(item.products);
-                    productObj['shipping'] = item.shipping;
-                    productObj['shippingCharge'] = item.shippingCharge;
-                    productObj['coupon'] = item.coupon;
-                    productObj['couponDiscount'] = item.couponDiscount;
-                    productObj['grandTotal'] = item.grandTotal;
-                    productObj['delivery'] = item.delivery;
-                    productObj['deliveryMobile'] = item.deliveryMobile;
-                    productObj['paymentType'] = item.paymentType;
-                    productObj['orderedBy'] = item.orderedBy;
-                    productObj['createdAt'] = item.createdAt;
-
-                    orderProducts.push(productObj);
-                })
-            )
-            return res.status(200).json(orderProducts);
-        } catch (error) {
-            return res.status(422).json({ error: "Some error occur. Please try again later." });
-        }
-    });
-
-    server.put('/api/admin/orderstatus', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
-        const { status, itemId, tackingId } = req.body;
-        console.log(req.body)
-        try {
-            await Order.findOneAndUpdate({
-                'products._id': itemId,
-            }, {
-                '$set': { "products.$.orderStatus": status }
-            });
-
-            const orderStatusLog = {
-                status,
-                statusChangeBy: req.user._id,
-                statusChangeDate: new Date()
-            }
-            await Order.findOneAndUpdate({ 'products._id': itemId },
-                {
-                    $push: {
-                        'products.$.orderStatusLog': orderStatusLog
-                    }
-                }, {
-                new: true
-            });
-            if (status === 'packed' || status === 'shipped' || status === 'cancelled') {
-                // check app user or web user. if web send email, if app then send notification
-
-            } else {
-                return res.status(200).json({ msg: "success" });
-            }
-        } catch (error) {
-            return res.status(422).json({ error: "Some error occur. Please try again later." });
-        }
-    });
-
 };

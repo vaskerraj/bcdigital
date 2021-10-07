@@ -119,22 +119,45 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
         }
     }, [shippingPlans, products, cartDetails]);
 
-    // make price fix cause price may varify after discount expired or seller change its price anytime
-    let cartItemWithFixPrice = [];
-    products.map(item => {
-        const finalPrice = checkProductDiscountValidity(item.products[0].promoStartDate, item.products[0].promoEndDate) === true
-            ? item.products[0].finalPrice
-            :
-            item.products[0].price;
+    const unqiueSellers = [...new Map(products.map(item =>
+        [item.createdBy['_id'], item.createdBy])).values()];
 
-        let productObj = new Object();
-        productObj['productId'] = item.productId;
-        productObj['productQty'] = item.productQty;
-        productObj['price'] = Number(finalPrice) * Number(item.productQty);
-        productObj['seller'] = item.createdBy._id;
-        productObj['sellerRole'] = item.createdBy.sellerRole;
-        cartItemWithFixPrice.push(productObj);
+    const getProductInfoBaseOnUniqueSeller = (products) => {
+        // make price fix cause price may varify after discount expired or seller change its price anytime
+        let cartItemWithFixPrice = [];
+        products.map(item => {
+            const finalPrice = checkProductDiscountValidity(item.products[0].promoStartDate, item.products[0].promoEndDate) === true
+                ? item.products[0].finalPrice
+                :
+                item.products[0].price;
+
+            let productObj = new Object();
+            productObj['productId'] = item.productId;
+            productObj['productQty'] = item.productQty;
+            productObj['price'] = Number(finalPrice) * Number(item.productQty);
+            cartItemWithFixPrice.push(productObj);
+        });
+        return cartItemWithFixPrice;
+    }
+
+    const cartItemWithFixPriceForOrder = getProductInfoBaseOnUniqueSeller(products);
+
+
+    let packagesWithProducts = [];
+    unqiueSellers.map(seller => {
+        let packageObj = new Object();
+        const productsBaseOnSeller = products.filter(item => item.createdBy._id === seller._id);
+        const packageTotal = priceSectionFromCombinedCartItems(productsBaseOnSeller).reduce((a, c) =>
+            (a + c.productQty * c.exactPrice), 0);
+
+        packageObj['products'] = getProductInfoBaseOnUniqueSeller(productsBaseOnSeller);
+        packageObj['seller'] = seller._id;
+        packageObj['sellerRole'] = seller.sellerRole;
+        packageObj['shippingCharge'] = shippingPlans.plans[0].amount;
+        packageObj['packageTotal'] = packageTotal;
+        packagesWithProducts.push(packageObj)
     });
+    console.log(packagesWithProducts)
 
 
     const { register, handleSubmit, errors, reset, getValues, trigger, control } = useForm();
@@ -238,7 +261,8 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
         try {
             setSubmitOrderLoading(true);
             const { data } = await axiosApi.post(`/api/submitorder`, {
-                products: cartItemWithFixPrice,
+                packages: packagesWithProducts,
+                products: cartItemWithFixPriceForOrder,
                 total: cartTotal,
                 shipping: shippingId,
                 shippingCharge,
