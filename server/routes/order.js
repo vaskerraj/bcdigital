@@ -324,4 +324,53 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
+
+    // order details
+    server.get('/api/orders/detail/:id', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        const orderId = req.params.id;
+        try {
+
+            const order = await Order.findById(orderId).lean();
+            const userAddress = await User.findOne(
+                {
+                    "addresses._id": order.delivery,
+                }, { _id: 0 })
+                .select('addresses')
+                .lean()
+                .populate('addresses.region', 'name')
+                .populate('addresses.city', 'name')
+                .populate('addresses.area', 'name');
+
+            console.log(userAddress.addresses);
+
+            const packages = await Package.find(
+                {
+                    orderId: orderId
+                })
+                .lean()
+                .populate('seller', '_id name');
+
+            let orderPackages = [];
+            await Promise.all(
+                packages.map(async (item) => {
+                    const packageObj = new Object();
+                    packageObj['_id'] = item._id;
+                    packageObj['products'] = await getProductDetail(item.products);
+                    packageObj['paymentStatus'] = item.paymentStatus;
+                    packageObj['paymentType'] = item.paymentType;
+                    packageObj['seller'] = item.seller;
+                    packageObj['packageTotal'] = item.packageTotal;
+                    orderPackages.push(packageObj);
+                })
+            );
+
+            return res.status(200).json({
+                order,
+                deliveryAddress: userAddress.addresses[0],
+                packages: orderPackages
+            });
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
 };
