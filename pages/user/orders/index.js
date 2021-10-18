@@ -98,7 +98,10 @@ const Orders = ({ orders }) => {
                             <Card style={{
                                 minHeight: '60vh'
                             }}>
-                                <div className="d-block border-bottom pb-4">
+                                <div className="d-block page-header justify-content-between">
+                                    <h1>Orders</h1>
+                                </div>
+                                <div className="d-block border-bottom pb-4 mt-5">
                                     <div className="d-flex">
                                         <div className="mr-3">{orders.length} order placed in</div>
                                         <div className="">
@@ -182,80 +185,84 @@ const Orders = ({ orders }) => {
                                                 }
                                             </div>
                                             <div className="col-12 p-0 p-md-3">
-                                                <ul className="list-unstyled">
+                                                <ul className="list-unstyled mt-2">
                                                     {
-                                                        order.products.map(item => (
-                                                            <li key={item.products[0]._id} className={`cart-item item_${item.products[0]._id}`}>
-                                                                <div className="row">
-                                                                    <div className="col-12 col-sm-8 col-md-6">
-                                                                        <div className="d-flex">
-                                                                            <Image src={`/uploads/products/${item.colour[0].images[0]}`}
-                                                                                layout="fixed"
-                                                                                width="100"
-                                                                                height="100"
-                                                                                objectFit="cover"
-                                                                                objectPosition="top center"
-                                                                                quality="50"
-                                                                            />
-                                                                            <div className="product-detail ml-3" style={{ width: '100%' }}>
-                                                                                <div className="product-name">{item.name}</div>
-                                                                                <div className="d-flex justify-content-between align-items-center mt-1">
-                                                                                    <div>
-                                                                                        <div className="">
-                                                                                            {item.products[0].size !== 'nosize' ? `Size : ${item.products[0].size} ` : ''}
-                                                                                        </div>
-                                                                                        <div className="mt-1">
-                                                                                            <b>Qty</b>:{item.productQty}
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    {onlyMobile &&
-                                                                                        <div>
-                                                                                            {item.orderStatus !== 'not_confirmed' && item.orderStatus !== 'confirmed'
-                                                                                                ?
-                                                                                                item.orderStatus === 'for_delivery' ?
-                                                                                                    <span className="badge bg-warning">On The Way</span>
-                                                                                                    :
-                                                                                                    <span className="badge bg-success text-capitalize">{item.orderStatus}</span>
-                                                                                                :
-                                                                                                <span className="badge bg-warning">Processing</span>
+                                                        order.packages.map(pack => (
+                                                            <li key={pack._id}>
+                                                                {pack.products.map(item => (
+                                                                    <div key={item.products[0]._id} className="pt-2 pb-2">
+                                                                        <div className="row">
+                                                                            <div className="col-12 col-sm-8 col-md-6">
+                                                                                <div className="d-flex">
+                                                                                    <Image src={`/uploads/products/${item.colour[0].images[0]}`}
+                                                                                        layout="fixed"
+                                                                                        width="100"
+                                                                                        height="100"
+                                                                                        objectFit="cover"
+                                                                                        objectPosition="top center"
+                                                                                        quality="50"
+                                                                                    />
+                                                                                    <div className="product-detail ml-3" style={{ width: '100%' }}>
+                                                                                        <div className="product-name">{item.name}</div>
+                                                                                        <div className="d-flex justify-content-between align-items-center mt-1">
+                                                                                            <div>
+                                                                                                <div className="">
+                                                                                                    {item.products[0].size !== 'nosize' ? `Size : ${item.products[0].size} ` : ''}
+                                                                                                </div>
+                                                                                                <div className="mt-1">
+                                                                                                    <b>Qty</b>:{item.productQty}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            {onlyMobile &&
+                                                                                                <div className="mr-2">
+                                                                                                    {item.orderStatus !== 'not_confirmed' && item.orderStatus !== 'confirmed'
+                                                                                                        ?
+                                                                                                        item.orderStatus === 'for_delivery' ?
+                                                                                                            <span className="badge bg-warning">On The Way</span>
+                                                                                                            :
+                                                                                                            <span className="badge bg-success text-capitalize">{item.orderStatus}</span>
+                                                                                                        :
+                                                                                                        <span className="badge bg-warning">Processing</span>
+                                                                                                    }
+                                                                                                </div>
                                                                                             }
                                                                                         </div>
-                                                                                    }
-                                                                                </div>
-                                                                                {onlyMobile &&
-
-                                                                                    <div className="d-block text-right mt-1">
-                                                                                        <button className="btn btn-warning btn-sm">Write a Review</button>
+                                                                                        {onlyMobile && item.orderStatus === 'delivered' && item.paymentStatus === 'paid' &&
+                                                                                            <div className="d-block text-right mt-1 mr-2">
+                                                                                                <button className="btn btn-warning btn-sm">Write a Review</button>
+                                                                                            </div>
+                                                                                        }
                                                                                     </div>
-
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="d-none d-sm-block col-sm-4 col-md-2 text-right pr-4">
+                                                                                {item.orderStatus !== 'not_confirmed' && item.orderStatus !== 'confirmed'
+                                                                                    ?
+                                                                                    item.orderStatus === 'for_delivery' ?
+                                                                                        <span className="badge bg-warning">On The Way</span>
+                                                                                        :
+                                                                                        <span className="badge bg-success text-capitalize">{item.orderStatus}</span>
+                                                                                    :
+                                                                                    <span className="badge bg-warning">Processing</span>
+                                                                                }
+                                                                                {item.orderStatus === 'delivered' && item.paymentStatus === 'paid' &&
+                                                                                    <div className="d-none d-sm-block d-md-none d-lg-none mt-3">
+                                                                                        <button className="btn btn-lg btn-warning">Write a Review</button>
+                                                                                    </div>
+                                                                                }
+                                                                            </div>
+                                                                            <div className="d-none d-md-block col-md-4 text-right">
+                                                                                {item.orderStatus === 'delivered' && item.paymentStatus === 'paid'
+                                                                                    ?
+                                                                                    <div className="d-block">
+                                                                                        <button className="btn c-btn-primary">Write a Review</button>
+                                                                                    </div>
+                                                                                    : ''
                                                                                 }
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                    <div className="d-none d-sm-block col-sm-4 col-md-2 text-right">
-                                                                        {item.orderStatus !== 'not_confirmed' && item.orderStatus !== 'confirmed'
-                                                                            ?
-                                                                            item.orderStatus === 'for_delivery' ?
-                                                                                <span className="badge bg-warning">On The Way</span>
-                                                                                :
-                                                                                <span className="badge bg-success text-capitalize">{item.orderStatus}</span>
-                                                                            :
-                                                                            <span className="badge bg-warning">Processing</span>
-                                                                        }
-                                                                        <div className="d-none d-sm-block d-md-none d-lg-none mt-3">
-                                                                            <button className="btn btn-lg btn-warning">Write a Review</button>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="d-none d-md-block col-md-4 text-right">
-                                                                        {item.orderStatus === 'delivered' && item.paymentStatus === 'paid'
-                                                                            ?
-                                                                            <div className="d-block">
-                                                                                <button className="btn c-btn-primary">Write a Review</button>
-                                                                            </div>
-                                                                            : ''
-                                                                        }
-                                                                    </div>
-                                                                </div>
+                                                                ))}
                                                             </li>
                                                         ))
                                                     }
@@ -288,7 +295,7 @@ export async function getServerSideProps(context) {
     } catch (err) {
         return {
             redirect: {
-                destination: '../login',
+                destination: '../../login',
                 permanent: false,
             },
             props: {},
