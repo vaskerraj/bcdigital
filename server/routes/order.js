@@ -38,6 +38,39 @@ const priceSectionFromCombinedCartItems = (cartItem) => {
     return cartItemQtyAndPrice;
 }
 
+const getProductDetail = async (products) => {
+    const getProductIds = products.map(item => item.productId);
+
+    // const haha = packages.map(package => {
+    //     return package.products.map(item => item.productId);
+    // });
+    // const concatIds = [].concat.apply([], haha);
+
+
+    const orderProducts = await Product.find(
+        {
+            'products._id': { $in: getProductIds }
+        },
+        {
+            'products.$': 1
+        })
+        .select('_id name colour products').lean();
+
+    const parseProducts = JSON.parse(JSON.stringify(orderProducts));
+    // combine proucts details and productQty
+    const combineProductWithOrderitems = parseProducts.map(item => ({
+        ...item,
+        ...products.find(ele => ele.productId == item.products[0]._id)
+    }));
+
+    // const combineProductWithOrderitems = parseProducts.map(item => ({
+    //     ...item,
+    //     ...packages.reduce((prev, package) => prev || package.products.find(ele => ele.productId == item.products[0]._id), undefined)
+    // }));
+
+    return combineProductWithOrderitems;
+}
+
 module.exports = function (server) {
     server.post('/api/submitorder', requiredAuth, checkRole(['subscriber']), async (req, res) => {
         const {
@@ -188,19 +221,22 @@ module.exports = function (server) {
         const orderId = req.params.id;
         try {
             const order = await Order.findOne({ _id: orderId, orderedBy: req.user._id }).lean();
-            if (order.paymentStatus === 'notpaid') {
-                if (order.paymentType !== 'cashondelivery') {
+            const packages = await Package.find({ orderId: order._id }).select('paymentStatus').lean();
+
+            const checkedPaidPackages = packages.filter(item => item.paymentStatus === 'notpaid');
+
+            if (order.paymentType !== 'cashondelivery') {
+                if (checkedPaidPackages.length !== 0) {
                     return res.status(500).json({ error: "Order not found" });
                 }
-                // payementType = cashondelivery
                 return res.status(200).json({ msg: "success" });
             } else {
+                // payementType = cashondelivery
                 return res.status(200).json({ msg: "success" });
             }
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
-
     });
 
     // order list at user pannel
@@ -223,50 +259,50 @@ module.exports = function (server) {
                 break;
         }
         try {
-            const orders = await Order.find(
+
+            const orders = await Order.aggregate([
                 {
-                    orderedBy: req.user._id,
-                    $or: [
-                        { paymentType: 'cashondelivery' },
-                        {
-                            $and: [
-                                { paymentType: { $ne: 'cashondelivery' } },
-                                { 'products.paymentStatus': 'paid' }
-                            ]
-                        },
-                    ],
-                    createdAt: { $gte: fromdate }
-                })
-                .lean()
-                .sort([['updatedAt', -1]]);
+                    "$lookup": {
+                        "from": "packages",
+                        "localField": "_id", // from order document
+                        "foreignField": "orderId",
+                        "as": "packages"
+                    }
+                },
+                {
+                    "$match": {
+                        "$and": [
+                            { orderedBy: req.user._id },
+                            { createdAt: { $gte: fromdate } },
+                            {
+                                "$or": [
+                                    { "packages.paymentType": 'cashondelivery' },
+                                    {
+                                        $and: [
+                                            { "packages.paymentType": { $ne: 'cashondelivery' } },
+                                            { 'packages.products.paymentStatus': 'paid' }
+                                        ]
+                                    },
+                                ],
+                            }
+                        ]
+                    }
+                },
+            ]);
 
-            const getProductDetail = async (products) => {
-
-                const getProductIds = products.map(item => item.productId);
-                let relatedProducts = [];
+            const getPakageDetailsWithProducts = async (packages) => {
+                let orderPackages = [];
                 await Promise.all(
-                    getProductIds.map(async (pro) => {
-                        const orderProducts = await Product.findOne(
-                            {
-                                'products._id': pro
-                            },
-                            {
-                                'products.$': 1
-                            })
-                            .select('_id name colour products').lean();
-                        relatedProducts.push(orderProducts);
+                    packages.map(async (item) => {
+                        const packageObj = new Object();
+                        packageObj['_id'] = item._id;
+                        packageObj['products'] = await getProductDetail(item.products);
+                        packageObj['paymentStatus'] = item.paymentStatus;
+                        packageObj['orderStatus'] = item.orderStatus;
+                        orderPackages.push(packageObj);
                     })
-                );
-
-                const parseProducts = JSON.parse(JSON.stringify(relatedProducts));
-
-                // combine proucts details and productQty
-                const combineProductWithOrderitems = parseProducts.map(item => ({
-                    ...item,
-                    ...products.find(ele => ele.productId == item.products[0]._id)
-                }));
-
-                return combineProductWithOrderitems;
+                )
+                return orderPackages;
             }
 
             let orderProducts = [];
@@ -274,17 +310,14 @@ module.exports = function (server) {
                 orders.map(async (item) => {
                     const productObj = new Object();
                     productObj['_id'] = item._id;
-                    productObj['products'] = await getProductDetail(item.products);
+                    productObj['packages'] = await getPakageDetailsWithProducts(item.packages);
                     productObj['grandTotal'] = item.grandTotal;
                     productObj['paymentType'] = item.paymentType;
-                    productObj['paymentStatus'] = item.paymentStatus;
-                    productObj['orderStatus'] = item.orderStatus;
-                    productObj['orderStatusLog'] = item.orderStatusLog;
                     productObj['createdAt'] = item.createdAt;
 
                     orderProducts.push(productObj);
                 })
-            )
+            );
             return res.status(200).json(orderProducts);
 
         } catch (error) {
