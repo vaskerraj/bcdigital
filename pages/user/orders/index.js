@@ -47,7 +47,7 @@ const Orders = ({ orders }) => {
         const duration = e.target.value;
         setOrderFilter(duration);
         try {
-            const { data } = await axiosApi.get(`/api/orders/${duration}`, {
+            const { data } = await axiosApi.get(`/api/orders/list/${duration}`, {
                 headers: {
                     token: userInfo.token
                 }
@@ -282,7 +282,7 @@ const Orders = ({ orders }) => {
 export async function getServerSideProps(context) {
     try {
         const cookies = parseCookies(context);
-        const { data } = await axios.get(`${process.env.api}/api/orders/2`, {
+        const { data } = await axios.get(`${process.env.api}/api/orders/list/2`, {
             headers: {
                 token: cookies.token,
             },

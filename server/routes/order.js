@@ -6,6 +6,7 @@ const Package = mongoose.model('Package');
 const ShippingCost = mongoose.model('ShippingPlan');
 const Coupon = mongoose.model('Coupon');
 const User = mongoose.model('Users');
+const Payment = mongoose.model('Payment');
 
 const { requiredAuth, checkRole, checkAdminRole } = require('../middlewares/auth');
 
@@ -240,7 +241,7 @@ module.exports = function (server) {
     });
 
     // order list at user pannel
-    server.get('/api/orders/:duration', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+    server.get('/api/orders/list/:duration', requiredAuth, checkRole(['subscriber']), async (req, res) => {
         const duration = req.params.duration;
 
         let fromdate = new Date();
@@ -280,7 +281,7 @@ module.exports = function (server) {
                                     {
                                         $and: [
                                             { "packages.paymentType": { $ne: 'cashondelivery' } },
-                                            { 'packages.products.paymentStatus': 'paid' }
+                                            { 'packages.paymentStatus': 'paid' }
                                         ]
                                     },
                                 ],
