@@ -60,6 +60,10 @@ const packageSchema = new mongoose.Schema({
             }
         }],
     }],
+    paymentId: {
+        type: ObjectId,
+        ref: "Payment"
+    },
     paymentType: {
         type: String,
         require: true
