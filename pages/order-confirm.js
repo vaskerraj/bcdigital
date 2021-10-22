@@ -10,7 +10,6 @@ import axiosApi from '../helpers/api';
 import { CheckCircle } from 'react-feather';
 
 const OrderConfirm = () => {
-
     const router = useRouter();
     return (
         <>
@@ -47,7 +46,7 @@ const OrderConfirm = () => {
                                 </div>
                             </div>
                             <div className="d-block text-center mt-5 mb-4">
-                                <Link href="/user/orders">
+                                <Link href={`/user/orders/${router.query.orderId}`}>
                                     <button className="btn c-btn-primary mt-3">
                                         View Order
                                     </button>
