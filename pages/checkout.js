@@ -22,6 +22,7 @@ import AddressForm from '../components/user/AddressForm';
 import { addAddress } from '../redux/actions/addressAction';
 import ShippingAddress from '../components/ShippingAddress';
 import Loading from '../components/Loading';
+import baseUrl from '../helpers/baseUrl';
 
 const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addresses }) => {
 
@@ -157,7 +158,6 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
         packageObj['packageTotal'] = packageTotal;
         packagesWithProducts.push(packageObj)
     });
-    console.log(packagesWithProducts)
 
 
     const { register, handleSubmit, errors, reset, getValues, trigger, control } = useForm();
@@ -288,7 +288,37 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
 
                 router.push(`/order-confirm?orderId=${data.id}&payment=success`)
             } else if (data && paymentType === 'esewa') {
+                var path = process.env.NEXT_PUBLIC_ESWEA_PATH;
+                var params = {
+                    amt: grandTotal,
+                    psc: 0,
+                    pdc: 0,
+                    txAmt: 0,
+                    tAmt: grandTotal,
+                    pid: data.id,
+                    scd: process.env.NEXT_PUBLIC_ESEWA_SCD,
+                    su: `${baseUrl}/payment/esewa-success`,
+                    fu: `${baseUrl}/payment/esewa-failed?oid=${data.id}`
+                }
 
+                function post(path, params) {
+                    var form = document.createElement("form");
+                    form.setAttribute("method", "POST");
+                    form.setAttribute("action", path);
+
+                    for (var key in params) {
+                        var hiddenField = document.createElement("input");
+                        hiddenField.setAttribute("type", "hidden");
+                        hiddenField.setAttribute("name", key);
+                        hiddenField.setAttribute("value", params[key]);
+                        form.appendChild(hiddenField);
+                    }
+
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+                // 
+                post(path, params);
             }
         } catch (error) {
             setSubmitOrderLoading(false);
@@ -497,7 +527,7 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
                                                     <Image src="/payment-card.png" layout="fixed" width="60" height="33" />
                                                 </div>
                                             </Radio>
-                                            <Radio value="eswewa" style={{ width: '100%', borderBottom: '1px solid #ddd', paddingBottom: '1.5rem' }}>
+                                            <Radio value="esewa" style={{ width: '100%', borderBottom: '1px solid #ddd', paddingBottom: '1.5rem' }}>
                                                 <div className="d-inline-flex align-items-center">
                                                     <span className="font16 mr-2">e-Sewa</span>
                                                     <Image src="/payment-esewa.png" layout="fixed" width="60" height="33" />

@@ -342,8 +342,6 @@ module.exports = function (server) {
                 .populate('addresses.city', 'name')
                 .populate('addresses.area', 'name');
 
-            console.log(userAddress.addresses);
-
             const packages = await Package.find(
                 {
                     orderId: orderId
@@ -370,6 +368,97 @@ module.exports = function (server) {
                 deliveryAddress: userAddress.addresses[0],
                 packages: orderPackages
             });
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.put('/api/orders/payment', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        const { paymentType, amount, orderId, tranId, packageId } = req.body;
+        try {
+            const order = await Order.findOne({ _id: orderId, paymentType, orderedBy: req.user._id });
+
+            if (order) {
+
+                if (paymentType === 'cashondelivery') {
+
+                    const newPayment = new Payment({
+                        orderId,
+                        packageId,
+                        amount,
+                        paymentType,
+                        transactionId: tranId,
+                        paidBy: req.user._id
+                    });
+                    const payment = await newPayment.save();
+                    // update paymentStatus at package(user pay as package receive)
+                    await Package.findOneAndUpdate({
+                        packageId,
+                    }, {
+                        $set: {
+                            paymentStatus: 'paid',
+                            paymentId: payment._id,
+                            payementDate: new Date()
+                        }
+                    });
+
+                    // remove data from cart
+                    await Cart.deleteOne({ 'orderedBy': req.user._id });
+
+                    return res.status(200).json({ msg: 'success' });
+                } else {
+
+                    const newPayment = new Payment({
+                        orderId,
+                        amount,
+                        paymentType,
+                        transactionId: tranId,
+                        paidBy: req.user._id
+                    });
+                    const payment = await newPayment.save();
+
+                    // update paymentStatus at package
+                    await Package.updateMany({
+                        orderId,
+                    }, {
+                        $set: {
+                            paymentStatus: 'paid',
+                            paymentId: payment._id,
+                            payementDate: new Date()
+                        }
+                    });
+
+                    // remove data from cart
+                    await Cart.deleteOne({ 'orderedBy': req.user._id });
+                    return res.status(200).json({ msg: 'success' });
+                }
+            } else {
+                const payment = new Payment({
+                    orderId,
+                    packageId,
+                    amount,
+                    paymentType,
+                    transactionId: tranId,
+                    paidBy: req.user._id,
+                    paymentStatus: 'unfair'
+                });
+                await payment.save();
+                return res.status(200).json({ msg: 'unfair_payment' });
+            }
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.post('/api/orders/check-payment', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        const { orderId, paymentType } = req.body;
+        try {
+            const payment = await Payment.findOne({ orderId, paymentType, paidBy: req.user._id });
+            if (payment) {
+                return res.status(200).json({ msg: 'success' });
+            } else {
+                return res.status(200).json({ msg: 'notsuccess' });
+            }
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
