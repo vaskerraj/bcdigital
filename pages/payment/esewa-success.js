@@ -62,7 +62,7 @@ function EsweaPaymentSuccess({ oid, amt, refId, cookies }) {
                     // clear carttems cookie on successfull esewa payment
                     destroyCookie(null, "cartItem");
 
-                    return router.push(`../payment-issue?orderId=${oid}&payment=error&ref=${refId}`);
+                    return router.push(`../payment-issue?id=${oid}&payment=error&ref=${refId}&type=esewa`);
                 }
             } else {
                 return router.push(`./eswea-failed?oid=${oid}`);
