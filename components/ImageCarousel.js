@@ -7,11 +7,11 @@ const ImageCarousel = ({ data, autoplay, autoplaySpeed, imgWidth, imgHeight, img
     return (
         <Carousel autoplay={autoplay} autoplaySpeed={autoplaySpeed}>
             {
-                data.map(item => (
-                    <>
+                data.map((item, index) => (
+                    <div key={item._id}>
                         {
                             item.bannerFor !== 'show_case' ?
-                                <Link key={item._id} className="cp"
+                                <Link
                                     href={
                                         item.bannerFor === "product_promtion" ?
                                             `/product/${item.productId.slug}`
@@ -19,20 +19,26 @@ const ImageCarousel = ({ data, autoplay, autoplaySpeed, imgWidth, imgHeight, img
                                             `/shop/${item.sellerId.name}/${item.sellerId._id}`
                                     }
                                 >
-                                    <Image src={`/uploads/banners/${item.webImage}`} layout="responsive"
-                                        width={imgWidth}
-                                        height={imgHeight}
-                                        quality={imgQuality} />
+                                    <a key={item._id} className="cp">
+                                        <Image src={`/uploads/banners/${item.webImage}`} layout="responsive"
+                                            width={imgWidth}
+                                            height={imgHeight}
+                                            quality={imgQuality}
+                                            priority={index === 0 ? true : false}
+                                        />
+                                    </a>
                                 </Link>
                                 :
                                 <div key={item._id} className="position-relative">
                                     <Image src={`/uploads/banners/${item.webImage}`} layout="responsive"
                                         width={imgWidth}
                                         height={imgHeight}
-                                        quality={imgQuality} />
+                                        quality={imgQuality}
+                                        priority={index === 0 ? true : false}
+                                    />
                                 </div>
                         }
-                    </>
+                    </div>
                 ))
             }
         </Carousel>
