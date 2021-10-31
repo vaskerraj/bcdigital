@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Product = mongoose.model('Product');
 const SearchTag = mongoose.model('SearchTag');
 const Category = mongoose.model('Category');
+const Package = mongoose.model('Package');
 const slugify = require('slugify');
 const multer = require('multer');
 const fs = require('fs');
@@ -631,5 +632,61 @@ module.exports = function (server) {
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
+    });
+
+    server.get('/api/products/trending', async (req, res) => {
+        const getProductDetail = async (id) => {
+            const productDetail = await Product.findOne(
+                {
+                    'products._id': id,
+                    'products.approved.status': 'approved', 'products.status': 'active'
+                },
+                {
+                    'products.$': 1
+                })
+                .select('_id name slug brand colour size products rating createdBy')
+                .lean()
+                .populate('brand')
+                .populate({
+                    path: 'createdBy',
+                    select: 'name username role sellerRole picture, _id',
+                });
+            return productDetail;
+        }
+
+        const products = await Package.aggregate([
+            {
+                "$unwind": {
+                    "path": "$products"
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$products.productId",
+                    "totalSold": {
+                        "$sum": "$products.productQty"
+                    }
+                }
+            },
+            {
+                "$sort": {
+                    "totalSold": -1
+                }
+            },
+            {
+                "$limit": 20
+            }
+        ])
+        let trendingProducts = [];
+        await Promise.all(
+            products.map(async (item) => {
+                const productObj = new Object();
+                productObj['_id'] = item._id;
+                productObj['products'] = await getProductDetail(item._id);
+                trendingProducts.push(productObj);
+            })
+        )
+        return res.status(200).json(trendingProducts);
+        return res.status(200).json(products)
     });
 }

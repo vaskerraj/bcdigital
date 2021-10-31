@@ -12,12 +12,12 @@ import { HistoryOutlined } from '@ant-design/icons'
 import Wrapper from '../components/Wrapper';
 import { listProducts } from '../redux/actions/productListAction';
 import ImageCarousel from '../components/ImageCarousel';
-import LastestProductSlider from '../components/helpers/LastestProductSlider';
+import TrendingProductSlider from '../components/helpers/TrendingProductSlider';
 
 const numberOfLatestProduct = 20;
-const numberOfTrendingProduct = 10;
 
-const Home = ({ banners, products }) => {
+const Home = ({ banners, trendings, products }) => {
+  const trendingProducts = trendings.filter(item => item.products !== null);
 
   const dispatch = useDispatch();
 
@@ -30,8 +30,6 @@ const Home = ({ banners, products }) => {
       <Head>
         <title>Home || BC Digital</title>
         <link rel="icon" href="/favicon.ico" />
-        <script defer src="/js/solid.js"></script>
-        <script defer src="/your-path-to-fontawesome/js/fontawesome.js"></script>
       </Head>
       <div>
         <ImageCarousel
@@ -44,10 +42,10 @@ const Home = ({ banners, products }) => {
         />
         <div className="container mt-5">
           <div className="text-center">
-            <h2 className="text-capitalize" style={{ fontSize: '3rem' }}>Latest Products</h2>
+            <h2 className="text-capitalize" style={{ fontSize: '3rem' }}>Trending Products</h2>
           </div>
           <div className="d-block slide">
-            <LastestProductSlider data={products} />
+            <TrendingProductSlider data={trendingProducts} />
           </div>
           <div className="col mt-5">
             <div className="row services bg-white border pt-4 pb-4">
@@ -93,7 +91,7 @@ const Home = ({ banners, products }) => {
           </div>
           <div className="d-block mt-5">
             <div className="text-center">
-              <h2 className="text-capitalize" style={{ fontSize: '3rem' }}>Trending Products</h2>
+              <h2 className="text-capitalize" style={{ fontSize: '3rem' }}>Lastest Products</h2>
             </div>
             <div className="d-block slide">
 
@@ -107,10 +105,12 @@ const Home = ({ banners, products }) => {
 export async function getServerSideProps(context) {
   try {
     const { data: bannerData } = await axios.get(`${process.env.api}/api/banner/position_home`);
+    const { data: trendingData } = await axios.get(`${process.env.api}/api/products/trending`);
     const { data: productData } = await axios.get(`${process.env.api}/api/products/number/${numberOfLatestProduct}`);
     return {
       props: {
         banners: bannerData,
+        trendings: trendingData,
         products: productData
       }
     }

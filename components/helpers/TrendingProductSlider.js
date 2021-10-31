@@ -4,7 +4,7 @@ import "slick-carousel/slick/slick.css";
 import { SliderNextArrow, SliderPrevArrow } from './SliderArrow';
 import ProductCard from './ProductCard';
 
-const LastestProductSlider = ({ data }) => {
+const TrendingProductSlider = ({ data }) => {
     const lastestSliderSettings = {
         dots: false,
         infinite: false,
@@ -46,11 +46,11 @@ const LastestProductSlider = ({ data }) => {
         <Slider {...lastestSliderSettings}>
             {data.map(product => (
                 <div key={product._id}>
-                    <ProductCard data={product} />
+                    <ProductCard data={product.products} />
                 </div>
             ))}
         </Slider>
     );
 }
 
-export default LastestProductSlider;
+export default TrendingProductSlider;
