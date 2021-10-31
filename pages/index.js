@@ -1,29 +1,45 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useDispatch, useSelector } from 'react-redux'
 
 import axios from 'axios';
+import axiosApi from '../helpers/api';
 
 import { Phone, RotateCcw, Shield, Truck } from 'react-feather';
-import { HistoryOutlined } from '@ant-design/icons'
+import { LoadingOutlined } from '@ant-design/icons';
 
 import Wrapper from '../components/Wrapper';
-import { listProducts } from '../redux/actions/productListAction';
 import ImageCarousel from '../components/ImageCarousel';
 import TrendingProductSlider from '../components/helpers/TrendingProductSlider';
-
-const numberOfLatestProduct = 20;
+import ProductCard from '../components/helpers/ProductCard';
 
 const Home = ({ banners, trendings, products }) => {
+
+  const [lastestProduct, setLastestProduct] = useState(products);
+  const [isFetching, setIsFetching] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
   const trendingProducts = trendings.filter(item => item.products !== null);
 
-  const dispatch = useDispatch();
-
+  const loadMoreLatestProducts = async () => {
+    setIsFetching(true);
+    const { data } = await axiosApi.post("/api/products/latest", {
+      page
+    });
+    if (data) {
+      setLastestProduct((prevItems) => {
+        return [...new Set([...prevItems, ...data])];
+      });
+      setHasMore(data.length > 0);
+      setIsFetching(false);
+    }
+  }
   useEffect(() => {
-    dispatch(listProducts());
-  }, []);
+    if (page !== 1) loadMoreLatestProducts();
+  }, [page]);
 
   return (
     <Wrapper>
@@ -94,19 +110,35 @@ const Home = ({ banners, trendings, products }) => {
               <h2 className="text-capitalize" style={{ fontSize: '3rem' }}>Lastest Products</h2>
             </div>
             <div className="d-block slide">
-
+              <div className="d-flex">
+                {lastestProduct.map(product => (
+                  <div key={product._id}>
+                    <ProductCard data={product} />
+                  </div>
+                ))}
+              </div>
+              {hasMore && lastestProduct < 24 && (
+                <div className="d-block text-center mt-3">
+                  <button type="button"
+                    className="btn c-btn-primary"
+                    onClick={() => setPage((prevPageNumber) => prevPageNumber + 1)}
+                  >
+                    {isFetching ? <LoadingOutlined className="pl-5 pr-5" /> : 'Load More'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div >
-    </Wrapper>
+    </Wrapper >
   )
 }
 export async function getServerSideProps(context) {
   try {
     const { data: bannerData } = await axios.get(`${process.env.api}/api/banner/position_home`);
     const { data: trendingData } = await axios.get(`${process.env.api}/api/products/trending`);
-    const { data: productData } = await axios.get(`${process.env.api}/api/products/number/${numberOfLatestProduct}`);
+    const { data: productData } = await axios.post(`${process.env.api}/api/products/latest`);
     return {
       props: {
         banners: bannerData,

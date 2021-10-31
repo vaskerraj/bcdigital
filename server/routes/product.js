@@ -340,8 +340,10 @@ module.exports = function (server) {
         }
     });
 
-    server.get('/api/products/number/:number', async (req, res) => {
-        const totalNumber = parseInt(req.params.number);
+    server.post('/api/products/latest', async (req, res) => {
+        const { page, limit } = req.body;
+        const currentPage = page || 1;
+        const productPerPage = limit || 24;
         try {
             // later change approved.status to active
             const products = await Product.find({ 'products.approved.status': 'approved', 'products.status': 'active' })
@@ -353,7 +355,8 @@ module.exports = function (server) {
                     select: 'name username role sellerRole picture, _id',
                 })
                 .sort([['createdAt', -1]])
-                .limit(totalNumber)
+                .skip((currentPage - 1) * productPerPage)
+                .limit(productPerPage);
             if (products) return res.status(200).json(products);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
