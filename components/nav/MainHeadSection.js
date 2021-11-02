@@ -89,7 +89,7 @@ const MainHeadSection = ({ mobileTabBar }) => {
     return (
         <>
             <Affix>
-                <div className="container-fluid" style={{ backgroundColor: '#fff' }}>
+                <div className="container-fluid header">
                     <div className="container">
                         <div className={`${styles.topnav} row align-items-center`} >
                             <div className={` ${mobileTabBar !== "hide" ? 'col-12' : 'col-6'} col-sm-4 col-lg-3 order-first`}>
