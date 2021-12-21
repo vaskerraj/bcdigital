@@ -25,7 +25,7 @@ module.exports = function (server) {
     server.get('/api/admingetseller', requiredAuth, checkRole(['admin']), async (req, res) => {
         try {
             const user = await Users.findOne({ role: 'seller', sellerRole: 'own' })
-                .select('_id picture email')
+                .select('_id picture mobile email')
                 .lean();
             let moreSellerInfo = null;
             if (user) {
@@ -103,7 +103,7 @@ module.exports = function (server) {
         }
     });
 
-    // own shop step
+    ////////////////// own shop step ////////////////////////
     // company
     server.post('/api/ownshop/step/company', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), upload.single('docFile'), async (req, res) => {
         const { id, legalName, regType, regNumber, fullname, mobile, email, street } = req.body;
@@ -166,7 +166,7 @@ module.exports = function (server) {
                     'account.bankName': bankName,
                     'account.branch': bankBranch,
                     'account.chequeFile': copyOfCheque,
-                    bankVerify: 'verified',
+                    'account.bankVerify': 'verified',
                 }
             );
 
