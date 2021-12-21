@@ -4,7 +4,7 @@
   "private": true,
   "author": "Dharma Raj Bhandari",
   "scripts": {
-    "dev": "nodemon -w server -w package.json server/index.js",
+    "dev": "nodemon server/index.js",
     "build": "next build",
     "start": "cross-env NODE_ENV=production node server/index.js"
   },
@@ -28,7 +28,7 @@
     "moment-timezone": "^0.5.33",
     "mongoose": "^5.7.0",
     "multer": "^1.4.2",
-    "next": "^11.1.2",
+    "next": "^12.0.1",
     "next-redux-wrapper": "^6.0.2",
     "nodemailer": "^6.6.3",
     "nookies": "^2.5.2",
