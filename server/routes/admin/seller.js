@@ -47,7 +47,11 @@ module.exports = function (server) {
             if (req.file) {
                 sellerPicture = req.file.filename;
             }
-            const user = new Users({
+            const user = await Users.findOne({ username: mobile, method: 'custom', role: 'seller' });
+            if (user) {
+                return res.status(422).json({ error: 'Seller alerady exists with this mobile number' });
+            }
+            const newuser = new Users({
                 name,
                 email,
                 username: mobile,
@@ -59,7 +63,7 @@ module.exports = function (server) {
                 method: 'custom',
                 status: 'approved'
             });
-            await user.save();
+            await newuser.save();
 
             // Note: auto login after successfully sign up(registration)
 
@@ -67,7 +71,7 @@ module.exports = function (server) {
             // create token and send to client
 
             // use objectid of database uid
-            const uid = user._id.toString();
+            const uid = newuser._id.toString();
 
             await admin.auth().createCustomToken(uid)
                 .then(function (token) {
@@ -321,36 +325,6 @@ module.exports = function (server) {
         }
     });
 
-    server.put('/api/ownseller', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), upload.single('sellerPicture'), async (req, res) => {
-        const { name, email, sellerId } = req.body;
-        try {
-            let sellerPicture;
-            if (req.file) {
-                sellerPicture = req.file.filename;
-                const preSellerImage = await Users.findById(sellerId).select('picture');
-                if (preSellerImage) {
-                    // check file
-                    if (fs.existsSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preSellerImage.picture))) {
-                        fs.unlinkSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preSellerImage.picture))
-                    }
-                }
-                await Users.findByIdAndUpdate(sellerId, {
-                    picture: sellerPicture
-                });
-            }
-            await Users.findByIdAndUpdate(sellerId, { name, email });
-            return res.status(200).json({ msg: "success" });
-        }
-        catch (error) {
-            return res.status(422).json({
-                error: error.code === 11000 ?
-                    'Seller already exists'
-                    :
-                    "Something went wrong. Please try again later."
-            });
-        }
-    });
-
     server.put('/api/seller/status/:id', requiredAuth, checkRole(['admin']), async (req, res) => {
         const sellerId = req.params.id;
         try {
@@ -366,9 +340,13 @@ module.exports = function (server) {
         }
     });
 
-    server.put('/api/ownseller/username', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), async (req, res) => {
+    server.put('/api/ownshop/username', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), async (req, res) => {
         const { mobile, sellerId } = req.body;
         try {
+            const user = await Users.findOne({ username: mobile, method: 'custom', role: 'seller' });
+            if (user) {
+                return res.status(422).json({ error: 'Seller alerady exists with this mobile number' });
+            }
             await Users.findByIdAndUpdate(sellerId, { username: mobile, mobile });
             return res.status(200).json({ msg: 'success' });
         } catch (error) {
@@ -381,7 +359,7 @@ module.exports = function (server) {
         }
     });
 
-    server.put('/api/ownseller/password', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), async (req, res) => {
+    server.put('/api/ownshop/password', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), async (req, res) => {
         const { password, sellerId } = req.body;
         try {
             const user = await Users.findById(sellerId);
