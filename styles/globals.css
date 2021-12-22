@@ -1005,6 +1005,9 @@ footer .footer-menu li:hover>a {
   width: 1.6rem;
   margin-left: 0.4rem;
 }
+.seller-logo .ant-upload-picture-card-wrapper{
+  width: auto !important;
+}
 
 /* manage account */
 .account-menu .ant-card-body{

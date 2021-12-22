@@ -7,9 +7,13 @@ import { parseCookies } from 'nookies';
 import axios from 'axios';
 import axiosApi from '../../../helpers/api';
 
+import baseUrl from '../../../helpers/baseUrl';
+
 import { Tabs, message, Tag, Upload, Button } from 'antd';
-const { TabPane } = Tabs; import {
-    InfoOutlined,
+const { TabPane } = Tabs;
+import {
+    EditOutlined,
+    PlusOutlined,
     UploadOutlined,
     DeleteOutlined
 } from '@ant-design/icons';
@@ -21,6 +25,8 @@ import WarehouseAddress from '../../../components/seller/WarehouseAddress';
 import ReturnAddress from '../../../components/seller/ReturnAddress';
 import { sellerStatusText } from '../../../helpers/functions';
 
+import EditSellerUsernameModal from '../../../components/admin/EditSellerUsernameModal';
+import EditSellerPasswordModal from '../../../components/admin/EditSellerPasswordModal';
 
 // config antdesign message
 message.config({
@@ -29,8 +35,25 @@ message.config({
     duration: 3,
 });
 
+const getBase64 = (img, callback) => {
+    const reader = new FileReader();
+    reader.addEventListener('load', () => callback(reader.result));
+    reader.readAsDataURL(img);
+}
+
 const OwnShopList = ({ sellerData, defaultAddresses }) => {
     const { seller, details } = sellerData;
+
+    // MODAL
+    const [visibleUsernameModal, setVisibleUsernameModal] = useState(false);
+    const [visiblePasswordModal, setVisiblePasswordModal] = useState(false);
+    const handleUsernameModalCancel = () => {
+        setVisibleUsernameModal(false)
+    }
+    const handlePasswordModalCancel = () => {
+        setVisiblePasswordModal(false)
+    }
+
     // file upload states
     const [docFileList, setDocFileList] = useState([]);
     const [chequeFileList, setChequeFileList] = useState([]);
@@ -41,6 +64,36 @@ const OwnShopList = ({ sellerData, defaultAddresses }) => {
 
     const router = useRouter();
     const { adminAuth } = useSelector(state => state.adminAuth);
+
+    ///////////////////////logo /////////////////////
+    const [previewImage, setPreviewImage] = useState("");
+
+
+    const imageValidation = (file) => {
+        const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+        if (!isJpgOrPng) {
+            message.error('You can only upload JPG/PNG file!');
+        }
+        const isLt2M = file.size / 1024 / 1024 < 2;
+        if (!isLt2M) {
+            message.error('Image must smaller than 2MB!');
+        }
+        return isJpgOrPng && isLt2M;
+    }
+
+    const handleUpload = ({ fileList }) => {
+        imageValidation(fileList[0]);
+
+        getBase64(fileList[0].originFileObj, imageUrl =>
+            setPreviewImage(imageUrl)
+        );
+    }
+    const uploadButton = (
+        <div>
+            <PlusOutlined />
+            <div style={{ marginTop: 8 }}>Change Logo</div>
+        </div>
+    );
 
     //////////////////////////////////// business //////////////////////////// ///////
 
@@ -357,52 +410,108 @@ const OwnShopList = ({ sellerData, defaultAddresses }) => {
     }
     /////////////////////////////////////////////////////////////////////////////////
 
+
     return (
         <Wrapper onActive="ownShop" breadcrumb={["Own Seller"]}>
+            <EditSellerUsernameModal
+                visible={visibleUsernameModal}
+                handleCancel={handleUsernameModalCancel}
+                ownshopData={seller}
+            />
+            <EditSellerPasswordModal
+                visible={visiblePasswordModal}
+                handleCancel={handlePasswordModalCancel}
+                ownshopData={seller}
+            />
             <Tabs tabPosition="top" >
                 <TabPane tab="General Info" key="1">
-                    <div className="d-flex">
-                        <div className="font-weight-bold" style={{ minWidth: '20rem' }}>
-                            Shop Name:
+                    <div className="row">
+                        <div className="col-6">
+                            <div className="d-flex">
+                                <div className="font-weight-bold" style={{ minWidth: '20rem' }}>
+                                    Shop Name:
+                                </div>
+                                <div>
+                                    {details.legalName}
+                                </div>
+                            </div>
+                            <div className="d-flex mt-4">
+                                <div className="font-weight-bold" style={{ minWidth: '20rem' }}>
+                                    Mobile Number:
+                                </div>
+                                <div>
+                                    {seller.mobile}
+                                    <EditOutlined
+                                        onClick={() => setVisibleUsernameModal(true)}
+                                        size={24}
+                                        className="ml-3 cp"
+                                        style={{ color: 'blue' }}
+                                    />
+                                </div>
+                            </div>
+                            <div className="d-flex mt-4">
+                                <div className="font-weight-bold" style={{ minWidth: '20rem' }}>
+                                    Email Address:
+                                </div>
+                                <div>
+                                    {seller.email}
+                                </div>
+                            </div>
+                            <div className="d-flex mt-4">
+                                <div className="font-weight-bold" style={{ minWidth: '20rem' }}>
+                                    Business Document Status:
+                                </div>
+                                <div>
+                                    <Tag color="red">
+                                        {sellerStatusText(details.documentVerify)}
+                                    </Tag>
+                                </div>
+                            </div>
+                            <div className="d-flex mt-4">
+                                <div className="font-weight-bold" style={{ minWidth: '20rem' }}>
+                                    Bank Info Status:
+                                </div>
+                                <div>
+                                    <Tag color="red">
+                                        {sellerStatusText(details.account.bankVerify)}
+                                    </Tag>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            {details.legalName}
-                        </div>
-                    </div>
-                    <div className="d-flex mt-4">
-                        <div className="font-weight-bold" style={{ minWidth: '20rem' }}>
-                            Mobile Number:
-                        </div>
-                        <div>
-                            {seller.mobile}
-                        </div>
-                    </div>
-                    <div className="d-flex mt-4">
-                        <div className="font-weight-bold" style={{ minWidth: '20rem' }}>
-                            Email Address:
-                        </div>
-                        <div>
-                            {seller.email}
-                        </div>
-                    </div>
-                    <div className="d-flex mt-4">
-                        <div className="font-weight-bold" style={{ minWidth: '20rem' }}>
-                            Business Document Status:
-                        </div>
-                        <div>
-                            <Tag color="red">
-                                {sellerStatusText(details.documentVerify)}
-                            </Tag>
-                        </div>
-                    </div>
-                    <div className="d-flex mt-4">
-                        <div className="font-weight-bold" style={{ minWidth: '20rem' }}>
-                            Bank Info Status:
-                        </div>
-                        <div>
-                            <Tag color="red">
-                                {sellerStatusText(details.account.bankVerify)}
-                            </Tag>
+                        <div className="col-6">
+                            <div className="d-block">
+                                <button type="button" className="btn c-btn-primary" onClick={() => setVisiblePasswordModal(true)}>
+                                    Change Password
+                                </button>
+                            </div>
+                            <div className="d-flex seller-logo mt-5">
+                                <Upload
+                                    name="file"
+                                    accept=".png, .jpg, .jpeg"
+                                    multiple={false}
+                                    showUploadList={false}
+                                    action={`${baseUrl}/api/seller/logo?id=${seller._id}`}
+                                    listType="picture-card"
+                                    onChange={handleUpload}
+                                    maxCount={1}
+                                >
+                                    {uploadButton}
+                                </Upload>
+                                {previewImage &&
+                                    <div style={{ width: '10.4rem' }}>
+                                        <div className="ant-upload ant-upload-select ant-upload-select-picture-card position-relative">
+                                            <img src={previewImage} alt="avatar" style={{ width: '100%' }} />
+                                        </div>
+                                    </div>
+                                }
+                                {seller?.picture && previewImage === "" &&
+                                    <div style={{ width: '10.4rem' }}>
+                                        <div className="ant-upload ant-upload-select ant-upload-select-picture-card position-relative">
+                                            <img src={`/uploads/sellers/${seller.picture}`} alt="avatar" style={{ width: '100%' }} />
+                                        </div>
+                                    </div>
+                                }
+                            </div>
                         </div>
                     </div>
                 </TabPane>
