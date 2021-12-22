@@ -177,6 +177,150 @@ module.exports = function (server) {
         }
     });
 
+    //////////////////////// own shop update /////////////////////
+    // company
+    server.put('/api/ownshop/business', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), upload.single('docFile'), async (req, res) => {
+        const { id, legalName, regType, regNumber, fullname, mobile, email, street } = req.body;
+
+        try {
+            let docFile;
+            if (req.file) {
+                docFile = req.file.filename;
+
+                const preDocImage = await Seller.findOne({ userId: id }).select('documentFile');
+                if (preDocImage) {
+                    // check file
+                    if (fs.existsSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preDocImage.documentFile))) {
+                        fs.unlinkSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preDocImage.documentFile))
+                    }
+                }
+                await Seller.findOneAndUpdate({ userId: id }, { documentFile: docFile });
+            }
+
+            // company
+            await Seller.findOneAndUpdate({ userId: id },
+                {
+                    legalName,
+                    registrationType: regType,
+                    registrationNumber: regNumber,
+                }
+            );
+
+            // company or business address
+            await Seller.findOneAndUpdate(
+                {
+                    userId: id,
+                    'addresses.label': 'business'
+                },
+                {
+                    '$set': {
+                        'addresses.$.fullname': fullname,
+                        'addresses.$.mobile': mobile,
+                        'addresses.$.email': email,
+                        'addresses.$.street': street,
+                    }
+                }
+            );
+
+
+            return res.status(200).json({ msg: 'success' });
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    // warehouse
+    server.put('/api/ownshop/warehouse', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), async (req, res) => {
+        const { id, addresses } = req.body;
+
+        try {
+            await Seller.findOneAndUpdate({
+                userId: id,
+                'addresses.label': 'warehouse'
+            },
+                {
+                    '$set': {
+                        'addresses.$.fullname': addresses.fullname,
+                        'addresses.$.mobile': addresses.mobile,
+                        'addresses.$.email': addresses.email,
+                        'addresses.$.region': addresses.region,
+                        'addresses.$.city': addresses.city,
+                        'addresses.$.area': addresses.area,
+                        'addresses.$.street': addresses.street,
+                    }
+                }
+            );
+
+            return res.status(201).json({ msg: 'success' });
+
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    // return
+    server.put('/api/ownshop/return', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), async (req, res) => {
+        const { id, addresses } = req.body;
+
+        try {
+            await Seller.findOneAndUpdate({
+                userId: id,
+                'addresses.label': 'return'
+            },
+                {
+                    '$set': {
+                        'addresses.$.fullname': addresses.fullname,
+                        'addresses.$.mobile': addresses.mobile,
+                        'addresses.$.email': addresses.email,
+                        'addresses.$.region': addresses.region,
+                        'addresses.$.city': addresses.city,
+                        'addresses.$.area': addresses.area,
+                        'addresses.$.street': addresses.street,
+                    }
+                }
+            );
+
+            return res.status(201).json({ msg: 'success' });
+
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    // bank
+    server.put('/api/ownshop/bank', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), upload.single('copyofcheque'), async (req, res) => {
+        const { id, title, number, bankName, bankBranch } = req.body;
+        try {
+            let copyOfCheque;
+            if (req.file) {
+                copyOfCheque = req.file.filename;
+
+                const preBankImage = await Seller.findOne({ userId: id }).select('account.chequeFile');
+
+                if (preBankImage) {
+                    // check file
+                    if (fs.existsSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preBankImage.account.documentFile))) {
+                        fs.unlinkSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preBankImage.account.chequeFile))
+                    }
+                }
+                await Seller.findOneAndUpdate({ userId: id }, { 'account.chequeFile': copyOfCheque });
+            }
+            await Seller.findOneAndUpdate({ userId: id },
+                {
+                    'account.title': title,
+                    'account.number': number,
+                    'account.bankName': bankName,
+                    'account.branch': bankBranch,
+                }
+            );
+
+            return res.status(201).json({ msg: 'success' });
+
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
     server.put('/api/ownseller', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), upload.single('sellerPicture'), async (req, res) => {
         const { name, email, sellerId } = req.body;
         try {
