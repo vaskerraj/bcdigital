@@ -51,10 +51,14 @@ const HeaderMenu = ({ loginUser, totalCartItems }) => {
                             <ChevronDown size={20} className="mt-1" />
                         </div>
                         <div>
-                            BC Shop
+                            <Link href="/bcshop">
+                                BC Shop
+                            </Link>
                         </div>
                         <div>
-                            Seller Pannel
+                            <Link href="/seller">
+                                Seller Pannel
+                            </Link>
                         </div>
                         <div>
                             Customer Care
