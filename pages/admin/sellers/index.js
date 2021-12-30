@@ -22,6 +22,7 @@ message.config({
 });
 
 const SellerList = ({ sellers }) => {
+    console.log(sellers)
     const [sellersData, setSellersData] = useState([]);
     const [activeTab, setActiveTab] = useState('approved');
 
@@ -32,19 +33,17 @@ const SellerList = ({ sellers }) => {
         {
             Header: "Name",
             show: true,
-            accessor: row => {
-                return row.name
-            },
+            accessor: "userId.name",
             displayValue: " Name ",
             Cell: ({ row: { original } }) => (
                 <div className="d-flex align-items-center" style={{ verticalAlign: 'middle' }}>
                     <div className="">
-                        <Image src={`${baseUrl}/uploads/sellers/${original.picture}`}
+                        <Image src={`${baseUrl}/uploads/sellers/${original.userId.picture}`}
                             className="img-thumbnail" width="50" height="50"
                         />
                     </div>
                     <div>
-                        {original.name}
+                        {original.userId.name}
                     </div>
                 </div>
             )
@@ -57,83 +56,83 @@ const SellerList = ({ sellers }) => {
             displayValue: " ID "
         },
         {
-            Header: "Username",
-            accessor: "username",
+            Header: "Legal Name",
+            accessor: "legalName",
             sortable: false,
             show: true,
-            displayValue: " Username "
+            displayValue: " Legal Name "
         },
         {
             Header: "Mobile No.",
-            accessor: "mobile",
+            accessor: "userId.mobile",
             sortable: false,
             show: true,
             displayValue: " Mobile No. "
         },
         {
             Header: "Email",
-            accessor: "email",
+            accessor: "userId.email",
             sortable: false,
             show: true,
             displayValue: " Email "
         },
-        {
-            Header: "Commission",
-            accessor: "",
-            sortable: false,
-            show: true,
-            displayValue: " Commission "
-        },
-        {
-            Header: "Revenue",
-            accessor: "",
-            sortable: true,
-            show: true,
-            displayValue: " Revenue "
-        },
+        // {
+        //     Header: "Commission",
+        //     accessor: "commission",
+        //     sortable: false,
+        //     show: true,
+        //     displayValue: " Commission "
+        // },
+        // {
+        //     Header: "Revenue",
+        //     accessor: "",
+        //     sortable: true,
+        //     show: true,
+        //     displayValue: " Revenue "
+        // },
         {
             Header: "Status",
             show: true,
             Cell: ({ row: { original } }) => {
                 return (
-                    original.status == 'approved'
+                    original.status.title == 'approved'
                         ?
                         <Switch
                             checkedChildren={<CheckOutlined />}
                             unCheckedChildren={<CloseOutlined />}
-                            onChange={() => changeSellerStatusHandler(original._id, original.status)}
-                            defaultChecked
+                            onChange={() => changeSellerStatusHandler(original._id, 'unapproved')}
                         />
                         :
                         <Switch
                             checkedChildren={<CheckOutlined />}
                             unCheckedChildren={<CloseOutlined />}
-                            onChange={() => changeSellerStatusHandler(original._id, original.status)}
+                            onChange={() => changeSellerStatusHandler(original._id, 'approved')}
+                            defaultChecked
                         />
                 )
             }
         },
-        {
-            Header: "Actions",
-            show: true,
-            Cell: ({ row: { original } }) => (
-                <button className="btn c-btn-primary"
-                    onClick={() => viewAnalyticsHandler(original._id)}>
-                    View Analytics
-                </button>
-            )
-        }
+        // {
+        //     Header: "Actions",
+        //     show: true,
+        //     Cell: ({ row: { original } }) => (
+        //         <button className="btn c-btn-primary"
+        //             onClick={() => viewAnalyticsHandler(original._id)}>
+        //             View Analytics
+        //         </button>
+        //     )
+        // }
     ]);
 
     useEffect(() => {
-        console.log("called");
-        const filteredData = sellers.filter((data) => data.status === activeTab);
+        const stepComplete = (activeTab === 'uncomplete') ? false : true;
+        const filteredData = sellers.filter((data) => data.status.title === activeTab && data.stepComplete === stepComplete);
         setSellersData(filteredData);
     }, [activeTab]);
 
     const changeSellerStatusHandler = (async (id, status) => {
         try {
-            const { data } = await axiosApi.put(`/api/seller/status/${id}`, {}, {
+            const { data } = await axiosApi.put(`/api/seller/status/${id}/${status}`, {}, {
                 headers: {
                     token: adminAuth.token
                 }
@@ -178,7 +177,6 @@ const SellerList = ({ sellers }) => {
         console.log(id);
     });
 
-
     return (
         <Wrapper onActive="sellers" breadcrumb={["Sellers"]}>
             <div className="d-flex" style={{ fontSize: '1.6rem', fontWeight: 600 }}>
@@ -189,6 +187,10 @@ const SellerList = ({ sellers }) => {
                 <div className="filter-tab ml-4 cp" onClick={() => setActiveTab('unapproved')}>
                     UnApproved Sellers
                     <div className={`activebar ${activeTab === 'unapproved' ? 'active' : ''}`}></div>
+                </div>
+                <div className="filter-tab ml-4 cp" onClick={() => setActiveTab('blocked')}>
+                    Blocked Sellers
+                    <div className={`activebar ${activeTab === 'blocked' ? 'active' : ''}`}></div>
                 </div>
             </div>
             <div className="table-responsive mt-5">
@@ -205,7 +207,7 @@ const SellerList = ({ sellers }) => {
 export async function getServerSideProps(context) {
     try {
         const cookies = parseCookies(context);
-        const { data } = await axios.get(`${process.env.api}/api/admingetseller`, {
+        const { data } = await axios.get(`${process.env.api}/api/admin/seller/list`, {
             headers: {
                 token: cookies.ad_token,
             },

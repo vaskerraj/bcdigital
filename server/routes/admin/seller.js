@@ -325,15 +325,11 @@ module.exports = function (server) {
         }
     });
 
-    server.put('/api/seller/status/:id', requiredAuth, checkRole(['admin']), async (req, res) => {
+    server.put('/api/seller/status/:id/:status', requiredAuth, checkRole(['admin']), async (req, res) => {
         const sellerId = req.params.id;
+        const status = req.params.status;
         try {
-            const preSellerStatus = await Users.findById(sellerId).select('status');
-            if (preSellerStatus.status === 'approved') {
-                await Users.findByIdAndUpdate(sellerId, { status: 'unapproved' });
-            } else {
-                await Users.findByIdAndUpdate(sellerId, { status: 'approved' });
-            }
+            await Seller.findByIdAndUpdate(sellerId, { 'status.title': status, 'status.actionBy': req.user._id });
             return res.status(200).json({ msg: 'success' });
         } catch (error) {
             return res.status(422).json({ error: "Something went wrong. Please try again later." })
@@ -367,6 +363,25 @@ module.exports = function (server) {
             await user.save();
 
             return res.status(200).json({ msg: "success" });
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
+
+    //////////////////// seller list /////////////////////
+
+    server.get("/api/admin/seller/list", requiredAuth, checkRole(['admin']), async (req, res) => {
+
+        try {
+            const sellers = await Seller.find(
+                {
+                    'status.title': { $ne: 'deleted' },
+                })
+                .populate('userId')
+                .populate('addresses.region', '_id name')
+                .populate('addresses.city', '_id name')
+                .populate('addresses.area', '_id name');
+            return res.status(200).json(sellers);
         } catch (error) {
             return res.status(422).json({ error: "Something went wrong. Please try again later." })
         }
