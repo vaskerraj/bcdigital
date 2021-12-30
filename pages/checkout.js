@@ -53,6 +53,8 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
 
     const [combinedCartItems, setCombinedCartItems] = useState([]);
 
+    const [exsitingShippingPlan, setExsitingShippingPlan] = useState(true);
+
     const router = useRouter();
 
     const dispatch = useDispatch();
@@ -104,6 +106,12 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
 
     useEffect(() => {
         if (products) {
+
+            // check shipping plan as customer address
+            setExsitingShippingPlan(shippingPlans.plans.length === 0 ? false : true)
+
+            const shippingPlanAmount = shippingPlans.plans.length === 0 ? 0 : shippingPlans.plans[0].amount;
+
             // for total number of package to ship to customer
             const uniqueSellerForPackage = [...new Map(products.map(item =>
                 [item.createdBy['_id'], item.createdBy])).values()];
@@ -111,11 +119,13 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
             const packages = uniqueSellerForPackage.length === 0 ? 1 : uniqueSellerForPackage.length;
             setPackagesForCustomer(packages);
 
-            setShippingCharge(Number(shippingPlans.plans[0].amount) * Number(packages));
-            setShippingId(shippingPlans.plans[0]._id);
+
+            setShippingCharge(Number(shippingPlanAmount) * Number(packages));
+            setShippingId(shippingPlans.plans[0]?._id);
 
             // set grand Total
-            setGrandTotal(Number(cartTotal) + (Number(shippingPlans.plans[0].amount) * Number(packages)) - Number(cartDetails.couponDiscount));
+            setGrandTotal(Number(cartTotal) + (Number(shippingPlanAmount) * Number(packages)) - Number(cartDetails.couponDiscount));
+
 
         }
     }, [shippingPlans, products, cartDetails]);
@@ -154,7 +164,7 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
         packageObj['products'] = getProductInfoBaseOnUniqueSeller(productsBaseOnSeller);
         packageObj['seller'] = seller._id;
         packageObj['sellerRole'] = seller.sellerRole;
-        packageObj['shippingCharge'] = shippingPlans.plans[0].amount;
+        packageObj['shippingCharge'] = shippingPlans.plans[0]?.amount;
         packageObj['packageTotal'] = packageTotal;
         packagesWithProducts.push(packageObj)
     });
@@ -464,35 +474,41 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
                         <h4 className="text-uppercase">Delivery Options</h4>
                     </div>
                     <div className="col-12 p-3">
-                        <Radio.Group onChange={onDeliveryChange} value={shippingId} className="mb-1">
-                            {shippingPlans.plans.map((plan, index) => (
-                                <Radio key={plan._id} value={plan._id} amount={plan.amount}>
-                                    <div className="d-inline-flex">
-                                        <div className="d-block">
-                                            <span className="font-weight-bold">Rs.{plan.amount * Number(packagesForCustomer)}</span> | {plan.name}
-                                            <div className="mt-1">
-                                                Estimated Delivery:
-                                                <span className="font-weight-bold ml-2">
-                                                    {plan.minDeliveryTime ?
-                                                        moment().add(plan.minDeliveryTime, 'days').format('D MMM , YYYY')
-                                                        : moment().add(2, 'days').format('D MMM, YYYY')
-                                                    }
-                                                    <span className="ml-2 mr-2">-</span>
-                                                    {plan.maxDeliveryTime ?
-                                                        moment().add(plan.maxDeliveryTime, 'days').format('D MMM , YYYY')
-                                                        : moment().add(5, 'days').format('D MMM, YYYY')
-                                                    }
-                                                </span>
+                        {!exsitingShippingPlan ?
+                            <div className="text-danger">
+                                Currently delivery plan does not exist to your address. Please contact us for futher information.
+                            </div>
+                            :
+                            <Radio.Group onChange={onDeliveryChange} value={shippingId} className="mb-1">
+                                {shippingPlans.plans.map((plan, index) => (
+                                    <Radio key={plan._id} value={plan._id} amount={plan.amount}>
+                                        <div className="d-inline-flex">
+                                            <div className="d-block">
+                                                <span className="font-weight-bold">Rs.{plan.amount * Number(packagesForCustomer)}</span> | {plan.name}
+                                                <div className="mt-1">
+                                                    Estimated Delivery:
+                                                    <span className="font-weight-bold ml-2">
+                                                        {plan.minDeliveryTime ?
+                                                            moment().add(plan.minDeliveryTime, 'days').format('D MMM , YYYY')
+                                                            : moment().add(2, 'days').format('D MMM, YYYY')
+                                                        }
+                                                        <span className="ml-2 mr-2">-</span>
+                                                        {plan.maxDeliveryTime ?
+                                                            moment().add(plan.maxDeliveryTime, 'days').format('D MMM , YYYY')
+                                                            : moment().add(5, 'days').format('D MMM, YYYY')
+                                                        }
+                                                    </span>
+                                                </div>
+                                                {shippingPlans.as === 'default' &&
+                                                    <div className="mt-1 text-danger">Note: Delivery charge may vary as your address.</div>
+                                                }
                                             </div>
-                                            {shippingPlans.as === 'default' &&
-                                                <div className="mt-1 text-danger">Note: Delivery charge may vary as your address.</div>
-                                            }
                                         </div>
-                                    </div>
-                                </Radio>
-                            ))
-                            }
-                        </Radio.Group>
+                                    </Radio>
+                                ))
+                                }
+                            </Radio.Group>
+                        }
                     </div>
                 </div>
                 {shippingPlans.as === 'user' &&
@@ -557,7 +573,7 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
                                 <span>Product Total</span>
                                 <span>Rs.{cartTotal}</span>
                             </div>
-                            {shippingCharge !== 0 &&
+                            {shippingCharge !== 0 && exsitingShippingPlan &&
                                 <div className="d-flex justify-content-between mt-3 pt-4 border-top border-gray align-items-center">
                                     <span>Shipping Charge</span>
                                     <span>Rs.{shippingCharge}</span>
@@ -576,14 +592,14 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
                             <div className="d-block mt-5">
                                 {shippingPlans.as === 'default' ?
                                     <button type="button"
-                                        className={`btn btn-danger btn-block btn-lg position-relative`}
+                                        className={`btn btn-danger btn-block btn-lg position-relative ${!exsitingShippingPlan ? 'disabled' : ''}`}
                                         style={{ fontSize: '2.0rem' }}
                                     >
                                         Submit Order
                                     </button>
                                     :
                                     <button type="submit"
-                                        className={`btn btn-danger btn-block btn-lg position-relative ${submitOrderLoading ? 'disabled' : ''}`}
+                                        className={`btn btn-danger btn-block btn-lg position-relative ${submitOrderLoading || !exsitingShippingPlan ? 'disabled' : ''}`}
                                         disabled={changeAddress ? true : false}
                                         style={{ fontSize: '2.0rem' }}
                                     >
