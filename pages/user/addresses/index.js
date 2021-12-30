@@ -34,7 +34,7 @@ const Addresses = ({ addresses, defaultAddresses }) => {
 
     const [addAddressBlock, setAddAddressBlock] = useState(false);
 
-    const { register, handleSubmit, errors } = useForm();
+    const { register, handleSubmit, errors, getValues, reset } = useForm();
 
     const router = useRouter();
 
@@ -193,6 +193,8 @@ const Addresses = ({ addresses, defaultAddresses }) => {
                                                     formRegister={register}
                                                     handleSubmit={handleSubmit(onSubmit)}
                                                     errors={errors}
+                                                    getValues={getValues}
+                                                    reset={reset}
                                                     onCancel={onCancel}
                                                     addresses={defaultAddresses}
                                                 />
