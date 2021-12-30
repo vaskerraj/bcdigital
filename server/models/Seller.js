@@ -95,6 +95,29 @@ const sellerSchema = new mongoose.Schema({
             ],
             default: 'pending'
         }
+    },
+    status: {
+        title: {
+            type: String,
+            enum: [
+                "deleted",
+                "approved",
+                "unapproved",
+                "blocked"
+            ],
+            default: "approved"
+        },
+        reason: {
+            type: String
+        },
+        actionBy: {
+            type: ObjectId,
+            ref: "Users"
+        },
+        actionDate: {
+            type: Date
+        }
+
     }
 
 }, { timestamps: true });
