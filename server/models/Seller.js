@@ -74,7 +74,7 @@ const sellerSchema = new mongoose.Schema({
             type: String
         },
         number: {
-            type: Number
+            type: String
         },
         bankName: {
             type: String,
@@ -95,6 +95,9 @@ const sellerSchema = new mongoose.Schema({
             ],
             default: 'pending'
         }
+    },
+    commission: {
+        type: String
     },
     status: {
         title: {

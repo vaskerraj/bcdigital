@@ -76,20 +76,13 @@ const SellerList = ({ sellers }) => {
             show: true,
             displayValue: " Email "
         },
-        // {
-        //     Header: "Commission",
-        //     accessor: "commission",
-        //     sortable: false,
-        //     show: true,
-        //     displayValue: " Commission "
-        // },
-        // {
-        //     Header: "Revenue",
-        //     accessor: "",
-        //     sortable: true,
-        //     show: true,
-        //     displayValue: " Revenue "
-        // },
+        {
+            Header: "Commission(%)",
+            accessor: "commission",
+            sortable: false,
+            show: true,
+            displayValue: " Commission "
+        },
         {
             Header: "Status",
             show: true,
