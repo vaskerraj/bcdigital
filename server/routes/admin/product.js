@@ -190,4 +190,16 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Something went wrong. Please try again later." })
         }
     });
+    server.put("/api/admin/product/commission", requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), async (req, res) => {
+        const { productId, amount } = req.body;
+        try {
+            await Product.findByIdAndUpdate(productId,
+                {
+                    '$set': { point: amount }
+                });
+            return res.status(201).json({ msg: 'success' });
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
 };

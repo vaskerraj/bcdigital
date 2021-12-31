@@ -6,6 +6,7 @@ const Banner = mongoose.model('Banner');
 const DefaultAddress = mongoose.model('DefaultAddress');
 const ShippingCost = mongoose.model('ShippingPlan');
 const Coupon = mongoose.model('Coupon');
+const Seller = mongoose.model('Seller');
 
 const admin = require('../../firebase/firebaseAdmin');
 const { requiredAuth, checkRole } = require('../middlewares/auth');
@@ -144,7 +145,9 @@ module.exports = function (server) {
     server.get('/api/seller/:id', async (req, res) => {
         const sellerId = req.params.id;
         try {
-            const sellers = await Users.findById(sellerId).select('_id name username email mobile picture role sellerRole addresses status createdAt');
+            const sellers = await Seller.findOne({ userId: sellerId })
+                .populate('userId')
+                .select('commission status');
             return res.status(200).json(sellers);
         } catch (error) {
             return res.status(422).json({ error: "Something went wrong. Please try again later." })

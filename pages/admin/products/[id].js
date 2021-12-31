@@ -5,14 +5,16 @@ import { useSelector } from 'react-redux';
 import axios from 'axios';
 import baseUrl from '../../../helpers/baseUrl';
 
-import { message, Table, Image, Tag, Button, Switch } from 'antd';
+import { message, Table, Image, Tag, Button, Switch, Input } from 'antd';
 import { CheckOutlined, CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 
+import { useForm, Controller } from 'react-hook-form';
 import moment from 'moment';
 
 import ShowMore from 'react-show-more-button';
 
 import Wrapper from '../../../components/admin/Wrapper';
+import { checkProductDiscountValidity } from '../../../helpers/productDiscount';
 
 // config antdesign message
 message.config({
@@ -29,10 +31,18 @@ const OverAllProductDetails = ({ product }) => {
     const [sellerData, setSellerData] = useState([]);
     const [sellerLoading, setSellerLoading] = useState(false);
 
+    // change commission rate
+
+    const [changeCommissionRate, setChangeCommissionRate] = useState(false);
+    const [commissionPercantage, setCommissionPercantage] = useState(0);
+
     const router = useRouter();
     const { status } = router.query;
 
     const { adminAuth } = useSelector(state => state.adminAuth);
+
+
+    const { register, handleSubmit, errors, reset, getValues, trigger, control } = useForm();
 
     useEffect(() => {
         if (product) {
@@ -45,6 +55,7 @@ const OverAllProductDetails = ({ product }) => {
                 try {
                     const { data } = await axios.get(`${process.env.api}/api/seller/${product.createdBy}`);
                     if (data) {
+                        setCommissionPercantage(product.point !== undefined ? product.point : data.commission);
                         setSellerLoading(false);
                         setSellerData(data);
                     }
@@ -63,6 +74,49 @@ const OverAllProductDetails = ({ product }) => {
             getSellerInfo();
         }
     }, [product]);
+
+    const onSubmitCommissionChange = async (inputData) => {
+        console.log(inputData)
+        const amount = inputData.commission;
+        console.log(amount)
+        try {
+            const { data } = await axios.put(`${process.env.api}/api/admin/product/commission`, {
+                productId: product._id,
+                amount
+            },
+                {
+                    headers: {
+                        token: adminAuth.token,
+                    }
+                }
+            );
+            if (data.msg === 'success') {
+                message.success({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">Success</div>
+                            Commission rate succssfully update for this product.
+                        </div>
+                    ),
+                    className: 'message-warning',
+                });
+                setTimeout(() => {
+                    router.reload(true);
+                }, 2000)
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
+    }
+
 
     const columns = [
         {
@@ -88,15 +142,29 @@ const OverAllProductDetails = ({ product }) => {
             key: "price",
         },
         {
-            title: 'Discount(%)',
+            title: 'Discount',
             key: 'discount',
-            render: (text, record) => <>{record.discount ? record.discount : '-'}</>,
+            render: (text, record) => <>{checkProductDiscountValidity(record.promoStartDate, record.promoEndDate) ? record.discount : '-'}</>,
 
         },
         {
             title: 'Retail Price',
-            dataIndex: "finalPrice",
             key: 'finalPrice',
+            render: (text, record) => <>{checkProductDiscountValidity(record.promoStartDate, record.promoEndDate) === true ?
+                record.finalPrice
+                : record.price}</>,
+        },
+        {
+            title: 'Commission Amt',
+            render: (text, record) => <>{
+                (
+                    checkProductDiscountValidity(record.promoStartDate, record.promoEndDate) === true ?
+                        record.finalPrice
+                        : record.price
+                        *
+                        commissionPercantage
+                ) / 100}
+            </>
         },
         {
             title: 'Orders',
@@ -264,28 +332,95 @@ const OverAllProductDetails = ({ product }) => {
                             ?
                             <div className="d-block">
                                 <div className="d-block" >
-                                    <span className="font14" style={{ fontWeight: 500 }}>Name</span>: {sellerData.name}
-                                    {sellerData.sellerRole === 'own' &&
+                                    <span className="font14" style={{ fontWeight: 500 }}>Name</span>: {sellerData.userId?.name}
+                                    {sellerData.userId?.sellerRole === 'own' &&
                                         <span className="badge bg-warning ml-3">Own</span>
                                     }
                                 </div>
                                 <div className="d-block" >
-                                    <span className="font14" style={{ fontWeight: 500 }}>Mobile</span>: {sellerData.mobile}
+                                    <span className="font14" style={{ fontWeight: 500 }}>Mobile</span>: {sellerData.userId?.mobile}
                                 </div>
                                 <div className="d-block" >
-                                    <span className="font14" style={{ fontWeight: 500 }}>Email</span>: {sellerData.email}
+                                    <span className="font14" style={{ fontWeight: 500 }}>Email</span>: {sellerData.userId?.email}
                                 </div>
                                 <div className="d-block" >
-                                    <span className="font14" style={{ fontWeight: 500 }}>Join Date</span>: {moment(sellerData.createdAt).format("DD MMM YYYY")}
+                                    <span className="font14" style={{ fontWeight: 500 }}>Join Date</span>: {moment(sellerData.userId?.createdAt).format("DD MMM YYYY")}
                                 </div>
                                 <div className="d-block" >
-                                    <span className="font14" style={{ fontWeight: 500 }}>Status</span>: {sellerData.status === 'approved'
+                                    <span className="font14" style={{ fontWeight: 500 }}>Status</span>: {sellerData.status?.title === 'approved'
                                         ?
                                         <span span className="badge bg-success ml-3">Approved</span>
                                         :
                                         <span span className="badge bg-danger ml-3">UnApproved</span>
                                     }
                                 </div>
+                                <div className="d-block border-top font14 mt-2 pt-2" style={{ fontWeight: 500 }}>
+                                    <span className="mr-2">
+                                        Commission Rate:
+                                    </span>
+                                    <span className="font16">
+                                        {sellerData.commission} %
+                                    </span>
+                                </div>
+                            </div>
+                            :
+                            <div className="text-center mt-2 mb-2">
+                                <LoadingOutlined size={30} />
+                            </div>
+                        }
+                    </div>
+                    <div className="mt-4" style={{ border: '2px solid #ddd', borderRadius: 8, padding: 10 }}>
+                        <div className="font14" style={{ fontWeight: 700 }}>Change Commission Rate For Product?</div>
+                        {!sellerLoading ?
+                            <div className="d-block">
+                                <form onSubmit={handleSubmit(onSubmitCommissionChange)}>
+                                    <div className="d-flex align-item-center mt-3">
+                                        <div className="ml-3">
+                                            <div className="d-block  font-weight-bold">
+                                                {!changeCommissionRate ?
+                                                    <>
+                                                        {product.point ? product.point : sellerData.commission} %
+                                                        <span className="text-info font-weight-normal ml-3 cp"
+                                                            onClick={() => setChangeCommissionRate(true)}
+                                                        >
+                                                            Change
+                                                        </span>
+                                                    </>
+                                                    :
+                                                    <>
+
+                                                        <div className="d-flex">
+                                                            <Controller
+                                                                name="commission"
+                                                                defaultValue={product.point ? product.point : sellerData.commission}
+                                                                control={control}
+                                                                render={({ onChange, value, onBlur, onFocus, ref }) => (
+                                                                    <Input allowClear
+                                                                        name="commission"
+                                                                        type="number"
+                                                                        autoComplete="none"
+                                                                        value={value}
+                                                                        onChange={(e) => {
+                                                                            onChange(e);
+                                                                        }
+                                                                        }
+
+                                                                    />)}
+                                                                rules={{ required: true, maxLength: 10 }}
+                                                            />
+                                                            <button type="submit" className="btn btn-lg btn-outline-info ml-3">
+                                                                Save
+                                                            </button>
+                                                        </div>
+                                                        {errors.commision && errors.commision.type === "required" && (
+                                                            <p className="d-block errorMsg">Provide commission rate</p>
+                                                        )}
+                                                    </>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
                             :
                             <div className="text-center mt-2 mb-2">

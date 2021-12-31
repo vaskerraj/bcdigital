@@ -90,6 +90,9 @@ const ProductSchema = new mongoose.Schema({
             emum: ["Battery", "Liquid", "Flamable", "None"]
         }]
     },
+    point: {
+        type: String
+    },
     createdBy: {
         type: ObjectId,
         ref: 'Users'
