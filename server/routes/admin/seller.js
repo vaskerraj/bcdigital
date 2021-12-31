@@ -386,11 +386,24 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Something went wrong. Please try again later." })
         }
     });
+    server.put("/api/admin/seller/commission", requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin']), async (req, res) => {
+        const { sellerId, amount } = req.body;
+        try {
+            await Seller.findByIdAndUpdate(sellerId,
+                {
+                    commission: amount
+                });
+            return res.status(201).json({ msg: 'success' });
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
 
     server.get('/api/admin/seller/verify', requiredAuth, checkRole(['admin']), async (req, res) => {
         try {
             const seller = await Seller.find(
                 {
+                    stepComplete: 'true',
                     $or: [
                         { documentVerify: 'pending' },
                         { documentVerify: 're_uploaded' },

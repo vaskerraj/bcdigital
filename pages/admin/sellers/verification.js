@@ -70,7 +70,6 @@ const SellerVerification = ({ seller }) => {
             render: (text) => <>{moment(text).format("DD MMM YYYY")}</>,
         },
     ];
-    console.log(commissionStatus)
     const sellerVerifyHandler = async (sellerId, type, status) => {
         try {
             const { data } = await axiosApi.put('/api/admin/seller/verify', { sellerId, type, status },
@@ -112,7 +111,6 @@ const SellerVerification = ({ seller }) => {
     }
 
     const commissionHandler = async (sellerId) => {
-        console.log(commissionAmt);
         try {
             const { data } = await axiosApi.put('/api/admin/seller/commission', { sellerId, amount: commissionAmt },
                 {
