@@ -3,6 +3,7 @@ const Product = mongoose.model('Product');
 const Cart = mongoose.model('Cart');
 const ShippingCost = mongoose.model('ShippingPlan');
 const Coupon = mongoose.model('Coupon');
+const Seller = mongoose.model('Seller');
 
 const { requiredAuth, checkRole } = require('../middlewares/auth');
 
@@ -50,7 +51,7 @@ module.exports = function (server) {
                         },
                         { 'products.$': 1 }
                     )
-                        .select('_id products createdBy').lean()
+                        .select('_id products createdBy point').lean()
                         .populate({
                             path: 'createdBy',
                             select: '_id sellerRole',
@@ -128,10 +129,39 @@ module.exports = function (server) {
                 return res.status(200).json({ msg: 'error' });
             }
 
+            let comissionPoint = 0;
+            const getCommissionAmt = async (product, seller, productQty, point) => {
+                if (point === undefined) {
+                    const sellers = await Seller.findOne({ userId: seller._id }).select('commission');
+                    comissionPoint = sellers.commission === undefined ? 0 : sellers.commission;
+                } else {
+                    comissionPoint = point
+                }
+                const finalPrice = checkProductDiscountValidity(product.products[0].promoStartDate, product.products[0].promoEndDate) === true
+                    ? product.products[0].finalPrice
+                    :
+                    product.products[0].price;
+                const totalPrice = finalPrice * productQty;
+                return Math.floor((totalPrice * comissionPoint) / 100);
+            }
+            let productWithComission = [];
+            await Promise.all(
+                combineProductWithCartItems.map(async (item) => {
+                    const proObj = new Object();
+                    proObj['_id'] = item._id;
+                    proObj['products'] = item.products;
+                    proObj['createdBy'] = item.createdBy;
+                    proObj['pointAmt'] = await getCommissionAmt(item, item.createdBy, item.productQty, item.point);
+                    proObj['productId'] = item.productId;
+                    proObj['productQty'] = item.productQty;
+                    productWithComission.push(proObj);
+                }));
+
+
             // combine cart details and products details
             let newObj = new Object();
             let newArray = [];
-            newObj['products'] = combineProductWithCartItems;
+            newObj['products'] = productWithComission;
             newObj['cartDetails'] = cartDetails;
             newArray.push(newObj)
 

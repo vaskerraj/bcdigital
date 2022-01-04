@@ -22,6 +22,9 @@ const packageSchema = new mongoose.Schema({
             type: Number,
             require: true
         },
+        pointAmount: {
+            type: String,
+        },
         orderStatus: {
             type: String,
             default: 'not_confirmed',
@@ -91,6 +94,9 @@ const packageSchema = new mongoose.Schema({
         type: Number,
         require: true
     },
+    totalPointAmount: {
+        type: String,
+    }
 }, { timestamps: true });
 
 mongoose.models.Package || mongoose.model('Package', packageSchema)

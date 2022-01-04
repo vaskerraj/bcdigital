@@ -7,6 +7,7 @@ const ShippingCost = mongoose.model('ShippingPlan');
 const Coupon = mongoose.model('Coupon');
 const User = mongoose.model('Users');
 const Payment = mongoose.model('Payment');
+const Seller = mongoose.model('Seller');
 
 const { requiredAuth, checkRole, checkAdminRole } = require('../middlewares/auth');
 
@@ -100,7 +101,7 @@ module.exports = function (server) {
                         {
                             'products.$': 1
                         })
-                        .select('_id products createdBy').lean()
+                        .select('_id products createdBy point').lean()
                         .populate('createdBy');
                     productsCartList.push(cartProducts);
                 })
@@ -194,6 +195,10 @@ module.exports = function (server) {
                 await Cart.deleteOne({ 'orderedBy': req.user._id });
             }
 
+            // 
+            const totalComissionAmount = (product) => {
+                return product.reduce((a, c) => (a + c.pointAmount), 0);
+            }
             // save packages base on unique seller
             packages.map(async package => {
                 const newPackages = new Package({
@@ -201,6 +206,7 @@ module.exports = function (server) {
                     products: package.products,
                     seller: package.seller,
                     sellerRole: package.sellerRole,
+                    totalPointAmount: totalComissionAmount(package.products),
                     shippingCharge: package.shippingCharge,
                     packageTotal: package.packageTotal,
                     paymentType
@@ -432,6 +438,8 @@ module.exports = function (server) {
                     await Cart.deleteOne({ 'orderedBy': req.user._id });
                     return res.status(200).json({ msg: 'success' });
                 }
+
+
             } else {
                 const payment = new Payment({
                     orderId,

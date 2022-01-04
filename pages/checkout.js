@@ -130,9 +130,6 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
         }
     }, [shippingPlans, products, cartDetails]);
 
-    const unqiueSellers = [...new Map(products.map(item =>
-        [item.createdBy['_id'], item.createdBy])).values()];
-
     const getProductInfoBaseOnUniqueSeller = (products) => {
         // make price fix cause price may varify after discount expired or seller change its price anytime
         let cartItemWithFixPrice = [];
@@ -146,6 +143,10 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
             productObj['productId'] = item.productId;
             productObj['productQty'] = item.productQty;
             productObj['price'] = Number(finalPrice) * Number(item.productQty);
+
+            //////////////////////////////////
+            productObj['pointAmount'] = item.pointAmt;
+            ////////////////////////////
             cartItemWithFixPrice.push(productObj);
         });
         return cartItemWithFixPrice;
@@ -153,6 +154,8 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
 
     const cartItemWithFixPriceForOrder = getProductInfoBaseOnUniqueSeller(products);
 
+    const unqiueSellers = [...new Map(products.map(item =>
+        [item.createdBy['_id'], item.createdBy])).values()];
 
     let packagesWithProducts = [];
     unqiueSellers.map(seller => {
