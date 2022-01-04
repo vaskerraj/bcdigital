@@ -26,7 +26,6 @@ message.config({
 });
 
 const OwnshopOrder = ({ ordersData }) => {
-    console.table(ordersData)
     const [orders, setOrders] = useState([]);
     const [activeTab, setActiveTab] = useState('not_confirmed');
     const [shippedModalVisible, setShippedModalVisible] = useState(false);
@@ -41,12 +40,12 @@ const OwnshopOrder = ({ ordersData }) => {
         return router.push(router.asPath)
     }
 
-    const updateOrderStatus = async (status, itemid, tackingId = null) => {
+    const updateOrderStatus = async (status, itemId, tackingId = null) => {
         try {
             const { data } = await axiosApi.put(`/api/admin/orderstatus`,
                 {
                     status,
-                    itemid,
+                    itemId,
                     tackingId
                 },
                 {
@@ -102,8 +101,8 @@ const OwnshopOrder = ({ ordersData }) => {
                 onCancel: onModalCancel
             });
         } else {
+            setOrderItemId(itemId);
             setShippedModalVisible(true);
-            setOrderItemId(itemId)
         }
     }
 
@@ -176,7 +175,7 @@ const OwnshopOrder = ({ ordersData }) => {
 
                             <div className="d-flex justify-content-between">
                                 <div>
-                                    Name: {item.seller.name}
+                                    Name: {original.seller?.name}
                                 </div>
                             </div>
                             <div className="d-flex justify-content-between align-items-center border-top mt-3 pb-2 pt-3">
@@ -217,32 +216,32 @@ const OwnshopOrder = ({ ordersData }) => {
                         Coupon: {original.coupon ? original.coupon.name : 'N/A'}
                     </div>
                     <div className="d-block">
-                        Coupon Discount: Rs.{original.couponDiscount}
+                        Coupon Discount: Rs.{original.orders.couponDiscount}
                     </div>
                     <div className="d-block">
-                        Shipping: Rs.{original.shippingCharge}
+                        Shipping: Rs.{original.orders.shippingCharge}
                     </div>
                     <div className="d-block font-weight-bold text-right">
-                        Grand Total: <span className="text-success font16 ">Rs.{original.grandTotal}</span>
+                        Grand Total: <span className="text-success font16 ">Rs.{original.orders.grandTotal}</span>
                     </div>
 
                     <div className="border-bottom mt-2 pt-2 font16" style={{ fontWeight: 500 }}>
                         Delivery Info:
                     </div>
                     <div className="d-block">
-                        Mobile: {original.deliveryMobile}
+                        Mobile: {original.orders.deliveryMobile}
                     </div>
                     <div className="d-block">
-                        Ordered By: {original.orderedBy.name}
+                        Ordered By: {original.orders.orderedBy?.name}
                     </div>
                     <div className="d-block">
                         Ordered At: {moment(original.createdAt).format("DD MMM YYYY HH:mm")}
                     </div>
                     <div className="d-block">
-                        Shipping Plan: {original.shipping.name}
+                        Shipping Plan: {original.orders.shipping?.name}
                     </div>
                     <div className="d-block">
-                        Shipping Agent: {original.shipping.shipAgentId.name}
+                        Shipping Agent: {original.orders.shipping?.shipAgentId.name}
                     </div>
                 </div>
             )
