@@ -12,6 +12,14 @@ export const orderStatusText = (status) => {
             return "For Delivery"
         case 'delivered':
             return "Delivered"
+        case 'cancelled':
+            return "Cancelled"
+        case 'cancelled_by_admin':
+            return "Cancelled By Admin"
+        case 'cancelled_by_seller':
+            return "Cancelled By Seller"
+        case 'cancelled_by_user':
+            return "Cancelled By User"
         default:
             status;
     }
@@ -21,7 +29,7 @@ export const paymentTypeText = (type) => {
     switch (type) {
         case 'cashondelivery':
             return 'Cash On Delivery';
-        case 'eswea':
+        case 'esewa':
             return 'e-Sewa';
         case 'card':
             return 'Card';
