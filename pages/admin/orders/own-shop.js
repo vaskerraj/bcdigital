@@ -134,9 +134,59 @@ const OwnshopOrder = ({ ordersData }) => {
         }
     }
 
-    const oderStatusOnChange = (status, itemId, packageId) => {
+    const cancelOrderProductByAdmin = async (orderId, packageId, productId, paymentStatus, paymentType) => {
+        try {
+            const { data } = await axiosApi.put(`/api/admin/cancelorder`,
+                {
+                    orderId,
+                    packageId,
+                    productId,
+                    paymentStatus,
+                    paymentType
+                },
+                {
+                    headers: {
+                        token: adminAuth.token
+                    }
+                });
+            if (data) {
+                message.success({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">Success</div>
+                            {
+                                paymentStatus === 'cashondelivery' ?
+                                    'Product has been succssfully cancelled but no need to proceed for refund.'
+                                    :
+                                    'Product has been succssfully cancelled and proceed for refund.'
+                            }
+
+                        </div>
+                    ),
+                    className: 'message-success',
+                });
+                return router.reload(true)
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
+    }
+
+    const oderStatusOnChange = (status, itemId, orderId, packageId, paymentStatus, paymentType) => {
         const onModalConfirm = () => {
-            updateOrderStatus(status, itemId, packageId)
+            if (status !== 'cancelled') {
+                updateOrderStatus(status, itemId, packageId)
+            } else {
+                cancelOrderProductByAdmin(orderId, packageId, itemId, paymentStatus, paymentType)
+            }
         }
         const onModalCancel = () => {
             return router.push(router.asPath);

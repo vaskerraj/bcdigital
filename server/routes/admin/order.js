@@ -260,4 +260,101 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
+
+    server.put('/api/admin/cancelorder', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
+        const { orderId, packageId, productId, paymentStatus, paymentType } = req.body;
+        try {
+            const orderStatusLog = {
+                status: 'cancelled_by_admin',
+                statusChangeBy: req.user._id,
+                statusChangeDate: new Date()
+            }
+            const packageUpdate = await Package.findOneAndUpdate({
+                _id: packageId,
+                'products._id': productId
+            },
+                {
+                    $set: {
+                        "products.$.orderStatus": 'cancelled_by_admin'
+                    },
+                    $push: {
+                        'products.$.orderStatusLog': orderStatusLog
+                    }
+                },
+                {
+                    new: true
+                });
+
+            //send email
+            if (packageUpdate) {
+
+                if (paymentStatus === 'paid' && paymentType !== 'cashondelivery') {
+                    // for productTotal
+                    const packageProductParticular = await Package.findOne(
+                        {
+
+                            _id: packageId,
+                            orderId,
+                            'products._id': productId,
+                        },
+                        {
+                            'products.$': 1
+                        })
+                        .lean();
+
+                    const packageProducts = await Package.findOne(
+                        {
+
+                            _id: packageId,
+                            orderId,
+                            'products._id': productId,
+                        })
+                        .lean()
+                        .populate('orderId', 'orderedBy');
+
+                    // check number of product at package
+                    const totalProductAtPackage = packageProductParticular.products.length;
+
+                    const totalCancelProductAtPackage = packageProducts.products.length;
+
+                    const productTotalAmount = packageProductParticular.products.reduce((a, c) => (a + c.productQty * c.price), 0);
+
+                    // return shipping charge if all package had been cancelled
+                    const shippingChargeOnCancel = totalProductAtPackage === totalCancelProductAtPackage ?
+                        packageProducts.shippingCharge
+                        :
+                        0;
+
+                    const totalRefundAmount = parseInt(productTotalAmount) + parseInt(shippingChargeOnCancel);
+
+                    // refund status
+                    const refundStatus = {
+                        status: 'progress',
+                        statusChangeBy: req.user._id,
+                        statusChangeDate: new Date()
+                    }
+                    // save refund data
+                    const newRefund = new Refund({
+                        orderId,
+                        packageId,
+                        amount: totalRefundAmount,
+                        refundType: 'cancel',
+                        paymentId: packageProducts.paymentId,
+                        paymentStatus,
+                        paymentType,
+                        refundTo: packageProducts.orderId.orderedBy,
+                        status: 'progress',
+                        statusLog: refundStatus
+                    });
+                    await newRefund.save();
+
+                    return res.status(200).json({ msg: 'success' });
+                } else {
+                    return res.status(200).json({ msg: 'success' });
+                }
+            }
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
 }
