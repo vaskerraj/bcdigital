@@ -15,6 +15,7 @@ import moment from 'moment';
 import { useForm } from 'react-hook-form';
 
 import { orderStatusText, paymentTypeText, generateTrackingId } from '../../../helpers/functions'
+import { checkProductDiscountValidity } from '../../../helpers/productDiscount';
 import Wrapper from '../../../components/admin/Wrapper';
 import { ReactTable } from '../../../components/helpers/ReactTable';
 
@@ -28,17 +29,13 @@ message.config({
 const OwnshopOrder = ({ ordersData }) => {
     const [orders, setOrders] = useState([]);
     const [activeTab, setActiveTab] = useState('not_confirmed');
-    const [shippedModalVisible, setShippedModalVisible] = useState(false);
-    const [orderItemId, setOrderItemId] = useState('');
+    const [shippingIdModalVisible, setShippingIdModalVisible] = useState(false);
+    const [allProductIdForPackedUpdate, setAllProductIdForPackedUpdate] = useState([]);
+    const [orderId, setOrderId] = useState('');
 
     const { adminAuth } = useSelector(state => state.adminAuth);
 
     const { register, handleSubmit, errors, } = useForm();
-
-    const handleShippedModalCancel = () => {
-        setShippedModalVisible(false);
-        return router.push(router.asPath)
-    }
 
     const updateOrderStatus = async (status, itemId, tackingId = null) => {
         try {
@@ -54,19 +51,34 @@ const OwnshopOrder = ({ ordersData }) => {
                     }
                 });
             if (data) {
-                message.success({
-                    content: (
-                        <div>
-                            <div className="font-weight-bold">Success</div>
-                            Oder status succssfully updated.
-                        </div>
-                    ),
-                    className: 'message-success',
-                });
-                setActiveTab(status);
-                setTimeout(() => {
-                    setActiveTab(activeTab);
-                }, 200);
+
+                if (status === 'packed') {
+                    setShippingIdModalVisible(false);
+                    message.success({
+                        content: (
+                            <div>
+                                <div className="font-weight-bold">Success</div>
+                                Please print shipping level to process further.
+                            </div>
+                        ),
+                        className: 'message-success',
+                    });
+                    return router.push(`/admin/orders/print/${orderId}`);
+                } else {
+                    message.success({
+                        content: (
+                            <div>
+                                <div className="font-weight-bold">Success</div>
+                                Oder status succssfully updated.
+                            </div>
+                        ),
+                        className: 'message-success',
+                    });
+                    setActiveTab(status);
+                    setTimeout(() => {
+                        setActiveTab(activeTab);
+                    }, 200);
+                }
 
                 return router.push(router.asPath);
             }
@@ -83,26 +95,89 @@ const OwnshopOrder = ({ ordersData }) => {
         }
     }
 
-    const oderStatusOnChange = (status, itemId) => {
+    const updateOrderStatusTrackingId = async (trackingId, packageId, productId) => {
+        try {
+            const { data } = await axiosApi.put(`/api/admin/orderstatus/trackingid`,
+                {
+                    trackingId,
+                    packageId,
+                    productId
+                },
+                {
+                    headers: {
+                        token: adminAuth.token
+                    }
+                });
+            if (data) {
+                setShippingIdModalVisible(false);
+                message.success({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">Success</div>
+                            Please print shipping level to process further.
+                        </div>
+                    ),
+                    className: 'message-success',
+                });
+                return router.push(`/admin/orders/print/${packageId}`);
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
+    }
+
+    const oderStatusOnChange = (status, itemId, packageId) => {
         const onModalConfirm = () => {
-            updateOrderStatus(status, itemId)
+            updateOrderStatus(status, itemId, packageId)
         }
         const onModalCancel = () => {
             return router.push(router.asPath);
         }
-        if (status !== 'shipped') {
+        Modal.confirm({
+            title: 'Confirm',
+            icon: <ExclamationCircleOutlined />,
+            content: 'Are you sure to change order status to `' + orderStatusText(status) + '`',
+            okText: 'Sure',
+            cancelText: 'Cancel',
+            onOk: onModalConfirm,
+            onCancel: onModalCancel
+        });
+    }
+
+    const checkProductStatusWhileReadyToShip = async (products, packageId) => {
+        const allStatus = products.map(item => item.orderStatus);
+        const productStatusNotConfirm = allStatus.includes('not_confirmed');
+
+        const onModalConfirm = () => {
+            return router.push(router.asPath);
+        }
+        const onModalCancel = () => {
+            return router.push(router.asPath);
+        }
+
+        if (productStatusNotConfirm) {
             Modal.confirm({
                 title: 'Confirm',
                 icon: <ExclamationCircleOutlined />,
-                content: 'Are you sure to change order status to `' + orderStatusText(status) + '`',
+                content: 'You have another product with this order.Please confirm or cancel that product and proceed.',
                 okText: 'Sure',
                 cancelText: 'Cancel',
                 onOk: onModalConfirm,
                 onCancel: onModalCancel
             });
         } else {
-            setOrderItemId(itemId);
-            setShippedModalVisible(true);
+            const allProductId = products.map(item => item._id);
+            setAllProductIdForPackedUpdate(allProductId);
+            setShippingIdModalVisible(true);
+            setOrderId(packageId);
         }
     }
 
@@ -114,7 +189,7 @@ const OwnshopOrder = ({ ordersData }) => {
                 <div className="pt-4 pb-4">
                     <div className="d-block">
                         <Tag color="black">
-                            Order Id: {original._id.toUpperCase()}
+                            Order Id: {original.orders._id.toUpperCase()}
                         </Tag>
                     </div>
                     {original.products.map(item => (
@@ -136,9 +211,11 @@ const OwnshopOrder = ({ ordersData }) => {
                                 </div>
                                 <div>
                                     Discount:
-                                    {item.products[0].discount ? `${item.products[0].discount} %` : 'N/A'}
+                                    {
+                                        checkProductDiscountValidity(item.products[0].promoStartDate, item.products[0].promoEndDate) ? item.products[0].discount : 'N/A'
+                                    }
                                     <div className="font13 text-muted">
-                                        {item.products[0].discount ?
+                                        {checkProductDiscountValidity(item.products[0].promoStartDate, item.products[0].promoEndDate) ?
                                             `${moment(item.products[0].promoStartDate).format("DD MMMM YYYY")}
                                             -
                                             ${moment(item.products[0].promoEndDate).format("DD MMM YYYY")}`
@@ -148,7 +225,16 @@ const OwnshopOrder = ({ ordersData }) => {
                                     </div>
                                 </div>
                                 <div>
-                                    Sell Price: <span className="text-success font15 font-weight-bold">Rs.{item.products[0].finalPrice}</span>
+                                    Sell Price:
+                                    <span className="text-success font15 font-weight-bold">
+                                        Rs.
+                                        {checkProductDiscountValidity(item.products[0].promoStartDate, item.products[0].promoEndDate)
+                                            ?
+                                            item.products[0].finalPrice
+                                            :
+                                            item.products[0].price
+                                        }
+                                    </span>
                                 </div>
                             </div>
                             <>
@@ -164,7 +250,7 @@ const OwnshopOrder = ({ ordersData }) => {
                                     <div>
                                         Status:
                                         <span className="badge bg-success ml-2">
-                                            {original.products[0].paymentStatus === 'notpaid' ? 'Not Paid' : 'Paid'}
+                                            {original.paymentStatus === 'notpaid' ? 'Not Paid' : 'Paid'}
                                         </span>
                                     </div>
                                 </div>
@@ -185,16 +271,19 @@ const OwnshopOrder = ({ ordersData }) => {
                                         {orderStatusText(item.orderStatus)}
                                     </Tag>
                                 </div>
-                                <div>
-                                    <select className="form-control" defaultValue={item.orderStatus} onChange={(e) => oderStatusOnChange(e.target.value, item._id)}>
-                                        <option value="confirmed">Confirmed</option>
-                                        <option value="packed">Packed</option>
-                                        <option value="shipped">Shipped</option>
-                                        <option value="Delivered">Delivered</option>
-                                        <option value="cancelled">Cancelled</option>
-                                        <option value="not_confirmed" disabled={true}>Not Confirmed</option>
-                                    </select>
-                                </div>
+                                {item.orderStatus === 'not_confirmed' &&
+                                    <div>
+                                        <select
+                                            className="form-control"
+                                            defaultValue={item.orderStatus}
+                                            onChange={(e) => oderStatusOnChange(e.target.value, item._id, original.orders._id, original._id, original.paymentStatus, original.paymentType)}
+                                        >
+                                            <option value="confirmed">Confirmed</option>
+                                            <option value="cancelled">Cancelled</option>
+                                            <option value="not_confirmed" disabled={true}>Not Confirmed</option>
+                                        </select>
+                                    </div>
+                                }
                             </div>
                         </div>
                     ))}
@@ -245,6 +334,22 @@ const OwnshopOrder = ({ ordersData }) => {
                     </div>
                 </div>
             )
+        },
+        {
+            Header: "Action",
+            show: true,
+            Cell: ({ row: { original } }) => (
+                <div className="text-right">
+                    {activeTab === 'confirmed'
+                        ?
+                        <button type="button" className="btn btn-primary" onClick={() => checkProductStatusWhileReadyToShip(original.products, original._id)}>
+                            Ready to Ship
+                        </button>
+                        :
+                        "-"
+                    }
+                </div>
+            )
         }
     ]);
 
@@ -257,16 +362,20 @@ const OwnshopOrder = ({ ordersData }) => {
         }
     }, [activeTab, ordersData]);
 
+    const handleShippedModalCancel = () => {
+        setShippingIdModalVisible(false);
+        return router.push(router.asPath)
+    }
     const onTackingIdSubmit = async (inputdata) => {
         const trackingId = inputdata.trackingId;
-        updateOrderStatus('shipped', orderItemId, trackingId);
+        updateOrderStatusTrackingId(trackingId, orderId, allProductIdForPackedUpdate);
     }
 
     return (
         <>
             <Modal
-                title="Add Tracking Id & Update Order Status to `Shipped`"
-                visible={shippedModalVisible}
+                title="Add Tracking Id & Print Shipping Label"
+                visible={shippingIdModalVisible}
                 footer={null}
                 closable={false}
                 destroyOnClose={true}
@@ -295,7 +404,7 @@ const OwnshopOrder = ({ ordersData }) => {
                         </button>
 
                         <button type="submit" className="btn btn-lg c-btn-primary font16 mt-4">
-                            SAVE & UPDATE
+                            SAVE & PRINT
                         </button>
                     </div>
                 </form>
@@ -315,7 +424,7 @@ const OwnshopOrder = ({ ordersData }) => {
                         <div className={`activebar ${activeTab === 'confirmed' ? 'active' : ''}`}></div>
                     </div>
                     <div className="filter-tab ml-4 cp" onClick={() => setActiveTab('packed')}>
-                        Packed
+                        Packed(Ready to Ship)
                         <div className={`activebar ${activeTab === 'packed' ? 'active' : ''}`}></div>
                     </div>
                     <div className="filter-tab ml-4 cp" onClick={() => setActiveTab('shipped')}>

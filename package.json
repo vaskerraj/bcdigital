@@ -11,6 +11,7 @@
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^27.1.0",
     "@ckeditor/ckeditor5-react": "^3.0.2",
+    "@createnextapp/react-barcode": "^1.1.1",
     "@firebase/app-types": "^0.6.2",
     "antd": "^4.12.3",
     "array-move": "^3.0.1",
@@ -19,6 +20,7 @@
     "bootstrap": "^5.0.0-alpha1",
     "child_process": "^1.0.2",
     "cross-env": "^7.0.3",
+    "easyqrcodejs": "^4.4.10",
     "express": "^4.17.1",
     "firebase": "^8.6.7",
     "firebase-admin": "^9.9.0",
@@ -44,6 +46,7 @@
     "react-sortable-hoc": "^2.0.0",
     "react-table": "^7.6.3",
     "react-thunk": "^1.0.0",
+    "react-to-print": "^2.14.3",
     "react-zoom-slider": "^0.1.0",
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0",
