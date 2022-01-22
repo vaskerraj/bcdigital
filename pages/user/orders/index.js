@@ -232,6 +232,17 @@ const Orders = ({ orders }) => {
                                                                                                 <button className="btn btn-warning btn-sm">Write a Review</button>
                                                                                             </div>
                                                                                         }
+                                                                                        {
+                                                                                            onlyMobile && item.orderStatus === 'not_confirmed' || item.orderStatus === 'confirmed' || item.orderStatus === 'packed'
+                                                                                                ?
+                                                                                                <div className="d-block text-right mt-1 mr-2">
+                                                                                                    <Link href={`/user/cancel/request?orderId=${order._id}&id=${item.products[0]._id}&packageId=${pack._id}`}>
+                                                                                                        <button className="btn btn-warning btn-sm">Cancel</button>
+                                                                                                    </Link>
+                                                                                                </div>
+                                                                                                :
+                                                                                                ''
+                                                                                        }
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
@@ -250,6 +261,17 @@ const Orders = ({ orders }) => {
                                                                                         <button className="btn btn-lg btn-warning">Write a Review</button>
                                                                                     </div>
                                                                                 }
+                                                                                {
+                                                                                    item.orderStatus === 'not_confirmed' || item.orderStatus === 'confirmed' || item.orderStatus === 'packed'
+                                                                                        ?
+                                                                                        <div className="d-none d-sm-block d-md-none d-lg-none mt-3">
+                                                                                            <Link href={`/user/cancel/request?orderId=${order._id}&id=${item.products[0]._id}&packageId=${pack._id}`}>
+                                                                                                <button className="btn btn-warning btn-sm">Cancel</button>
+                                                                                            </Link>
+                                                                                        </div>
+                                                                                        :
+                                                                                        ''
+                                                                                }
                                                                             </div>
                                                                             <div className="d-none d-md-block col-md-4 text-right">
                                                                                 {item.orderStatus === 'delivered' && item.paymentStatus === 'paid'
@@ -258,6 +280,16 @@ const Orders = ({ orders }) => {
                                                                                         <button className="btn c-btn-primary">Write a Review</button>
                                                                                     </div>
                                                                                     : ''
+                                                                                }
+                                                                                {
+                                                                                    item.orderStatus === 'not_confirmed' || item.orderStatus === 'confirmed' || item.orderStatus === 'packed' ?
+                                                                                        <div className="d-block text-right mt-1 mr-2">
+                                                                                            <Link href={`/user/cancel/request?orderId=${order._id}&id=${item.products[0]._id}&packageId=${pack._id}`}>
+                                                                                                <button className="btn btn-outline-primary btn-md">Cancel</button>
+                                                                                            </Link>
+                                                                                        </div>
+                                                                                        :
+                                                                                        ''
                                                                                 }
                                                                             </div>
                                                                         </div>

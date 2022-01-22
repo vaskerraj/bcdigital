@@ -7,7 +7,8 @@ const ShippingCost = mongoose.model('ShippingPlan');
 const Coupon = mongoose.model('Coupon');
 const User = mongoose.model('Users');
 const Payment = mongoose.model('Payment');
-const Seller = mongoose.model('Seller');
+const Cancellation = mongoose.model('Cancellation');
+const Refund = mongoose.model('Refund');
 
 const { requiredAuth, checkRole, checkAdminRole } = require('../middlewares/auth');
 
@@ -40,14 +41,8 @@ const priceSectionFromCombinedCartItems = (cartItem) => {
     return cartItemQtyAndPrice;
 }
 
-const getProductDetail = async (products) => {
-    const getProductIds = products.map(item => item.productId);
-
-    // const haha = packages.map(package => {
-    //     return package.products.map(item => item.productId);
-    // });
-    // const concatIds = [].concat.apply([], haha);
-
+const getProductDetail = async (products, mapped = null) => {
+    const getProductIds = mapped ? products : products.map(item => item.productId);
 
     const orderProducts = await Product.find(
         {
@@ -65,12 +60,30 @@ const getProductDetail = async (products) => {
         ...products.find(ele => ele.productId == item.products[0]._id)
     }));
 
-    // const combineProductWithOrderitems = parseProducts.map(item => ({
-    //     ...item,
-    //     ...packages.reduce((prev, package) => prev || package.products.find(ele => ele.productId == item.products[0]._id), undefined)
-    // }));
-
     return combineProductWithOrderitems;
+}
+
+const cancellableProductFromPackage = async (products) => {
+    const onlyCancelableProduct = products.filter(item => item.orderStatus === 'not_confirmed' || item.orderStatus === 'confirmed' || item.orderStatus === 'packed');
+
+    const getProductIds = onlyCancelableProduct.map(item => item.productId);
+    const productDetail = await Product.find(
+        {
+            'products._id': { $in: getProductIds }
+        },
+        {
+            'products.$': 1
+        })
+        .select('_id name colour products').lean();
+
+    const parseProducts = JSON.parse(JSON.stringify(productDetail));
+    // combine proucts details and productQty
+    const combineProductWithCancelableProduct = parseProducts.map(item => ({
+        ...item,
+        ...products.find(ele => ele.productId == item.products[0]._id)
+    }));
+
+    return combineProductWithCancelableProduct;
 }
 
 module.exports = function (server) {
@@ -471,4 +484,199 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
+
+    server.get('/api/cancelrequest/:id', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        const orderId = req.params.id;
+        try {
+
+            const packages = await Package.find(
+                {
+                    orderId
+                })
+                .lean()
+                .populate('orderId', '_id')
+                .populate('seller', '_id name');
+
+
+            let orderPackages = [];
+            await Promise.all(
+                packages.map(async (item) => {
+                    const packageObj = new Object();
+                    packageObj['_id'] = item._id;
+                    packageObj['products'] = await cancellableProductFromPackage(item.products);
+                    packageObj['paymentId'] = item.paymentId;
+                    packageObj['paymentStatus'] = item.paymentStatus;
+                    packageObj['paymentType'] = item.paymentType;
+                    orderPackages.push(packageObj);
+                })
+            );
+
+            return res.status(200).json(orderPackages);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.put('/api/cancelorder', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        const { orderId, orders, cancelRequestGroupPackages, paymentId, paymentStatus, paymentType } = req.body;
+
+        try {
+            const orderStatusLog = {
+                status: 'cancelled_by_user',
+                statusChangeBy: req.user._id,
+                statusChangeDate: new Date()
+            }
+
+            //check orderStatus for every product. for cancellation, order mustn't be shipped
+
+            const cancelledFromPackage = async (packageId, productIds, action) => {
+                const onlyProducts = await Package.findById(packageId, { _id: 0 }).select('products').lean();
+                const parseOnlyProducts = JSON.parse(JSON.stringify(onlyProducts));
+                const onlyCancelProduct = parseOnlyProducts.products.filter((item) => productIds.includes(item.productId));
+
+                switch (action) {
+                    case 'cancelTotal':
+                        return onlyCancelProduct.reduce((a, c) => (a + c.productQty * c.price), 0);
+                    case 'products':
+                        return onlyCancelProduct;
+                    case 'checkCancelableOrder':
+                        const checkOrderStatusForCancel = onlyCancelProduct.some(item => item.orderStatus === 'not_confirmed' || item.orderStatus === 'confirmed' || item.orderStatus === 'packed');
+
+                        return checkOrderStatusForCancel ? true : false;
+                    case 'checkNotConfirmedOrder':
+                        const checkNotConfirmedOrder = onlyCancelProduct.some(item => item.orderStatus !== 'not_confirmed');
+                        return checkNotConfirmedOrder ? false : true;
+                    default:
+                        return null;
+                }
+            }
+            let cancelProductsOrder = [];
+            await Promise.all(
+                cancelRequestGroupPackages.map(async (item) => {
+                    const productObj = new Object();
+                    productObj['orderStatus'] = await cancelledFromPackage(item.packageId, item.productId, 'checkCancelableOrder');
+                    productObj['orderStatusNotConfirmed'] = await cancelledFromPackage(item.packageId, item.productId, 'checkNotConfirmedOrder');
+
+                    cancelProductsOrder.push(productObj);
+                })
+            )
+
+            if (cancelProductsOrder.some(item => item.orderStatus !== false) === true) {
+                let packageUpdate;
+                await Promise.all(
+                    packageUpdate = orders.map(async (order) => {
+                        await Package.findOneAndUpdate({
+                            _id: order.packageId,
+                            'products.productId': order.productId
+                        },
+                            {
+                                $set: {
+                                    "products.$.orderStatus": 'cancelled_by_user'
+                                },
+                                $push: {
+                                    'products.$.orderStatusLog': orderStatusLog
+                                }
+                            });
+                    })
+                )
+
+                if (packageUpdate) {
+
+                    const getShippingCharge = async (packageId, productIds) => {
+
+                        const getProductFromPackage = await Package.findById(packageId).select('products shippingCharge').lean();
+
+                        const onlyProductIdOfPackage = getProductFromPackage.products.map(item => item.productId);
+
+                        const parseProductId = JSON.parse(JSON.stringify(onlyProductIdOfPackage));
+
+                        const diffProductIds = parseProductId.filter(e => !productIds.includes(e));
+
+                        let shippingCharge = 0;
+                        if (diffProductIds === 0) {
+                            shippingCharge = getProductFromPackage.shippingCharge;
+                        } else {
+                            // check if there is product which was cancel by user.
+                            // this condition will occur when user cancel product one by one.
+                            const checkPrevCancelProduct = getProductFromPackage.products.filter(item => item.orderStatus !== 'cancelled_by_user' && item.orderStatus !== 'cancelled_by_admin' && item.orderStatus !== 'cancelled_by_seller');
+
+                            shippingCharge = checkPrevCancelProduct.length === 0
+                                ? getProductFromPackage.shippingCharge
+                                : 0
+                        }
+                        return shippingCharge;
+                    }
+
+                    let cancelProducts = [];
+                    await Promise.all(
+                        cancelRequestGroupPackages.map(async (item) => {
+                            const productObj = new Object();
+                            productObj['packageId'] = item.packageId;
+                            productObj['shippingCharge'] = await getShippingCharge(item.packageId, item.productId);
+                            productObj['cancelAmount'] = await cancelledFromPackage(item.packageId, item.productId, 'cancelTotal')
+                            productObj['products'] = await cancelledFromPackage(item.packageId, item.productId, 'products')
+
+                            cancelProducts.push(productObj);
+                        })
+                    )
+
+                    const productTotalAmount = cancelProducts.reduce((a, c) => (a + c.cancelAmount), 0);
+
+                    const shippingChargeOnCancel = cancelProducts.reduce((a, c) => (a + c.shippingCharge), 0);
+
+                    const totalRefundAmount = parseInt(productTotalAmount) + parseInt(shippingChargeOnCancel);
+
+
+                    // insert into cancellation
+
+                    const statusNotConfirmedOrder = cancelProductsOrder.some(item => item.orderStatusNotConfirmed === true);
+
+                    const cancelStatusLog = {
+                        status: paymentType === 'cashondelivery' && statusNotConfirmedOrder ? 'complete' : 'progress',
+                        statusChangeBy: req.user._id,
+                        statusChangeDate: new Date()
+                    }
+                    const newCancellation = new Cancellation({
+                        orderId,
+                        packages: cancelProducts,
+                        paymentId: paymentType === 'cashondelivery' && statusNotConfirmedOrder ? null : paymentId,
+                        paymentType,
+                        paymentStatus,
+                        totalCancelAmount: totalRefundAmount,
+                        requestBy: req.user._id,
+                        status: paymentType === 'cashondelivery' && statusNotConfirmedOrder ? 'complete' : 'progress',
+                        statusLog: cancelStatusLog
+                    });
+
+                    await newCancellation.save();
+
+                    // save refund data
+                    if (paymentStatus === 'paid' && paymentType !== 'cashondelivery' && newCancellation) {
+
+                        cancelProducts.map(async item => {
+                            const newRefund = new Refund({
+                                orderId,
+                                packageId: item.packageId,
+                                cancellationId: newCancellation._id,
+                                amount: item.cancelAmount,
+                                refundType: 'cancel',
+                                paymentId,
+                                paymentStatus,
+                                paymentType,
+                                refundTo: req.user._id,
+                            });
+                            await newRefund.save();
+                        });
+                        return res.status(200).json({ msg: 'success' });
+                    }
+                    return res.status(200).json({ msg: 'success' });
+                }
+            } else {
+                return res.status(422).json({ error: "Some error occur. Please try again later." });
+            }
+
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    })
 };
