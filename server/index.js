@@ -25,6 +25,7 @@ require('./models/Package.js');
 require('./models/NotificationToken.js');
 require('./models/Seller.js');
 require('./models/Payment.js');
+require('./models/Cancellation.js');
 require('./models/Refund.js');
 
 const port = parseInt(process.env.PORT, 10) || 3000

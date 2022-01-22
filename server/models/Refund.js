@@ -10,6 +10,10 @@ const orderSchema = new mongoose.Schema({
         type: ObjectId,
         ref: "Package"
     },
+    cancellationId: {
+        type: ObjectId,
+        ref: "Cancellation"
+    },
     amount: {
         type: String,
         require: true
@@ -61,15 +65,18 @@ const orderSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: [
+            "justin",
             "progress",
             "complete",
             "denide"
-        ]
+        ],
+        default: "justin"
     },
     statusLog: [{
         status: {
             type: String,
             enum: [
+                "justin",
                 "progress",
                 "complete",
                 "denide"
