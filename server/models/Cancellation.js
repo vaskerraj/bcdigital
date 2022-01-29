@@ -35,7 +35,11 @@ const cancellationSchema = new mongoose.Schema({
         cancelAmount: {
             type: Number,
             require: true
-        }
+        },
+        cancelAt: {
+            type: String,
+            require: true
+        },
     }],
     paymentId: {
         type: ObjectId,

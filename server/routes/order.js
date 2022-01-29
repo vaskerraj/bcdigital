@@ -41,8 +41,8 @@ const priceSectionFromCombinedCartItems = (cartItem) => {
     return cartItemQtyAndPrice;
 }
 
-const getProductDetail = async (products, mapped = null) => {
-    const getProductIds = mapped ? products : products.map(item => item.productId);
+const getProductDetail = async (products) => {
+    const getProductIds = products.map(item => item.productId);
 
     const orderProducts = await Product.find(
         {
@@ -61,6 +61,21 @@ const getProductDetail = async (products, mapped = null) => {
     }));
 
     return combineProductWithOrderitems;
+}
+
+const getPakageDetailsWithProducts = async (packages) => {
+    let orderPackages = [];
+    await Promise.all(
+        packages.map(async (item) => {
+            const packageObj = new Object();
+            packageObj['_id'] = item._id;
+            packageObj['products'] = await getProductDetail(item.products);
+            packageObj['paymentStatus'] = item.paymentStatus;
+            packageObj['orderStatus'] = item.orderStatus;
+            orderPackages.push(packageObj);
+        })
+    )
+    return orderPackages;
 }
 
 const cancellableProductFromPackage = async (products) => {
@@ -310,21 +325,6 @@ module.exports = function (server) {
                 },
             ]);
 
-            const getPakageDetailsWithProducts = async (packages) => {
-                let orderPackages = [];
-                await Promise.all(
-                    packages.map(async (item) => {
-                        const packageObj = new Object();
-                        packageObj['_id'] = item._id;
-                        packageObj['products'] = await getProductDetail(item.products);
-                        packageObj['paymentStatus'] = item.paymentStatus;
-                        packageObj['orderStatus'] = item.orderStatus;
-                        orderPackages.push(packageObj);
-                    })
-                )
-                return orderPackages;
-            }
-
             let orderProducts = [];
             await Promise.all(
                 orders.map(async (item) => {
@@ -519,7 +519,6 @@ module.exports = function (server) {
 
     server.put('/api/cancelorder', requiredAuth, checkRole(['subscriber']), async (req, res) => {
         const { orderId, orders, cancelRequestGroupPackages, paymentId, paymentStatus, paymentType } = req.body;
-
         try {
             const orderStatusLog = {
                 status: 'cancelled_by_user',
@@ -534,11 +533,17 @@ module.exports = function (server) {
                 const parseOnlyProducts = JSON.parse(JSON.stringify(onlyProducts));
                 const onlyCancelProduct = parseOnlyProducts.products.filter((item) => productIds.includes(item.productId));
 
+
                 switch (action) {
                     case 'cancelTotal':
                         return onlyCancelProduct.reduce((a, c) => (a + c.productQty * c.price), 0);
                     case 'products':
-                        return onlyCancelProduct;
+                        const combineCancelProdutAndCanclReason = onlyCancelProduct.map(item => ({
+                            ...item,
+                            ...orders.find(ele => ele.productId == item.productId)
+                        }));
+
+                        return combineCancelProdutAndCanclReason;
                     case 'checkCancelableOrder':
                         const checkOrderStatusForCancel = onlyCancelProduct.some(item => item.orderStatus === 'not_confirmed' || item.orderStatus === 'confirmed' || item.orderStatus === 'packed');
 
@@ -546,6 +551,9 @@ module.exports = function (server) {
                     case 'checkNotConfirmedOrder':
                         const checkNotConfirmedOrder = onlyCancelProduct.some(item => item.orderStatus !== 'not_confirmed');
                         return checkNotConfirmedOrder ? false : true;
+                    case 'cancelAtStatus':
+                        const lastOrderSatus = onlyCancelProduct[0].orderStatusLog[1]?.status;
+                        return lastOrderSatus === undefined ? 'not_confirmed' : lastOrderSatus;
                     default:
                         return null;
                 }
@@ -615,6 +623,7 @@ module.exports = function (server) {
                             productObj['shippingCharge'] = await getShippingCharge(item.packageId, item.productId);
                             productObj['cancelAmount'] = await cancelledFromPackage(item.packageId, item.productId, 'cancelTotal')
                             productObj['products'] = await cancelledFromPackage(item.packageId, item.productId, 'products')
+                            productObj['cancelAt'] = await cancelledFromPackage(item.packageId, item.productId, 'cancelAtStatus')
 
                             cancelProducts.push(productObj);
                         })
@@ -652,13 +661,13 @@ module.exports = function (server) {
 
                     // save refund data
                     if (paymentStatus === 'paid' && paymentType !== 'cashondelivery' && newCancellation) {
-
+                        // refund will save base on order's packages
                         cancelProducts.map(async item => {
                             const newRefund = new Refund({
                                 orderId,
                                 packageId: item.packageId,
                                 cancellationId: newCancellation._id,
-                                amount: item.cancelAmount,
+                                amount: parseInt(item.cancelAmount) + parseInt(item.shippingCharge),
                                 refundType: 'cancel',
                                 paymentId,
                                 paymentStatus,
