@@ -566,8 +566,8 @@ module.exports = function (server) {
                         const checkNotConfirmedOrder = onlyCancelProduct.some(item => item.orderStatus !== 'not_confirmed');
                         return checkNotConfirmedOrder ? false : true;
                     case 'cancelAtStatus':
-                        const lastOrderSatus = onlyCancelProduct[0].orderStatusLog[1]?.status;
-                        return lastOrderSatus === undefined ? 'not_confirmed' : lastOrderSatus;
+                        const lastOrderSatus = onlyCancelProduct[0].orderStatusLog[0]?.status;
+                        return lastOrderSatus === 'cancelled_by_user' ? 'not_confirmed' : lastOrderSatus;
                     default:
                         return null;
                 }
