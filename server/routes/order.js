@@ -606,7 +606,8 @@ module.exports = function (server) {
                         } else {
                             // check if there is product which was cancel by user.
                             // this condition will occur when user cancel product one by one.
-                            const checkPrevCancelProduct = getProductFromPackage.products.filter(item => item.orderStatus !== 'cancelled_by_user' && item.orderStatus !== 'cancelled_by_admin' && item.orderStatus !== 'cancelled_by_seller');
+                            // if user cancel product one by one then first order may approve cancellation(status: cancel_approve). so check cancel_approve in orderStatus
+                            const checkPrevCancelProduct = getProductFromPackage.products.filter(item => item.orderStatus !== 'cancelled_by_user' && item.orderStatus !== 'cancelled_by_admin' && item.orderStatus !== 'cancelled_by_seller' && item.orderStatus !== 'cancel_approve');
 
                             shippingCharge = checkPrevCancelProduct.length === 0
                                 ? getProductFromPackage.shippingCharge
