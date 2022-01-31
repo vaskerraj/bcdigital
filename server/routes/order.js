@@ -77,6 +77,20 @@ const getPakageDetailsWithProducts = async (packages) => {
     )
     return orderPackages;
 }
+const getPakageDetailsWithProductsOnCancel = async (packages) => {
+    let orderPackages = [];
+    await Promise.all(
+        packages.map(async (item) => {
+            const packageObj = new Object();
+            packageObj['_id'] = item._id;
+            packageObj['products'] = await getProductDetail(item.products);
+            packageObj['shippingCharge'] = item.shippingCharge;
+            packageObj['amount'] = item.cancelAmount;
+            orderPackages.push(packageObj);
+        })
+    )
+    return orderPackages;
+}
 
 const cancellableProductFromPackage = async (products) => {
     const onlyCancelableProduct = products.filter(item => item.orderStatus === 'not_confirmed' || item.orderStatus === 'confirmed' || item.orderStatus === 'packed');
@@ -685,6 +699,50 @@ module.exports = function (server) {
                 return res.status(422).json({ error: "Some error occur. Please try again later." });
             }
 
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    })
+
+    server.get('/api/cancelorders', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        try {
+            const cancelOrders = await Cancellation.find(
+                { requestBy: req.user._id }
+            )
+                .lean()
+                .populate('orderId', 'createdAt');
+
+            const getRefundDetails = async (cancellationId, paymentType, paymentStatus) => {
+                const cancelInfo = await Refund.findOne({ cancellationId }).lean();
+                return cancelInfo ?
+                    paymentType === cancelInfo.paymentType && paymentStatus === cancelInfo.paymentStatus ?
+                        cancelInfo
+                        :
+                        null
+                    :
+                    null
+            }
+            let cancelOrderProducts = [];
+
+            await Promise.all(
+                cancelOrders.map(async (item) => {
+                    const productObj = new Object();
+                    productObj['_id'] = item._id;
+                    productObj['order'] = item.orderId;
+                    productObj['packages'] = await getPakageDetailsWithProductsOnCancel(item.packages);
+                    productObj['amount'] = item.totalCancelAmount;
+                    productObj['paymentId'] = item.paymentId;
+                    productObj['paymentType'] = item.paymentType;
+                    productObj['paymentStatus'] = item.paymentStatus;
+                    productObj['status'] = item.status;
+                    productObj['statusLog'] = item.statusLog;
+                    productObj['refund'] = await getRefundDetails(item._id, item.paymentType, item.paymentStatus);
+                    productObj['createdAt'] = item.createdAt;
+
+                    cancelOrderProducts.push(productObj);
+                })
+            );
+            return res.status(200).json(cancelOrderProducts);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }

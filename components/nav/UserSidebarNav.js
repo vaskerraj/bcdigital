@@ -47,12 +47,12 @@ const UserSidebarNav = ({ onActive }) => {
                             <Link href="/user/orders">Orders</Link>
                         </Menu.Item>
                         <Menu.Item key="return">
-                            <Link href="/user/returnorder">
+                            <Link href="/user/return/orders">
                                 Returns
                             </Link>
                         </Menu.Item>
                         <Menu.Item key="cancelOrder">
-                            <Link href="/user/cancelorder">
+                            <Link href="/user/cancel/orders">
                                 Cancel Orders
                             </Link>
                         </Menu.Item>

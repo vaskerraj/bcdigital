@@ -145,7 +145,7 @@ const CancelRequest = ({ packages, defaultItemForCancel }) => {
                     });
                 if (data) {
                     setLoading(true);
-                    return router.push('/user/cancellation');
+                    return router.push('/user/cancel/orders');
                 }
             } catch (error) {
                 setLoading(true);
