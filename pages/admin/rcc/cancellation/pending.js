@@ -8,7 +8,7 @@ import axiosApi from '../../../../helpers/api';
 
 import moment from 'moment';
 
-import { message, Table, Tag, Image, Button } from 'antd';
+import { message, Table, Tag, Image, Tooltip, Button } from 'antd';
 import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 
 import Wrapper from '../../../../components/admin/Wrapper';
@@ -52,12 +52,20 @@ const PendingCancellation = ({ cancellations }) => {
         },
         {
             title: 'Request By',
-            render: (text, record) => <Link href={`/`}>
-                <a target="_blank">
-                    {record.requestBy.name}
-                </a>
-            </Link>
-
+            render: (text, record) =>
+                <Tooltip title={
+                    <div className="d-block">
+                        <div className="d-block">Mobile No.:{record.requestBy.mobile} </div>
+                        <div className="d-block">Email: {record.requestBy.email}</div>
+                    </div>
+                }
+                    color={'#fff'}
+                    overlayInnerStyle={{ color: '#000' }}
+                >
+                    <div className="text-info cp">
+                        {record.requestBy.name}
+                    </div>
+                </Tooltip>
         },
         {
             title: 'Request Date',
@@ -142,8 +150,8 @@ const PendingCancellation = ({ cancellations }) => {
                                             <div className="d-block">
                                                 <div className="d-block font12 font-weight-bold" style={{ fontSize: '1.2rem' }}>
                                                     Package {index + 1}
-                                                    <div className="d-block">
-                                                        <div className="text-uppercase"> Cancel At:</div>
+                                                    <div className="d-flex align-items-center">
+                                                        <div className="text-uppercase mr-2"> Cancel At:</div>
                                                         <Tag color="blue" key={pack._id} className="mt-1 text-capitalize">{orderStatusText(pack.cancelAt)}</Tag>
                                                     </div>
                                                 </div>
