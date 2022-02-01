@@ -204,4 +204,40 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Something went wrong. Please try again later." })
         }
     });
+
+    server.get("/api/cancellation/list", requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
+        try {
+            const cancellationList = await Cancellation.find({
+                status: { $ne: 'progress' }
+            }).lean()
+                .populate('orderId')
+                .populate('requestBy', 'name mobile email _id');
+
+            let cancellationProducts = [];
+
+            await Promise.all(
+                cancellationList.map(async (item) => {
+                    const productObj = new Object();
+                    productObj['_id'] = item._id;
+                    productObj['order'] = item.orderId;
+                    productObj['packages'] = await getPakageDetailsWithProducts(item.packages);
+                    productObj['amount'] = item.totalCancelAmount;
+                    productObj['paymentId'] = item.paymentId;
+                    productObj['paymentType'] = item.paymentType;
+                    productObj['paymentStatus'] = item.paymentStatus;
+                    productObj['requestBy'] = item.requestBy;
+                    productObj['requestBy'] = item.requestBy;
+                    productObj['status'] = item.status;
+                    productObj['statusLog'] = item.statusLog;
+                    productObj['createdAt'] = item.createdAt;
+                    productObj['updatedAt'] = item.updatedAt;
+
+                    cancellationProducts.push(productObj);
+                })
+            );
+            return res.status(200).json(cancellationProducts);
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
 }
