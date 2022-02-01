@@ -676,21 +676,17 @@ module.exports = function (server) {
 
                     // save refund data
                     if (paymentStatus === 'paid' && paymentType !== 'cashondelivery' && newCancellation) {
-                        // refund will save base on order's packages
-                        cancelProducts.map(async item => {
-                            const newRefund = new Refund({
-                                orderId,
-                                packageId: item.packageId,
-                                cancellationId: newCancellation._id,
-                                amount: parseInt(item.cancelAmount) + parseInt(item.shippingCharge),
-                                refundType: 'cancel',
-                                paymentId,
-                                paymentStatus,
-                                paymentType,
-                                refundTo: req.user._id,
-                            });
-                            await newRefund.save();
+                        const newRefund = new Refund({
+                            orderId,
+                            cancellationId: newCancellation._id,
+                            amount: totalRefundAmount,
+                            refundType: 'cancel',
+                            paymentId,
+                            paymentStatus,
+                            paymentType,
+                            refundTo: req.user._id,
                         });
+                        await newRefund.save();
                         return res.status(200).json({ msg: 'success' });
                     }
                     return res.status(200).json({ msg: 'success' });

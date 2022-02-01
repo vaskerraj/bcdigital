@@ -6,10 +6,6 @@ const orderSchema = new mongoose.Schema({
         type: ObjectId,
         ref: "Order"
     },
-    packageId: {
-        type: ObjectId,
-        ref: "Package"
-    },
     cancellationId: {
         type: ObjectId,
         ref: "Cancellation"

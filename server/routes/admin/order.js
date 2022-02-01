@@ -474,7 +474,6 @@ module.exports = function (server) {
                         // save refund data
                         const newRefund = new Refund({
                             orderId,
-                            packageId,
                             cancellationId: newCancellation._id,
                             amount: totalRefundAmount,
                             refundType: 'cancel',
