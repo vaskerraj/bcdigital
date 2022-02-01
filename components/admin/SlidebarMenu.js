@@ -34,24 +34,14 @@ const SlidebarMenu = ({ onActive }) => {
                             : onActive === 'sellers' || onActive === 'verify'
                                 ?
                                 'sub4'
-                                : ''
+                                : onActive === 'cancellationList' || onActive === 'cancellationPending'
+                                    ? 'rrc'
+                                    : ''
             ]}
             mode="inline"
         >
             <Menu.Item key="index" icon={<DesktopOutlined />}>
                 <Link href="/admin/"> Dashboard</Link>
-            </Menu.Item>
-            <Menu.Item key="categories" icon={<BarsOutlined />}>
-                <Link href="/admin/categories">Categories</Link>
-            </Menu.Item>
-            <Menu.Item key="brands" icon={<TagsOutlined />}>
-                <Link href="/admin/brands">Brands</Link>
-            </Menu.Item>
-            <Menu.Item key="banners" icon={<FundProjectionScreenOutlined />}>
-                <Link href="/admin/banner">Banners</Link>
-            </Menu.Item>
-            <Menu.Item key="coupon" icon={<GiftOutlined />}>
-                <Link href="/admin/coupon/">Coupon</Link>
             </Menu.Item>
             <SubMenu key="sub1" icon={<ShoppingCartOutlined />} title="Oders">
                 <Menu.Item key="ownShopOrders">
@@ -75,6 +65,34 @@ const SlidebarMenu = ({ onActive }) => {
                     <Link href="/admin/products/unapproved">Unapproved</Link>
                 </Menu.Item>
             </SubMenu>
+            <SubMenu key="rrc" icon={<ShoppingCartOutlined />} title="RRC">
+                <Menu.ItemGroup title="Return">
+                    <Menu.Item key="returnList">
+                        <Link href="/admin/rcc/return">Lists</Link>
+                    </Menu.Item>
+                    <Menu.Item key="returnPending">
+                        <Link href="/admin/rcc/return/pending">Pending</Link>
+                    </Menu.Item>
+                </Menu.ItemGroup>
+                <Menu.Divider />
+                <Menu.ItemGroup title="Refund">
+                    <Menu.Item key="refundList">
+                        <Link href="/admin/rcc/refund">Lists</Link>
+                    </Menu.Item>
+                    <Menu.Item key="refundPending">
+                        <Link href="/admin/rcc/refund/pending">Pending</Link>
+                    </Menu.Item>
+                </Menu.ItemGroup>
+                <Menu.Divider />
+                <Menu.ItemGroup title="Cancellation">
+                    <Menu.Item key="cancellationList">
+                        <Link href="/admin/rcc/cancellation/">Lists</Link>
+                    </Menu.Item>
+                    <Menu.Item key="cancellationPending">
+                        <Link href="/admin/rcc/cancellation/pending">Pending</Link>
+                    </Menu.Item>
+                </Menu.ItemGroup>
+            </SubMenu>
             <SubMenu key="sub4" icon={<TeamOutlined />} title="Sellers">
                 <Menu.Item key="sellers">
                     <Link href="/admin/sellers">Lists</Link>
@@ -83,17 +101,32 @@ const SlidebarMenu = ({ onActive }) => {
                     <Link href="/admin/sellers/verification">Pending Verification</Link>
                 </Menu.Item>
             </SubMenu>
+            <Menu.Item key="users" icon={<UserOutlined />}>
+                <Link href="/admin/users/">Users</Link>
+            </Menu.Item>
             <Menu.Item key="ownShop" icon={<ShopOutlined />}>
                 <Link href="/admin/own-shop/">Own Shop</Link>
             </Menu.Item>
-            <Menu.Item key="report" icon={<PieChartOutlined />}>
-                Report
+            <Menu.Item key="categories" icon={<BarsOutlined />}>
+                <Link href="/admin/categories">Categories</Link>
+            </Menu.Item>
+            <Menu.Item key="brands" icon={<TagsOutlined />}>
+                <Link href="/admin/brands">Brands</Link>
+            </Menu.Item>
+            <Menu.Item key="banners" icon={<FundProjectionScreenOutlined />}>
+                <Link href="/admin/banner">Banners</Link>
+            </Menu.Item>
+            <Menu.Item key="coupon" icon={<GiftOutlined />}>
+                <Link href="/admin/coupon/">Coupon</Link>
             </Menu.Item>
             <Menu.Item key="account" icon={<BarChartOutlined />}>
                 Account
             </Menu.Item>
             <Menu.Item key="subAdmin" icon={<UserOutlined />}>
                 <Link href="/admin/sub-admin/">Sub Admin</Link>
+            </Menu.Item>
+            <Menu.Item key="report" icon={<PieChartOutlined />}>
+                Report
             </Menu.Item>
             <SubMenu key="sub3" icon={<Truck />} title=" Shipping">
                 <Menu.Item key="shipping">
@@ -109,7 +142,7 @@ const SlidebarMenu = ({ onActive }) => {
             <Menu.Item key="setting" icon={<SettingOutlined />}>
                 <Link href="/admin/setting/default-address">Setting</Link>
             </Menu.Item>
-        </Menu>
+        </Menu >
     );
 }
 
