@@ -36,10 +36,9 @@ const MainHeadSection = ({ mobileTabBar }) => {
         const { q } = e.target.elements
         const searchedQueryValue = q.value;
         const trimSearchedQueryValue = searchedQueryValue.trim();
-        console.log(trimSearchedQueryValue);
 
         if (trimSearchedQueryValue !== " ") {
-            router.push('/search?q=' + trimSearchedQueryValue);
+            router.push('/search?q=' + trimSearchedQueryValue + '&type=search');
         } else {
             router.reload();
         }

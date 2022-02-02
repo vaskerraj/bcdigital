@@ -8,11 +8,12 @@ import {
 }
     from '../types/searchTagType';
 
-export const storeSearchTag = (tag) => async (dispatch) => {
+export const storeSearchTag = (searchTag) => async (dispatch) => {
     dispatch({ type: SEARCH_TAG_RESPONSE });
     try {
-        const { data } = await axiosApi.post('/api/tags', { tag });
+        const { data } = await axiosApi.post('/api/tags', { tag: searchTag });
         dispatch({ type: SEARCH_TAG_SUCCESS, payload: data });
+
         if (data.msg === "success") {
 
             const { searchTagHistory } = parseCookies();
