@@ -240,4 +240,54 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Something went wrong. Please try again later." })
         }
     });
+
+    // refund
+
+    server.get("/api/refund/pending", requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
+        try {
+
+            const refundList = await Refund.find({
+                status: 'progress'
+            }).lean()
+                .populate('orderId')
+                .populate({
+                    path: 'paymentId',
+                    populate: ({
+                        path: 'paidBy',
+                        select: 'name mobile email _id'
+                    })
+                })
+                .populate('cancellationId')
+                .populate('refundTo', 'name mobile email _id');
+
+            return res.status(200).json(refundList);
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
+
+    server.put("/api/refund/pending", requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
+        const { refundId, status, reason } = req.body;
+        try {
+            const refundStatusLog = {
+                status,
+                statusChangeBy: req.user._id,
+                statusChangeDate: new Date(),
+                reason
+            }
+
+            await Refund.findByIdAndUpdate(refundId, {
+                $set: {
+                    status
+                },
+                $push: {
+                    statusLog: refundStatusLog
+                }
+            });
+
+            return res.status(200).json({ msg: 'success' });
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
 }

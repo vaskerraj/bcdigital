@@ -34,7 +34,7 @@ const SlidebarMenu = ({ onActive }) => {
                             : onActive === 'sellers' || onActive === 'verify'
                                 ?
                                 'sub4'
-                                : onActive === 'cancellationList' || onActive === 'cancellationPending'
+                                : onActive === 'cancellationList' || onActive === 'cancellationPending' || onActive === 'refundPending'
                                     ? 'rrc'
                                     : ''
             ]}
