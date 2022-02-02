@@ -35,6 +35,7 @@ const SlidebarMenu = ({ onActive }) => {
                                 ?
                                 'sub4'
                                 : onActive === 'cancellationList' || onActive === 'cancellationPending' || onActive === 'refundPending'
+                                    || onActive === 'refundList'
                                     ? 'rrc'
                                     : ''
             ]}
@@ -66,21 +67,21 @@ const SlidebarMenu = ({ onActive }) => {
                 </Menu.Item>
             </SubMenu>
             <SubMenu key="rrc" icon={<ShoppingCartOutlined />} title="RRC">
-                <Menu.ItemGroup title="Return">
-                    <Menu.Item key="returnList">
-                        <Link href="/admin/rcc/return">Lists</Link>
-                    </Menu.Item>
-                    <Menu.Item key="returnPending">
-                        <Link href="/admin/rcc/return/pending">Pending</Link>
-                    </Menu.Item>
-                </Menu.ItemGroup>
-                <Menu.Divider />
                 <Menu.ItemGroup title="Refund">
                     <Menu.Item key="refundList">
                         <Link href="/admin/rcc/refund">Lists</Link>
                     </Menu.Item>
                     <Menu.Item key="refundPending">
                         <Link href="/admin/rcc/refund/pending">Pending</Link>
+                    </Menu.Item>
+                </Menu.ItemGroup>
+                <Menu.Divider />
+                <Menu.ItemGroup title="Return">
+                    <Menu.Item key="returnList">
+                        <Link href="/admin/rcc/return">Lists</Link>
+                    </Menu.Item>
+                    <Menu.Item key="returnPending">
+                        <Link href="/admin/rcc/return/pending">Pending</Link>
                     </Menu.Item>
                 </Menu.ItemGroup>
                 <Menu.Divider />

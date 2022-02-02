@@ -226,7 +226,6 @@ module.exports = function (server) {
                     productObj['paymentType'] = item.paymentType;
                     productObj['paymentStatus'] = item.paymentStatus;
                     productObj['requestBy'] = item.requestBy;
-                    productObj['requestBy'] = item.requestBy;
                     productObj['status'] = item.status;
                     productObj['statusLog'] = item.statusLog;
                     productObj['createdAt'] = item.createdAt;
@@ -286,6 +285,28 @@ module.exports = function (server) {
             });
 
             return res.status(200).json({ msg: 'success' });
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
+
+    server.get("/api/refund/list", requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
+        try {
+            const refundList = await Refund.find({
+                status: { $ne: 'progress' }
+            }).lean()
+                .populate('orderId')
+                .populate({
+                    path: 'paymentId',
+                    populate: ({
+                        path: 'paidBy',
+                        select: 'name mobile email _id'
+                    })
+                })
+                .populate('cancellationId')
+                .populate('refundTo', 'name mobile email _id');
+
+            return res.status(200).json(refundList);
         } catch (error) {
             return res.status(422).json({ error: "Something went wrong. Please try again later." })
         }
