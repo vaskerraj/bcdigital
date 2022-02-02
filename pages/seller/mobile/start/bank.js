@@ -109,7 +109,7 @@ const BankDetails = () => {
                             <label>
                                 Account Number
                             </label>
-                            <input name="number" className="form-control ml-2"
+                            <input name="number" type="text" className="form-control ml-2"
                                 ref={register({
                                     required: "Provide"
                                 })}
