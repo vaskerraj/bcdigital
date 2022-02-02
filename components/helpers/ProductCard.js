@@ -15,7 +15,7 @@ const ProductCard = ({ data }) => {
                     -{data.products[0].discount + '%'}
                 </div>
             }
-            {data.createdBy.sellerRole === 'own' &&
+            {data.createdBy?.sellerRole === 'own' &&
                 <div className="feature-shop">
                     <Link href={`/seller/${data.createdBy._id}`}>
                         <a className="badge bg-info">{data.createdBy.name}</a>

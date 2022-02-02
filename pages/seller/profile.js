@@ -48,7 +48,7 @@ const SellerProfile = ({ seller, defaultAddresses }) => {
         business_email: filterBusinessAdd.email,
         businessRegion: filterBusinessAdd.region.name,
         businessCity: filterBusinessAdd.city.name,
-        businessArea: filterBusinessAdd.area.name,
+        businessArea: filterBusinessAdd.area?.name,
         businessStreet: filterBusinessAdd.street,
     }
 
@@ -643,7 +643,7 @@ const SellerProfile = ({ seller, defaultAddresses }) => {
                                             getValues={ware_getValues}
                                             defaultRegion={filterWarehouseAdd.region._id}
                                             defaultCity={filterWarehouseAdd.city._id}
-                                            defaultArea={filterWarehouseAdd.area._id}
+                                            defaultArea={filterWarehouseAdd.area?._id}
                                         />
                                     </div>
                                     <div className="mt-3">
@@ -724,7 +724,7 @@ const SellerProfile = ({ seller, defaultAddresses }) => {
                                             getValues={return_getValues}
                                             defaultRegion={filterWarehouseAdd.region._id}
                                             defaultCity={filterWarehouseAdd.city._id}
-                                            defaultArea={filterWarehouseAdd.area._id}
+                                            defaultArea={filterWarehouseAdd.area?._id}
                                         />
                                     </div>
                                     <div className="mt-3">

@@ -108,7 +108,7 @@ const MainSlider = ({ onActive, breadcrumb, planView, children }) => {
                                                     className="mr-2"
                                                     style={{ backgroundColor: '#87d068' }}
                                                 >
-                                                    {sellerAuth.user.charAt(0).toUpperCase()}
+                                                    {sellerAuth.user?.charAt(0).toUpperCase()}
                                                 </Avatar>
                                             }
                                             {sellerAuth.user}
