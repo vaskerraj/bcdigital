@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useDispatch, useSelector } from 'react-redux'
 
 import axios from 'axios';
 import axiosApi from '../helpers/api';
@@ -10,12 +7,24 @@ import axiosApi from '../helpers/api';
 import { Phone, RotateCcw, Shield, Truck } from 'react-feather';
 import { LoadingOutlined } from '@ant-design/icons';
 
+import useWindowDimensions from '../helpers/useWindowDimensions';
 import Wrapper from '../components/Wrapper';
 import ImageCarousel from '../components/ImageCarousel';
 import TrendingProductSlider from '../components/helpers/TrendingProductSlider';
 import ProductCard from '../components/helpers/ProductCard';
 
 const Home = ({ banners, trendings, products }) => {
+
+  const { width } = useWindowDimensions();
+  const [onlyMobile, setOnlyMoble] = useState(false);
+
+  useEffect(() => {
+    if (width <= 470) {
+      setOnlyMoble(true);
+    } else {
+      setOnlyMoble(false);
+    }
+  }, [width])
 
   const [lastestProduct, setLastestProduct] = useState(products);
   const [isFetching, setIsFetching] = useState(false);
@@ -105,19 +114,19 @@ const Home = ({ banners, trendings, products }) => {
               </div>
             </div>
           </div>
-          <div className="d-block mt-5">
+          <div className="d-block mt-5 mb-5 mb-sm-0 pb-5 pb-sm-0">
             <div className="text-center">
               <h2 className="text-capitalize" style={{ fontSize: '3rem' }}>Lastest Products</h2>
             </div>
-            <div className="d-block slide">
-              <div className="d-flex flex-wrap">
+            <div className={`d-block ${!onlyMobile && 'latest'}`}>
+              <div className={onlyMobile ? 'row' : 'd-flex flex-wrap justify-content-center'}>
                 {lastestProduct.map(product => (
-                  <div key={product._id} className="mt-3">
+                  <div key={product._id} className={onlyMobile ? 'col-6 col-sm-4 col-md-3 mt-3' : 'mt-3 pl-2 pr-2'}>
                     <ProductCard data={product} />
                   </div>
                 ))}
               </div>
-              {hasMore && lastestProduct < 20 && (
+              {hasMore && (
                 <div className="d-block text-center mt-3">
                   <button type="button"
                     className="btn c-btn-primary"
