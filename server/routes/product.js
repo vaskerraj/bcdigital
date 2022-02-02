@@ -343,7 +343,7 @@ module.exports = function (server) {
     server.post('/api/products/latest', async (req, res) => {
         const { page, limit } = req.body;
         const currentPage = page || 1;
-        const productPerPage = limit || 24;
+        const productPerPage = limit || 20;
         try {
             // later change approved.status to active
             const products = await Product.find({ 'products.approved.status': 'approved', 'products.status': 'active' })

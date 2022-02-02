@@ -110,14 +110,14 @@ const Home = ({ banners, trendings, products }) => {
               <h2 className="text-capitalize" style={{ fontSize: '3rem' }}>Lastest Products</h2>
             </div>
             <div className="d-block slide">
-              <div className="d-flex">
+              <div className="d-flex flex-wrap">
                 {lastestProduct.map(product => (
-                  <div key={product._id}>
+                  <div key={product._id} className="mt-3">
                     <ProductCard data={product} />
                   </div>
                 ))}
               </div>
-              {hasMore && lastestProduct < 24 && (
+              {hasMore && lastestProduct < 20 && (
                 <div className="d-block text-center mt-3">
                   <button type="button"
                     className="btn c-btn-primary"
