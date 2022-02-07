@@ -7,6 +7,7 @@ import axios from 'axios';
 import axiosApi from '../../../helpers/api';
 import baseUrl from '../../../helpers/baseUrl';
 
+import Countdown from "react-countdown";
 import moment from 'moment';
 
 import { message, Table, Tag, Modal, Tooltip, Popconfirm } from 'antd';
@@ -262,6 +263,18 @@ const SellerOrder = ({ ordersData }) => {
         return allStatus.includes(status)
     }
 
+    const sellerTimeRenderCallback = ({ formatted, completed }) => {
+        if (completed) {
+            return <Tag color="red"> Expired</Tag>
+        } else {
+            // Render a countdown
+            return <Tag>
+                <span className="font15">{formatted.hours}</span>H
+                : <span>{formatted.minutes}</span>M
+            </Tag>;
+        }
+    };
+
     const columns = [
         {
             title: 'ID',
@@ -350,9 +363,15 @@ const SellerOrder = ({ ordersData }) => {
         {
             title: 'Seller Time',
             render: (text, record) =>
-                <>
-
-                </>
+                checkAllProductStatus(record.products, 'confirmed')
+                    ?
+                    <Countdown
+                        date={record.sellerTime}
+                        daysInHours
+                        renderer={sellerTimeRenderCallback}
+                    />
+                    :
+                    <>-</>
         },
         {
             title: 'Status',
@@ -424,7 +443,7 @@ const SellerOrder = ({ ordersData }) => {
                         {record.products.map(item => (
                             <div key={item._id} className="d-block">
                                 <div className="font16" style={{ fontWeight: 600 }}>
-                                    <Link href={`${baseUrl}/product/${item._id}/${item.slug}`}>
+                                    <Link href={`/admin/orders/product/${item._id}/${item.slug}`}>
                                         <a target="_blank">
                                             {item.name}
                                         </a>

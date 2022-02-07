@@ -177,7 +177,7 @@ module.exports = function (server) {
                             {
                                 'products.$': 1
                             })
-                            .select('name slug colour products _id  as parentProductId').lean();
+                            .select('name slug colour products _id').lean();
                         relatedProducts.push(orderProducts);
                     })
                 );
@@ -186,8 +186,8 @@ module.exports = function (server) {
 
                 // combine proucts details and productQty
                 const combineProductWithOrderitems = parseProducts.map(item => ({
-                    ...products.find(ele => ele.productId == item.products[0]._id),
-                    ...item
+                    ...item,
+                    ...products.find(ele => ele.productId == item.products[0]._id)
                 }));
 
                 return combineProductWithOrderitems;
@@ -206,6 +206,7 @@ module.exports = function (server) {
                     productObj['paymentType'] = item.paymentType;
                     productObj['paymentStatus'] = item.paymentStatus;
                     productObj['seller'] = item.seller;
+                    productObj['sellerTime'] = item.sellerTime;
                     productObj['orders'] = item.orderId;
                     productObj['packageTotal'] = item.packageTotal;
                     productObj['createdAt'] = item.createdAt;
@@ -222,25 +223,23 @@ module.exports = function (server) {
     server.put('/api/admin/orderstatus', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
         const { status, itemId, tackingId } = req.body;
         try {
-            await Package.findOneAndUpdate({
-                'products._id': itemId,
-            }, {
-                '$set': { "products.$.orderStatus": status }
-            });
-
             const orderStatusLog = {
                 status,
                 statusChangeBy: req.user._id,
                 statusChangeDate: new Date()
             }
-            await Package.findOneAndUpdate({ 'products._id': itemId },
-                {
-                    $push: {
-                        'products.$.orderStatusLog': orderStatusLog
-                    }
-                }, {
-                new: true
+            await Package.findOneAndUpdate({
+                'products._id': itemId,
+            }, {
+                '$set': {
+                    "products.$.orderStatus": status,
+                    sellerTime: new Date(Date.now() + process.env.SELLER_TIME_FOR_PACKING * (60 * 60 * 1000))
+                },
+                $push: {
+                    'products.$.orderStatusLog': orderStatusLog
+                }
             });
+
             if (status === 'packed' || status === 'shipped' || status === 'cancelled') {
                 // check app user or web user. if web send email, if app then send notification
                 return res.status(200).json({ msg: "success" });
@@ -278,6 +277,12 @@ module.exports = function (server) {
                 })
 
             );
+
+            await Package.findByIdAndUpdate(packageId, {
+                '$set': {
+                    sellerTime: new Date(Date.now() + process.env.SELLER_TIME_FOR_PACKING * (60 * 60 * 1000))
+                }
+            });
 
             if (status === 'packed' || status === 'shipped') {
                 // check app user or web user. if web send email, if app then send notification

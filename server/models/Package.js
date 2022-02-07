@@ -87,6 +87,9 @@ const packageSchema = new mongoose.Schema({
         type: String,
         require: true
     },
+    sellerTime: {
+        type: Date
+    },
     shippingCharge: {
         type: Number
     },

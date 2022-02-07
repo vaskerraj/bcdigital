@@ -4,7 +4,7 @@
   "private": true,
   "author": "Dharma Raj Bhandari",
   "scripts": {
-    "dev": "nodemon server/index.js",
+    "dev": "nodemon -L server/index.js server/index.js",
     "build": "next build",
     "start": "cross-env NODE_ENV=production node server/index.js"
   },
@@ -35,6 +35,7 @@
     "nodemailer": "^6.6.3",
     "nookies": "^2.5.2",
     "react": "^17.0.2",
+    "react-countdown": "^2.3.2",
     "react-dom": "^17.0.2",
     "react-feather": "^2.0.9",
     "react-hook-form": "^6.15.5",
