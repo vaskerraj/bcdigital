@@ -122,6 +122,20 @@ module.exports = function (server) {
                     { 'products.orderStatus': 'shipped' },
                     { 'products.orderStatus': 'for_delivery' },
                     { 'products.orderStatus': 'delivered' },
+                    { 'products.orderStatus': 'cancelled_by_user' },
+                    { 'products.orderStatus': 'cancelled_by_seller' },
+                    { 'products.orderStatus': 'cancelled_by_admin' },
+                    { 'products.orderStatus': 'cancel_approve' },
+                    { 'products.orderStatus': 'cancel_denide' },
+                ],
+                $or: [
+                    { paymentType: 'cashondelivery' },
+                    {
+                        $and: [
+                            { paymentType: { $ne: 'cashondelivery' } },
+                            { paymentStatus: 'paid' }
+                        ]
+                    },
                 ],
             })
                 .populate({
@@ -139,13 +153,13 @@ module.exports = function (server) {
                         select: 'name _id code availableFor discountType discountAmount minBasket availableVoucher'
                     }, {
                         path: 'orderedBy',
-                        select: 'name username role picture _id',
+                        select: 'name mobile email username role picture _id',
                     }
                     ])
                 })
                 .populate({
                     path: 'seller',
-                    select: 'name picture _id',
+                    select: 'name mobile _id',
                 })
                 .lean()
                 .sort([['updatedAt', -1]]);
@@ -163,7 +177,7 @@ module.exports = function (server) {
                             {
                                 'products.$': 1
                             })
-                            .select('_id name colour products').lean();
+                            .select('name slug colour products _id  as parentProductId').lean();
                         relatedProducts.push(orderProducts);
                     })
                 );
@@ -172,8 +186,8 @@ module.exports = function (server) {
 
                 // combine proucts details and productQty
                 const combineProductWithOrderitems = parseProducts.map(item => ({
-                    ...item,
-                    ...products.find(ele => ele.productId == item.products[0]._id)
+                    ...products.find(ele => ele.productId == item.products[0]._id),
+                    ...item
                 }));
 
                 return combineProductWithOrderitems;
@@ -228,6 +242,44 @@ module.exports = function (server) {
                 new: true
             });
             if (status === 'packed' || status === 'shipped' || status === 'cancelled') {
+                // check app user or web user. if web send email, if app then send notification
+                return res.status(200).json({ msg: "success" });
+            } else {
+                return res.status(200).json({ msg: "success" });
+            }
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.put('/api/admin/orderstatus/all', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
+        const { status, productId, packageId } = req.body;
+        try {
+            const orderStatusLog = {
+                status,
+                statusChangeBy: req.user._id,
+                statusChangeDate: new Date()
+            }
+            await Promise.all(
+                productId.map(async id => {
+                    await Package.findOneAndUpdate({
+                        _id: packageId,
+                        'products._id': id,
+                    },
+                        {
+                            $set: {
+                                "products.$.orderStatus": status
+                            },
+                            $push: {
+                                'products.$.orderStatusLog': orderStatusLog
+                            }
+                        }
+                    );
+                })
+
+            );
+
+            if (status === 'packed' || status === 'shipped') {
                 // check app user or web user. if web send email, if app then send notification
                 return res.status(200).json({ msg: "success" });
             } else {
@@ -408,7 +460,8 @@ module.exports = function (server) {
                         } else {
                             // check if there is product which was cancel by admin or user & seller
                             // this condition will occur when user cancel product before then admin.
-                            const checkPrevCancelProduct = checkCancelProduct.products.filter(item => item.orderStatus !== 'cancelled_by_user' && item.orderStatus !== 'cancelled_by_admin');
+                            // if user cancel one product from order and first order may approve cancellation(status: cancel_approve). so check cancel_approve in orderStatus
+                            const checkPrevCancelProduct = checkCancelProduct.products.filter(item => item.orderStatus !== 'cancelled_by_user' && item.orderStatus !== 'cancelled_by_admin' && item.orderStatus !== 'cancel_approve');
 
                             shippingCharge = checkPrevCancelProduct.length === 0
                                 ? checkCancelProduct.shippingCharge
@@ -490,6 +543,145 @@ module.exports = function (server) {
                     } else {
                         return res.status(200).json({ msg: 'success' });
                     }
+                }
+            } else {
+                return res.status(422).json({ error: "Some error occur. Please try again later." });
+            }
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.put('/api/admin/cancelorder/all', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
+        const { orderId, packageId, productId, paymentStatus, paymentType } = req.body;
+        try {
+            const checkCancelProduct = await Package.findOne(
+                {
+                    _id: packageId,
+                    'products._id': { $in: productId },
+                    "products.orderStatus": 'not_confirmed'
+                })
+                .lean()
+                .populate('orderId', 'orderedBy');
+
+
+            const parseCancelProducts = JSON.parse(JSON.stringify(checkCancelProduct));
+            const onlyCancelableProduct = parseCancelProducts.products.filter((item) => productId.includes(item._id));
+
+            if (onlyCancelableProduct.length !== 0) {
+                const orderStatusLog = {
+                    status: 'cancelled_by_admin',
+                    statusChangeBy: req.user._id,
+                    statusChangeDate: new Date()
+                }
+
+                await Promise.all(
+                    productId.map(async (id) => {
+                        await Package.findOneAndUpdate({
+                            _id: packageId,
+                            'products._id': id
+                        },
+                            {
+                                $set: {
+                                    "products.$.orderStatus": 'cancelled_by_admin'
+                                },
+                                $push: {
+                                    'products.$.orderStatusLog': orderStatusLog
+                                }
+                            });
+                    })
+                )
+
+                //send email
+
+                const getShippingCharge = (productIds) => {
+                    const onlyProductIdOfPackage = parseCancelProducts.products.map(item => item._id);
+                    const diffProductIds = onlyProductIdOfPackage.filter(e => !productIds.includes(e));
+
+                    let shippingCharge = 0;
+                    if (diffProductIds.length === 0) {
+                        shippingCharge = checkCancelProduct.shippingCharge;
+                    } else {
+                        // check if there is product which was cancel by admin or user & seller
+                        // this condition will occur when user cancel product before then admin.
+                        // if user cancel one product from order and first order may approve cancellation(status: cancel_approve). so check cancel_approve in orderStatus
+                        const checkPrevCancelProduct = checkCancelProduct.products.filter(item => item.orderStatus !== 'cancelled_by_user' && item.orderStatus !== 'cancelled_by_admin' && item.orderStatus !== 'cancel_approve');
+
+                        shippingCharge = checkPrevCancelProduct.length === 0
+                            ? checkCancelProduct.shippingCharge
+                            : 0
+                    }
+                    return shippingCharge;
+                }
+
+                const cancelledFromPackage = (productIds, action) => {
+                    switch (action) {
+                        case 'cancelTotal':
+                            return onlyCancelableProduct.reduce((a, c) => (a + c.productQty * c.price), 0);
+                        case 'products':
+                            return onlyCancelableProduct;
+                        default:
+                            return null;
+                    }
+                }
+
+                const cancelProductObj = new Object();
+                cancelProductObj['packageId'] = packageId;
+                cancelProductObj['shippingCharge'] = getShippingCharge(productId);
+                cancelProductObj['cancelAmount'] = cancelledFromPackage(productId, 'cancelTotal')
+                cancelProductObj['products'] = cancelledFromPackage(productId, 'products');
+
+                const cancelStatusLog = {
+                    status: 'complete',
+                    statusChangeBy: req.user._id,
+                    statusChangeDate: new Date()
+                }
+                const newCancellation = new Cancellation({
+                    orderId,
+                    packages: cancelProductObj,
+                    paymentId: paymentType === 'cashondelivery' ? null : checkCancelProduct.paymentId,
+                    paymentType,
+                    paymentStatus,
+                    totalCancelAmount: cancelProductObj.cancelAmount,
+                    requestBy: checkCancelProduct.orderId.orderedBy,
+                    status: 'complete',
+                    statusLog: cancelStatusLog
+                });
+
+                await newCancellation.save();
+
+                if (paymentStatus === 'paid' && paymentType !== 'cashondelivery' && newCancellation) {
+
+                    const productTotalAmount = cancelProductObj.cancelAmount;
+
+                    const shippingChargeOnCancel = cancelProductObj.shippingCharge;
+
+                    const totalRefundAmount = parseInt(productTotalAmount) + parseInt(shippingChargeOnCancel);
+
+                    // refund status
+                    const refundStatus = {
+                        status: 'justin',
+                        statusChangeBy: req.user._id,
+                        statusChangeDate: new Date()
+                    }
+                    // save refund data
+                    const newRefund = new Refund({
+                        orderId,
+                        cancellationId: newCancellation._id,
+                        amount: totalRefundAmount,
+                        refundType: 'cancel',
+                        paymentId: checkCancelProduct.paymentId,
+                        paymentStatus,
+                        paymentType,
+                        refundTo: checkCancelProduct.orderId.orderedBy,
+                        status: 'justin',
+                        statusLog: refundStatus
+                    });
+                    await newRefund.save();
+
+                    return res.status(200).json({ msg: 'success' });
+                } else {
+                    return res.status(200).json({ msg: 'success' });
                 }
             } else {
                 return res.status(422).json({ error: "Some error occur. Please try again later." });
