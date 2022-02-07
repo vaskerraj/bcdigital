@@ -16,7 +16,7 @@ const getBase64 = (img, callback) => {
     reader.readAsDataURL(img);
 }
 
-const SellerLogo = ({ sellerId, sellerLogo }) => {
+const SellerLogo = ({ sellerData }) => {
     const [previewImage, setPreviewImage] = useState("");
 
 
@@ -54,7 +54,7 @@ const SellerLogo = ({ sellerId, sellerLogo }) => {
                     accept=".png, .jpg, .jpeg"
                     multiple={false}
                     showUploadList={false}
-                    action={`${baseUrl}/api/seller/logo?id=${sellerId}`}
+                    action={`${baseUrl}/api/seller/logo?id=${sellerData._id}`}
                     listType="picture-card"
                     onChange={handleUpload}
                     maxCount={1}
@@ -68,10 +68,10 @@ const SellerLogo = ({ sellerId, sellerLogo }) => {
                         </div>
                     </div>
                 }
-                {sellerLogo && previewImage === "" &&
+                {sellerData?.picture && previewImage === "" &&
                     <div style={{ width: '10.4rem' }}>
                         <div className="ant-upload ant-upload-select ant-upload-select-picture-card position-relative">
-                            <img src={`/uploads/sellers/${sellerLogo}`} alt="avatar" style={{ width: '100%' }} />
+                            <img src={`/uploads/sellers/${sellerData.picture}`} alt="avatar" style={{ width: '100%' }} />
                         </div>
                     </div>
                 }
@@ -88,12 +88,10 @@ export async function getServerSideProps(context) {
             },
         });
         if (data) {
-            console.log(data)
             if (data.stepComplete) {
                 return {
                     props: {
-                        sellerId: data.userId._id,
-                        sellerLogo: data.userId.picture
+                        sellerData: data.userId
                     }
                 }
             } else {

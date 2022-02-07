@@ -1,12 +1,14 @@
 import Router from 'next/router';
-import { destroyCookie, setCookie } from 'nookies';
 import axiosApi from '../../helpers/api';
 import firebase from '../../firebase/firebaseClient';
 import {
     SELLER_SIGIN_RESPONSE,
     SELLER_SIGIN_SUCCESS,
     SELLER_SIGIN_ERROR,
-    SELLER_SIGNOUT
+    SELLER_SIGNOUT,
+    SELLER_SIGNUP_RESPONSE,
+    SELLER_SIGNUP_SUCCESS,
+    SELLER_SIGNUP_ERROR
 }
     from '../types/sellerAuthType'
 

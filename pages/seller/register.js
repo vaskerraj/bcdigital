@@ -271,7 +271,7 @@ const RegisterSeller = () => {
 
                                             <div className="d-block text-center mt-5 mb-3">
                                                 Already registered?
-                                                <Link href="/seller/register">
+                                                <Link href="/seller/login">
                                                     <Button type="danger" shape="round" className="ml-2">Login</Button>
                                                 </Link>
                                             </div>
