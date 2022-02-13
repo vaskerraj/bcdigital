@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head'
 import Link from 'next/link'
 import { useSelector } from 'react-redux';
 import { parseCookies } from 'nookies';
@@ -10,8 +11,10 @@ import baseUrl from '../../../helpers/baseUrl';
 import Countdown from "react-countdown";
 import moment from 'moment';
 
-import { message, Table, Tag, Modal, Tooltip, Popconfirm } from 'antd';
-import { CloseOutlined, CheckOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { message, Table, Tag, Modal, Input, DatePicker, Button, Select, Tooltip, Menu, Dropdown, Pagination } from 'antd';
+const { Option } = Select;
+const { RangePicker } = DatePicker;
+import { SearchOutlined, CheckOutlined, CloseOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
 import Wrapper from '../../../components/admin/Wrapper';
 import { orderStatusText, paymentTypeText, generateTrackingId } from '../../../helpers/functions'
@@ -23,14 +26,90 @@ message.config({
     duration: 3,
 });
 
-const SellerOrder = ({ ordersData }) => {
+const SellerOrder = ({ ordersData, total }) => {
 
     const [activeTab, setActiveTab] = useState('not_confirmed');
     const [orders, setOrders] = useState([]);
 
+    const [loading, setLoading] = useState(false);
+    const [onFirstLoad, setOnFirstLoad] = useState(true);
+
+    const [data, setData] = useState(ordersData);
+    const [orderTotal, setOrderTotal] = useState(total);
+    const [currPage, setCurrPage] = useState(1);
+    const [page, setPage] = useState(1);
+    const [sizePerPage, setSizePerPage] = useState(30);
+    const [sort, setSort] = useState('newest');
+    const [onSearch, setOnSearch] = useState(false);
+
+    // 
+    const [paymentMethod, setPaymentMethod] = useState(null);
+    const [orderId, setOrderId] = useState("");
+    const [orderDateRange, setOrderDateRange] = useState(null);
+    const [sellerId, setSellerId] = useState(null);
+
+    // filter
+    const [filter, setFilter] = useState(false);
+
+    // pagation
+    const [pagination, setPagination] = useState({ position: ['none', 'none'], defaultPageSize: sizePerPage });
+
+    // router
     const router = useRouter();
 
     const { adminAuth } = useSelector(state => state.adminAuth)
+
+    const recallProductList = async (filterByOrderId, filterByPaymentMethod, filterByOrderDateRange, filterBySellerId) => {
+        setLoading(true);
+        try {
+            const { data } = await axios.post(`${process.env.api}/api/admin/orders/seller`, {
+                status: activeTab,
+                paymentMethod: filterByPaymentMethod,
+                orderId: filterByOrderId,
+                orderDate: filterByOrderDateRange,
+                sellerId: filterBySellerId,
+                sort,
+                page,
+                limit: sizePerPage
+            },
+                {
+                    headers: {
+                        token: adminAuth.token,
+                    }
+                });
+            if (data) {
+                setLoading(false);
+                setData(data.orders);
+                setOrderTotal(data.total);
+                setOnSearch(false);
+            }
+        } catch (error) {
+            setLoading(false)
+            setOnSearch(false);
+            setFilter(false);
+
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
+    }
+    useEffect(() => {
+        if (!onFirstLoad) {
+            const filterByOrderId = orderId !== '' ? orderId.toLowerCase() : 'all';
+            const filterByPaymentMethod = paymentMethod !== null ? paymentMethod : 'all';
+            const filterByOrderDateRange = orderDateRange !== null ? orderDateRange : 'all';
+            const filterBySellerId = sellerId !== null ? sellerId : 'all';
+
+            // call
+            recallProductList(filterByOrderId, filterByPaymentMethod, filterByOrderDateRange, filterBySellerId);
+        }
+    }, [onFirstLoad, activeTab, page, sizePerPage, sort, onSearch]);
 
     const updateOrderStatus = async (status, itemId, packageId) => {
         try {
@@ -280,7 +359,7 @@ const SellerOrder = ({ ordersData }) => {
             title: 'ID',
             dataIndex: ['_id'],
             key: ['_id'],
-            render: (text, record) => <Link href={`/admin/orders/${record.orders._id}`}><a target="_blank">{record.orders._id.toUpperCase()}</a></Link>,
+            render: (text, record) => <Link href={`/admin/orders/${record._id}?status=${activeTab}`}><a target="_blank">{record.orders._id.toUpperCase()}</a></Link>,
         },
         {
             title: 'Payment Method',
@@ -296,9 +375,7 @@ const SellerOrder = ({ ordersData }) => {
         },
         {
             title: 'Total',
-            dataIndex: ['packageTotal'],
-            key: ['packageTotal'],
-            render: text => <>Rs.{text}</>,
+            render: (text, record) => <>Rs.{getProductTotal(record.products, activeTab)}</>,
         },
         {
             title: 'Shipping',
@@ -307,8 +384,7 @@ const SellerOrder = ({ ordersData }) => {
         },
         {
             title: 'Grand Total',
-            dataIndex: ['packageTotal'],
-            render: (text, record) => <>Rs.{record.packageTotal + record.shippingCharge}</>,
+            render: (text, record) => <>Rs.{getProductTotal(record.products, activeTab) + record.shippingCharge}</>,
         },
         {
             title: 'Order By',
@@ -552,77 +628,231 @@ const SellerOrder = ({ ordersData }) => {
             </div >
         )
     }
-    useEffect(() => {
-        if (activeTab === 'all') {
-            setOrders(ordersData);
-        } else if (activeTab === 'cancelled') {
-            const filteredData = ordersData.filter(product => product.products.some(item => item.orderStatus === 'cancelled_by_admin' || item.orderStatus === 'cancelled_by_seller' || item.orderStatus === 'cancelled_by_user' || item.orderStatus === 'cancel_approve'));
-            setOrders(filteredData);
+
+    const getProductTotal = (products, activeTab) => {
+        let getNonCancelProduct = 0;
+        if (activeTab === 'cancelled') {
+            getNonCancelProduct = products.filter(product => product.orderStatusLog.some(item => item.status === 'cancelled_by_seller' || item.status === 'cancelled_by_admin' || item.status === 'cancelled_by_user'));
+        } else if (activeTab === 'all') {
+            getNonCancelProduct = products.filter(product => product.orderStatusLog.some(item => item.status !== 'cancelled_by_seller'));
         } else {
-            const filteredData = ordersData.filter(product => product.products.some(item => item.orderStatus === activeTab));
-            setOrders(filteredData);
+            getNonCancelProduct = products.filter(item => item.orderStatus === activeTab);
         }
-    }, [activeTab, ordersData]);
+        return getNonCancelProduct.reduce((a, c) => (a + c.productQty * c.price), 0);
+    }
+    const handleStatusChange = useCallback(value => {
+        setOnFirstLoad(false);
+        setFilter(prevState => prevState === true ? true : false);
+        setActiveTab(value);
+        setCurrPage(1);
+        setPage(1);
+        setOnSearch(true)
+    });
+
+    const onChangeDatePicker = useCallback(date => {
+        if (date) {
+            setFilter(prevState => prevState === true ? true : false);
+            setOrderDateRange({
+                startDate: moment(date[0]).format('YYYY/MM/DD'),
+                endDate: moment(date[1]).format('YYYY/MM/DD')
+            });
+        }
+    });
+
+    const handlePaymentChange = useCallback(value => {
+        setFilter(prevState => prevState === true ? true : false);
+        setPaymentMethod(value)
+    });
+
+    const handlePageChange = useCallback(value => {
+        setOnFirstLoad(false);
+        setFilter(prevState => prevState === true ? true : false);
+        setCurrPage(value);
+        setPage(value);
+        setOnSearch(true)
+    });
+
+    const handleLimitChange = value => {
+        setOnFirstLoad(false);
+        setFilter(prevState => prevState === true ? true : false);
+        setPagination({ position: ['none', 'none'], defaultPageSize: value });
+        setSizePerPage(value);
+        setCurrPage(1);
+        setPage(1);
+        setOnSearch(true);
+    };
+
+    const handleSortChange = useCallback(value => {
+        setOnFirstLoad(false);
+        setFilter(prevState => prevState === true ? true : false);
+        setSort(value);
+        setOnSearch(true);
+    });
+
+    const handleSearchClick = () => {
+        setOnFirstLoad(false);
+        setFilter(true);
+        setCurrPage(1);
+        setPage(1);
+        setOnSearch(true)
+    }
+
+    const handleClearFilter = () => {
+        setFilter(false);
+        return router.reload();
+    }
 
     return (
-        <Wrapper onActive="sellerOrders" breadcrumb={["Orders", "Seller's Orders"]}>
-            <div className="d-flex" style={{ fontSize: '1.6rem', fontWeight: 600 }}>
-                <div className="filter-tab cp" onClick={() => setActiveTab('all')}>
-                    All
-                    <div className={`activebar ${activeTab === 'all' ? 'active' : ''}`}></div>
+        <>
+            <Head>
+                <title>Seller's Orders | Orders | Admin Center</title>
+                <link rel="icon" href="/favicon.ico" />
+            </Head>
+            <Wrapper onActive="sellerOrders" breadcrumb={["Orders", "Seller's Orders"]}>
+                <div className="d-flex mb-5" style={{ fontSize: '1.6rem', fontWeight: 600 }}>
+                    <div className="filter-tab cp" onClick={() => handleStatusChange('all')}>
+                        All
+                        <div className={`activebar ${activeTab === 'all' ? 'active' : ''}`}></div>
+                    </div>
+                    <div className="filter-tab ml-4 cp" onClick={() => handleStatusChange('not_confirmed')}>
+                        Not Confirmed
+                        <div className={`activebar ${activeTab === 'not_confirmed' ? 'active' : ''}`}></div>
+                    </div>
+                    <div className="filter-tab ml-4 cp" onClick={() => handleStatusChange('confirmed')}>
+                        Confirmed
+                        <div className={`activebar ${activeTab === 'confirmed' ? 'active' : ''}`}></div>
+                    </div>
+                    <div className="filter-tab ml-4 cp" onClick={() => handleStatusChange('packed')}>
+                        Packed(Ready to Ship)
+                        <div className={`activebar ${activeTab === 'packed' ? 'active' : ''}`}></div>
+                    </div>
+                    <div className="filter-tab ml-4 cp" onClick={() => handleStatusChange('shipped')}>
+                        Shipped
+                        <div className={`activebar ${activeTab === 'shipped' ? 'active' : ''}`}></div>
+                    </div>
+                    <div className="filter-tab ml-4 cp" onClick={() => handleStatusChange('delivered')}>
+                        Delivered
+                        <div className={`activebar ${activeTab === 'delivered' ? 'active' : ''}`}></div>
+                    </div>
+                    <div className="filter-tab ml-4 cp" onClick={() => handleStatusChange('cancelled')}>
+                        Cancelled
+                        <div className={`activebar ${activeTab === 'cancelled' ? 'active' : ''}`}></div>
+                    </div>
+                    <div className="filter-tab ml-4 cp" onClick={() => handleStatusChange('return')}>
+                        Return
+                        <div className={`activebar ${activeTab === 'return' ? 'active' : ''}`}></div>
+                    </div>
                 </div>
-                <div className="filter-tab ml-4 cp" onClick={() => setActiveTab('not_confirmed')}>
-                    Not Confirmed
-                    <div className={`activebar ${activeTab === 'not_confirmed' ? 'active' : ''}`}></div>
-                </div>
-                <div className="filter-tab ml-4 cp" onClick={() => setActiveTab('confirmed')}>
-                    Confirmed
-                    <div className={`activebar ${activeTab === 'confirmed' ? 'active' : ''}`}></div>
-                </div>
-                <div className="filter-tab ml-4 cp" onClick={() => setActiveTab('packed')}>
-                    Packed
-                    <div className={`activebar ${activeTab === 'packed' ? 'active' : ''}`}></div>
-                </div>
-                <div className="filter-tab ml-4 cp" onClick={() => setActiveTab('shipped')}>
-                    Shipped
-                    <div className={`activebar ${activeTab === 'shipped' ? 'active' : ''}`}></div>
-                </div>
-                <div className="filter-tab ml-4 cp" onClick={() => setActiveTab('delivered')}>
-                    Delivered
-                    <div className={`activebar ${activeTab === 'delivered' ? 'active' : ''}`}></div>
-                </div>
-                <div className="filter-tab ml-4 cp" onClick={() => setActiveTab('cancelled')}>
-                    Cancelled
-                    <div className={`activebar ${activeTab === 'cancelled' ? 'active' : ''}`}></div>
-                </div>
-            </div>
-            <div className="d-block mt-5">
-                <Table
-                    rowKey="_id"
-                    columns={columns}
-                    expandable={{
-                        expandedRowRender: record =>
-                            expandedRowRender(record),
-                        rowExpandable: record => true,
-                    }}
-                    dataSource={orders}
+                <div className="d-block mb-5">
+                    <div className="d-flex justify-content-around">
+                        <Input className="mr-3" placeholder="Order Id" onChange={(e) => setOrderId(e.target.value)} />
+                        <Input className="mr-3" placeholder="Seller Id"
+                            onChange={(e) => setSellerId(e.target.value)}
+                        />
+                        <Select className="mr-3" style={{ width: '600px' }} onChange={handlePaymentChange}>
+                            <Option value="cashondelivery">Cash on delivery</Option>
+                            <Option value="esewa">e-Sewa</Option>
+                            <Option value="card">Card</Option>
+                        </Select>
+                        <RangePicker
+                            defaultValue=""
+                            format={'YYYY-MM-DD'}
+                            onChange={(date) => onChangeDatePicker(date)}
+                            className="form-control mr-2"
+                        />
+                        {filter &&
+                            <Button type="dashed" className="mr-2" icon={<CloseOutlined />} onClick={handleClearFilter}>Clear</Button>
+                        }
 
-                />
-            </div>
-        </Wrapper>
+                        <Button type="default"
+                            icon={<SearchOutlined />}
+                            onClick={handleSearchClick}
+                            size="middle"
+                        >
+                            Search
+                        </Button>
+                    </div>
+                </div>
+                <div className="d-flex justify-content-between mb-4">
+                    <div>
+                        {orderTotal} Order(s)
+                    </div>
+                    <Select
+                        defaultValue={sort}
+                        style={{ width: 120 }}
+                        onChange={handleSortChange}
+                        size="small"
+                    >
+                        <Option value="newest">Newest</Option>
+                        <Option value="oldest">Oldest</Option>
+                    </Select>
+                </div>
+                <div className="d-block table-responsive mt-5">
+                    <Table
+                        rowKey="_id"
+                        columns={columns}
+                        expandable={{
+                            expandedRowRender: record =>
+                                expandedRowRender(record),
+                            rowExpandable: record => true,
+                        }}
+                        dataSource={data}
+                        pagination={pagination}
+                        loading={loading}
+                    />
+                    {
+                        orderTotal !== 0 &&
+                        <div className="d-flex justify-content-between mt-5">
+                            <Select defaultValue={sizePerPage} style={{ width: 120 }} onChange={handleLimitChange}>
+                                <Option value={10}>10</Option>
+                                <Option value={30}>30</Option>
+                                <Option value={50}>50</Option>
+                                <Option value={100}>100</Option>
+                            </Select>
+                            <Pagination
+                                current={currPage}
+                                total={orderTotal}
+                                responsive
+                                pageSize={sizePerPage}
+                                onChange={handlePageChange}
+                            />
+                        </div>
+                    }
+                </div>
+            </Wrapper>
+        </>
     );
 }
 export async function getServerSideProps(context) {
     try {
         const cookies = parseCookies(context);
-        const { data } = await axios.get(`${process.env.api}/api/admin/orders/seller`, {
-            headers: {
-                token: cookies.ad_token,
-            },
-        });
+        const status = "not_confirmed";
+        const paymentMethod = 'all';
+        const orderId = 'all';
+        const orderDate = 'all';
+        const sellerId = 'all';
+        const sort = 'newest';
+        const page = 1;
+        const limit = 30;
+        const { data } = await axios.post(`${process.env.api}/api/admin/orders/seller`, {
+            status,
+            paymentMethod,
+            orderId,
+            orderDate,
+            sellerId,
+            sort,
+            page,
+            limit
+        },
+            {
+                headers: {
+                    token: cookies.ad_token,
+                },
+            });
         return {
             props: {
-                ordersData: data
+                ordersData: data.orders,
+                total: data.total
             }
         }
     } catch (err) {

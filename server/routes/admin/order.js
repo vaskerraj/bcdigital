@@ -111,33 +111,195 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
-    server.get('/api/admin/orders/seller', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
+    server.post('/api/admin/orders/seller', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
+        const { status, paymentMethod, orderId, orderDate, sellerId, sort, page, limit } = req.body;
+        const findByStatusType = type => {
+            switch (type) {
+                case 'not_confirmed':
+                    return {
+                        sellerRole: { $ne: 'own' },
+                        'products.orderStatus': 'not_confirmed',
+                        $or: [
+                            { paymentType: 'cashondelivery' },
+                            {
+                                $and: [
+                                    { paymentType: { $ne: 'cashondelivery' } },
+                                    { paymentStatus: 'paid' }
+                                ]
+                            },
+                        ],
+                    }
+                case 'confirmed':
+                    return {
+                        sellerRole: { $ne: 'own' },
+                        'products.orderStatus': 'confirmed',
+                        $or: [
+                            { paymentType: 'cashondelivery' },
+                            {
+                                $and: [
+                                    { paymentType: { $ne: 'cashondelivery' } },
+                                    { paymentStatus: 'paid' }
+                                ]
+                            },
+                        ],
+                    }
+                case 'packed':
+                    return {
+                        sellerRole: { $ne: 'own' },
+                        'products.orderStatus': 'packed',
+                        $or: [
+                            { paymentType: 'cashondelivery' },
+                            {
+                                $and: [
+                                    { paymentType: { $ne: 'cashondelivery' } },
+                                    { paymentStatus: 'paid' }
+                                ]
+                            },
+                        ],
+                    }
+                case 'shipped':
+                    return {
+                        sellerRole: { $ne: 'own' },
+                        'products.orderStatus': 'shipped',
+                        $or: [
+                            { paymentType: 'cashondelivery' },
+                            {
+                                $and: [
+                                    { paymentType: { $ne: 'cashondelivery' } },
+                                    { paymentStatus: 'paid' }
+                                ]
+                            },
+                        ],
+                    }
+                case 'delivered':
+                    return {
+                        sellerRole: { $ne: 'own' },
+                        'products.orderStatus': 'delivered',
+                        $or: [
+                            { paymentType: 'cashondelivery' },
+                            {
+                                $and: [
+                                    { paymentType: { $ne: 'cashondelivery' } },
+                                    { paymentStatus: 'paid' }
+                                ]
+                            },
+                        ],
+                    }
+                case 'cancelled':
+                    return {
+                        sellerRole: { $ne: 'own' },
+                        products: {
+                            $elemMatch: { "orderStatusLog.status": ['cancelled_by_seller'] }
+                        },
+                        $or: [
+                            { paymentType: 'cashondelivery' },
+                            {
+                                $and: [
+                                    { paymentType: { $ne: 'cashondelivery' } },
+                                    { paymentStatus: 'paid' }
+                                ]
+                            },
+                        ],
+                    }
+                case 'return':
+                    return {
+                        sellerRole: { $ne: 'own' },
+                        products: {
+                            $elemMatch: { "orderStatusLog.status": ['return_request'] }
+                        },
+                        $or: [
+                            { paymentType: 'cashondelivery' },
+                            {
+                                $and: [
+                                    { paymentType: { $ne: 'cashondelivery' } },
+                                    { paymentStatus: 'paid' }
+                                ]
+                            },
+                        ],
+                    }
+                default:
+                    return {
+                        sellerRole: { $ne: 'own' },
+                        $or: [
+                            { 'products.orderStatus': 'not_confirmed' },
+                            { 'products.orderStatus': 'confirmed' },
+                            { 'products.orderStatus': 'packed' },
+                            { 'products.orderStatus': 'shipped' },
+                            { 'products.orderStatus': 'for_delivery' },
+                            { 'products.orderStatus': 'delivered' },
+                            { 'products.orderStatus': 'cancelled_by_user' },
+                            { 'products.orderStatus': 'cancelled_by_seller' },
+                            { 'products.orderStatus': 'cancelled_by_admin' },
+                            { 'products.orderStatus': 'cancel_approve' },
+                            { 'products.orderStatus': 'cancel_denide' },
+                        ],
+                        $or: [
+                            { paymentType: 'cashondelivery' },
+                            {
+                                $and: [
+                                    { paymentType: { $ne: 'cashondelivery' } },
+                                    { paymentStatus: 'paid' }
+                                ]
+                            },
+                        ],
+                    }
+            }
+        }
+        const findByOrderId = (id) => {
+            if (id !== 'all') {
+                return {
+                    orderId: id
+                }
+            } else {
+                return {};
+            }
+        }
+        const findByDate = (date) => {
+            if (date != 'all') {
+                return {
+                    createdAt: {
+                        $gte: date.startDate, $lt: date.endDate
+                    }
+                }
+            } else {
+                return {};
+            }
+        }
+        const findByPaymentMethod = (method) => {
+            if (method != 'all') {
+                return { paymentType: method }
+            } else {
+                return {};
+            }
+        }
+        const findBySellerId = (id) => {
+            if (id !== 'all') {
+                return {
+                    seller: id
+                }
+            } else {
+                return {};
+            }
+        }
+        const sortBy = sort => {
+            switch (sort) {
+                case 'oldest':
+                    return [['createdAt', 1]]
+                case 'newest':
+                    return [['createdAt', - 1]]
+                default:
+                    return [['createdAt', - 1]]
+            }
+        }
+
+        const currentPage = page || 1;
+        const orderPerPage = limit || 30;
         try {
-            const orders = await Package.find({
-                'sellerRole': { $ne: 'own' },
-                $or: [
-                    { 'products.orderStatus': 'not_confirmed' },
-                    { 'products.orderStatus': 'confirmed' },
-                    { 'products.orderStatus': 'packed' },
-                    { 'products.orderStatus': 'shipped' },
-                    { 'products.orderStatus': 'for_delivery' },
-                    { 'products.orderStatus': 'delivered' },
-                    { 'products.orderStatus': 'cancelled_by_user' },
-                    { 'products.orderStatus': 'cancelled_by_seller' },
-                    { 'products.orderStatus': 'cancelled_by_admin' },
-                    { 'products.orderStatus': 'cancel_approve' },
-                    { 'products.orderStatus': 'cancel_denide' },
-                ],
-                $or: [
-                    { paymentType: 'cashondelivery' },
-                    {
-                        $and: [
-                            { paymentType: { $ne: 'cashondelivery' } },
-                            { paymentStatus: 'paid' }
-                        ]
-                    },
-                ],
-            })
+            const orders = await Package.find(findByStatusType(status))
+                .find(findByOrderId(orderId))
+                .find(findBySellerId(sellerId))
+                .find(findByPaymentMethod(paymentMethod))
+                .find(findByDate(orderDate))
                 .populate({
                     path: 'orderId',
                     populate: ([{
@@ -162,7 +324,9 @@ module.exports = function (server) {
                     select: 'name mobile _id',
                 })
                 .lean()
-                .sort([['updatedAt', -1]]);
+                .sort(sortBy(sort))
+                .skip((currentPage - 1) * orderPerPage)
+                .limit(orderPerPage);
 
             const getProductDetail = async (products) => {
 
@@ -214,7 +378,16 @@ module.exports = function (server) {
                     orderProducts.push(productObj);
                 })
             )
-            return res.status(200).json(orderProducts);
+            const allOrders = await Package.find(findByStatusType(status))
+                .find(findByOrderId(orderId))
+                .find(findByPaymentMethod(paymentMethod))
+                .find(findByDate(orderDate))
+                .select('_id');
+
+            return res.status(200).json({
+                orders: orderProducts,
+                total: allOrders.length
+            });
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
@@ -333,7 +506,7 @@ module.exports = function (server) {
         }
     });
 
-    // package details to print label
+    // oder/package details & package details to print label
     server.get('/api/admin/package/:id', requiredAuth, checkRole(['admin']), async (req, res) => {
         const packageId = req.params.id;
         try {
@@ -341,14 +514,25 @@ module.exports = function (server) {
                 .populate({
                     path: 'orderId',
                     populate: ([{
+                        path: 'shipping',
+                        select: 'name _id amount maxDeliveryTime minDeliveryTime isDefault',
+                        populate: ({
+                            path: 'shipAgentId',
+                            select: 'name _id number email',
+                        })
+                    },
+                    {
+                        path: 'coupon',
+                        select: 'name _id code availableFor discountType discountAmount minBasket availableVoucher'
+                    }, {
                         path: 'orderedBy',
-                        select: 'name _id',
+                        select: 'name username role picture _id',
                     }
                     ])
                 })
                 .populate({
                     path: 'seller',
-                    select: 'name',
+                    select: 'name mobile email picture _id'
                 }).lean();
             const getProductDetail = async (products) => {
 
@@ -363,7 +547,7 @@ module.exports = function (server) {
                             {
                                 'products.$': 1
                             })
-                            .select('_id name products package').lean();
+                            .select('_id name colour products package').lean();
                         relatedProducts.push(orderProducts);
                     })
                 );
@@ -496,6 +680,12 @@ module.exports = function (server) {
                     cancelProductObj['cancelAmount'] = cancelledFromPackage(productId, 'cancelTotal')
                     cancelProductObj['products'] = cancelledFromPackage(productId, 'products');
 
+                    const productTotalAmount = cancelProductObj.cancelAmount;
+
+                    const shippingChargeOnCancel = cancelProductObj.shippingCharge;
+
+                    const totalRefundCancelAmount = parseInt(productTotalAmount) + parseInt(shippingChargeOnCancel);
+
                     const cancelStatusLog = {
                         status: 'complete',
                         statusChangeBy: req.user._id,
@@ -507,7 +697,7 @@ module.exports = function (server) {
                         paymentId: paymentType === 'cashondelivery' ? null : cancelProduct.paymentId,
                         paymentType,
                         paymentStatus,
-                        totalCancelAmount: cancelProductObj.cancelAmount,
+                        totalCancelAmount: totalRefundCancelAmount,
                         requestBy: checkCancelProduct.orderId.orderedBy,
                         status: 'complete',
                         statusLog: cancelStatusLog
@@ -516,12 +706,6 @@ module.exports = function (server) {
                     await newCancellation.save();
 
                     if (paymentStatus === 'paid' && paymentType !== 'cashondelivery' && newCancellation) {
-
-                        const productTotalAmount = cancelProductObj.cancelAmount;
-
-                        const shippingChargeOnCancel = cancelProductObj.shippingCharge;
-
-                        const totalRefundAmount = parseInt(productTotalAmount) + parseInt(shippingChargeOnCancel);
 
                         // refund status
                         const refundStatus = {
@@ -533,7 +717,7 @@ module.exports = function (server) {
                         const newRefund = new Refund({
                             orderId,
                             cancellationId: newCancellation._id,
-                            amount: totalRefundAmount,
+                            amount: totalRefundCancelAmount,
                             refundType: 'cancel',
                             paymentId: checkCancelProduct.paymentId,
                             paymentStatus,
@@ -636,6 +820,11 @@ module.exports = function (server) {
                 cancelProductObj['cancelAmount'] = cancelledFromPackage(productId, 'cancelTotal')
                 cancelProductObj['products'] = cancelledFromPackage(productId, 'products');
 
+                const productTotalAmount = cancelProductObj.cancelAmount;
+
+                const shippingChargeOnCancel = cancelProductObj.shippingCharge;
+
+                const totalRefundAmount = parseInt(productTotalAmount) + parseInt(shippingChargeOnCancel);
                 const cancelStatusLog = {
                     status: 'complete',
                     statusChangeBy: req.user._id,
@@ -647,7 +836,7 @@ module.exports = function (server) {
                     paymentId: paymentType === 'cashondelivery' ? null : checkCancelProduct.paymentId,
                     paymentType,
                     paymentStatus,
-                    totalCancelAmount: cancelProductObj.cancelAmount,
+                    totalCancelAmount: totalRefundCancelAmount,
                     requestBy: checkCancelProduct.orderId.orderedBy,
                     status: 'complete',
                     statusLog: cancelStatusLog
@@ -656,12 +845,6 @@ module.exports = function (server) {
                 await newCancellation.save();
 
                 if (paymentStatus === 'paid' && paymentType !== 'cashondelivery' && newCancellation) {
-
-                    const productTotalAmount = cancelProductObj.cancelAmount;
-
-                    const shippingChargeOnCancel = cancelProductObj.shippingCharge;
-
-                    const totalRefundAmount = parseInt(productTotalAmount) + parseInt(shippingChargeOnCancel);
 
                     // refund status
                     const refundStatus = {
@@ -673,7 +856,7 @@ module.exports = function (server) {
                     const newRefund = new Refund({
                         orderId,
                         cancellationId: newCancellation._id,
-                        amount: totalRefundAmount,
+                        amount: totalRefundCancelAmount,
                         refundType: 'cancel',
                         paymentId: checkCancelProduct.paymentId,
                         paymentStatus,
