@@ -1069,6 +1069,11 @@ footer .footer-menu li:hover>a {
   box-shadow: 1px 1px 0.5rem 0px rgba(0,0,0,0.45);
 }
 
+.address-container.noheight{
+  min-height: auto !important;
+  padding-bottom: 1rem;
+}
+
 .address-container .default-address.show{
   background-color: #d4edda;
   padding: 0.1rem 0.5rem;
