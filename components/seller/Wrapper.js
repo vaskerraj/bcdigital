@@ -21,7 +21,6 @@ const MainSlider = ({ onActive, breadcrumb, planView, children }) => {
     };
 
     const { sellerAuth } = useSelector(state => state.sellerAuth);
-    console.log(sellerAuth);
 
     const dispatch = useDispatch();
     const signOutHandler = () => {
@@ -132,7 +131,10 @@ const MainSlider = ({ onActive, breadcrumb, planView, children }) => {
                             )}
                         </Breadcrumb>
                     }
-                    <div className={`site-layout-background ${planView ? 'mt-4' : ''}`} style={{ padding: 24, minHeight: 360 }}>
+                    <div
+                        className={onActive !== 'index' ? 'site-layout-background' : null, planView ? 'mt-4' : null}
+                        style={{ padding: onActive !== 'index' ? 24 : 0, minHeight: 360 }}
+                    >
                         {children}
                     </div>
                 </Content>

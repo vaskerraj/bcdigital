@@ -1,9 +1,14 @@
 const mongoose = require('mongoose');
 const User = mongoose.model('Users');
 const Seller = mongoose.model('Seller');
+const Product = mongoose.model('Product');
+const Package = mongoose.model('Package');
+
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const moment = require('moment');
+
 const sellerDocsImagePath = "/../../public/uploads/sellers/docs";
 const sellerlogoPath = "/../../public/uploads/sellers";
 
@@ -91,7 +96,6 @@ module.exports = function (server) {
     // bank
     server.post('/api/seller/start/bank', requiredAuth, checkRole(['seller']), upload.single('copyofcheque'), async (req, res) => {
         const { title, number, bankName, bankBranch } = req.body;
-        console.log(req.body)
         try {
             let copyOfCheque;
             if (req.file) {
@@ -136,5 +140,500 @@ module.exports = function (server) {
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
+    });
+
+    // dashboard
+    server.get('/api/dashbaord/card', requiredAuth, checkRole(['seller']), async (req, res) => {
+        const today = moment().startOf('day');
+
+        const todayStart = today.toDate()
+        const todayEnd = moment(today).endOf('day').toDate();
+        const last30DaysStart = moment().subtract(30, 'day').startOf('day').toDate();
+
+        // note: pending order will be find base on `sellerTime` which is 48 hour from confirmed by admin
+        //  so if we want pending order between 24 hour then we have to sub 48 hour too
+        // eg: last24DaysStart =  48+24 = 72
+        const last24hourStart = moment().subtract(72, 'h').startOf('day').toDate();  // 48+24
+        const last12hourEnd = moment().subtract(60, 'h').endOf('day').toDate();  // 48+12
+        const todayPedingOrderStart = moment().subtract(48, 'h').startOf('day').toDate();  // 48
+        const todayPedingOrderEnd = moment().subtract(48, 'h').endOf('day').toDate();  // 48
+
+        try {
+            /////////////////// orders  ////////////////////
+            const totalOrders = await Package.countDocuments(
+                {
+                    seller: req.user._id,
+                    $or: [
+                        { 'products.orderStatus': { $ne: 'cancel_approve' } },
+                        { 'products.orderStatus': { $ne: 'return_request' } },
+                        { 'products.orderStatus': { $ne: 'return_approve' } },
+                        { 'products.orderStatus': { $ne: 'return_pick' } },
+                        { 'products.orderStatus': { $ne: 'return_shipped' } },
+                        { 'products.orderStatus': { $ne: 'return_delivered' } },
+                    ],
+                    $or: [
+                        { paymentType: 'cashondelivery' },
+                        {
+                            $and: [
+                                { paymentType: { $ne: 'cashondelivery' } },
+                                { paymentStatus: 'paid' }
+                            ]
+                        },
+                    ],
+                })
+            //delivered orders
+            const totalDeliveredOrder = await Package.countDocuments(
+                {
+                    seller: req.user._id,
+                    'products.orderStatus': 'delivered',
+                    $or: [
+                        { paymentType: 'cashondelivery' },
+                        {
+                            $and: [
+                                { paymentType: { $ne: 'cashondelivery' } },
+                                { paymentStatus: 'paid' }
+                            ]
+                        },
+                    ]
+                })
+            const totalTodayDeliveredOrder = await Package.countDocuments(
+                {
+                    seller: req.user._id,
+                    'products.orderStatus': 'delivered',
+                    $or: [
+                        { paymentType: 'cashondelivery' },
+                        {
+                            $and: [
+                                { paymentType: { $ne: 'cashondelivery' } },
+                                { paymentStatus: 'paid' }
+                            ]
+                        },
+                    ],
+                    createdAt: {
+                        $gte: todayStart,
+                        $lte: todayEnd
+                    }
+                })
+            const totalLast30DeliveredOrder = await Package.countDocuments(
+                {
+                    seller: req.user._id,
+                    'products.orderStatus': 'delivered',
+                    $or: [
+                        { paymentType: 'cashondelivery' },
+                        {
+                            $and: [
+                                { paymentType: { $ne: 'cashondelivery' } },
+                                { paymentStatus: 'paid' }
+                            ]
+                        },
+                    ],
+                    createdAt: {
+                        $gte: last30DaysStart,
+                        $lte: todayEnd
+                    }
+                })
+
+            // packed but not shipped order
+            const totalPackedOrder = await Package.countDocuments(
+                {
+                    seller: req.user._id,
+                    'products.orderStatus': 'packed',
+                    $or: [
+                        { paymentType: 'cashondelivery' },
+                        {
+                            $and: [
+                                { paymentType: { $ne: 'cashondelivery' } },
+                                { paymentStatus: 'paid' }
+                            ]
+                        },
+                    ]
+                })
+
+            // to get `ship on time` get total order those have not cancellation and not pending
+            const totalOrderWithoutPending = await Package.countDocuments(
+                {
+                    seller: req.user._id,
+                    $or: [
+                        { 'products.orderStatus': { $ne: 'confirmed' } },
+                        { 'products.orderStatus': { $ne: 'cancel_approve' } },
+                        { 'products.orderStatus': { $ne: 'cancelled_by_seller' } },
+                        { 'products.orderStatus': { $ne: 'cancelled_by_admin' } },
+                        { 'products.orderStatus': { $ne: 'cancelled_by_user' } },
+                    ],
+                    $or: [
+                        { paymentType: 'cashondelivery' },
+                        {
+                            $and: [
+                                { paymentType: { $ne: 'cashondelivery' } },
+                                { paymentStatus: 'paid' }
+                            ]
+                        },
+                    ],
+                })
+
+            //cancellation orders
+            const totalCancelledOrder = await Package.countDocuments(
+                {
+                    seller: req.user._id,
+                    'products.orderStatus': 'cancel_approve',
+                    $or: [
+                        { paymentType: 'cashondelivery' },
+                        {
+                            $and: [
+                                { paymentType: { $ne: 'cashondelivery' } },
+                                { paymentStatus: 'paid' }
+                            ]
+                        },
+                    ]
+                })
+            const totalTodayCancelledOrder = await Package.countDocuments(
+                {
+                    seller: req.user._id,
+                    'products.orderStatus': 'cancel_approve',
+                    $or: [
+                        { paymentType: 'cashondelivery' },
+                        {
+                            $and: [
+                                { paymentType: { $ne: 'cashondelivery' } },
+                                { paymentStatus: 'paid' }
+                            ]
+                        },
+                    ],
+                    createdAt: {
+                        $gte: todayStart,
+                        $lte: todayEnd
+                    }
+                });
+
+            const totalLast30CancelledOrder = await Package.countDocuments(
+                {
+                    seller: req.user._id,
+                    'products.orderStatus': 'cancel_approve',
+                    $or: [
+                        { paymentType: 'cashondelivery' },
+                        {
+                            $and: [
+                                { paymentType: { $ne: 'cashondelivery' } },
+                                { paymentStatus: 'paid' }
+                            ]
+                        },
+                    ],
+                    createdAt: {
+                        $gte: last30DaysStart,
+                        $lte: todayEnd
+                    }
+                })
+
+            // pending orders
+
+            // pending order Between 24 hour
+            const totalOrderBetween24 = await Package.countDocuments(
+                {
+                    seller: req.user._id,
+                    'products.orderStatus': 'confirmed',
+                    $or: [
+                        { paymentType: 'cashondelivery' },
+                        {
+                            $and: [
+                                { paymentType: { $ne: 'cashondelivery' } },
+                                { paymentStatus: 'paid' }
+                            ]
+                        },
+                    ],
+                    sellerTime: {
+                        $gte: last24hourStart,
+                        $lte: todayPedingOrderEnd
+                    }
+                })
+            // pending order Between 12 to 24 hour
+            const totalOrderBetween24to12 = await Package.countDocuments(
+                {
+                    seller: req.user._id,
+                    'products.orderStatus': 'confirmed',
+                    $or: [
+                        { paymentType: 'cashondelivery' },
+                        {
+                            $and: [
+                                { paymentType: { $ne: 'cashondelivery' } },
+                                { paymentStatus: 'paid' }
+                            ]
+                        },
+                    ],
+                    sellerTime: {
+                        $gte: last24hourStart,
+                        $lte: last12hourEnd
+                    }
+                })
+
+            // pending order before 24 hour
+            const totalOrderBefore24 = await Package.countDocuments(
+                {
+                    seller: req.user._id,
+                    'products.orderStatus': 'confirmed',
+                    $or: [
+                        { paymentType: 'cashondelivery' },
+                        {
+                            $and: [
+                                { paymentType: { $ne: 'cashondelivery' } },
+                                { paymentStatus: 'paid' }
+                            ]
+                        },
+                    ],
+                    sellerTime: {
+                        $lte: last24hourStart
+                    }
+                });
+
+
+            // seller time expired order
+            const totalExpiredOrder = await Package.countDocuments(
+                {
+                    seller: req.user._id,
+                    $or: [
+                        {
+                            'products.orderStatus': 'confirmed'
+                        },
+                        {
+                            'products.orderStatus': 'packed'
+                        }
+                    ],
+                    $or: [
+                        { paymentType: 'cashondelivery' },
+                        {
+                            $and: [
+                                { paymentType: { $ne: 'cashondelivery' } },
+                                { paymentStatus: 'paid' }
+                            ]
+                        },
+                    ],
+                    sellerTime: {
+                        $lte: moment()
+                    }
+                });
+
+            //total pending order
+            const totalPendingOrder = await Package.countDocuments(
+                {
+                    seller: req.user._id,
+                    'products.orderStatus': 'confirmed',
+                    $or: [
+                        { paymentType: 'cashondelivery' },
+                        {
+                            $and: [
+                                { paymentType: { $ne: 'cashondelivery' } },
+                                { paymentStatus: 'paid' }
+                            ]
+                        },
+                    ]
+                });
+
+
+            // Products
+            const totalProducts = await Product.aggregate([
+                {
+                    $match: {
+                        createdBy: req.user._id,
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            status: "$products.status",
+                        },
+                        count: { $sum: 1 }
+                    }
+                }
+
+            ]);
+
+            const totalApprovedProducts = await Product.aggregate([
+                {
+                    $match: {
+                        createdBy: req.user._id
+                    }
+                },
+                { $unwind: "$products" },
+                {
+                    $group: {
+                        _id: {
+                            status: "$products.status",
+                            approved: "$products.approved"
+                        },
+                        count: { $sum: 1 }
+                    }
+                },
+                {
+                    $match: {
+                        "_id.approved.status": "approved"
+                    }
+                }
+
+            ]);
+
+            const totalApprovedLiveProducts = await Product.aggregate([
+                {
+                    $match: {
+                        createdBy: req.user._id
+                    }
+                },
+                { $unwind: "$products" },
+                {
+                    $group: {
+                        _id: {
+                            status: "$products.status",
+                            approved: "$products.approved"
+                        },
+                        count: { $sum: 1 }
+                    }
+                },
+                {
+                    $match: {
+                        "_id.status": "active",
+                        "_id.approved.status": "approved"
+                    }
+                }
+
+            ]);
+            const totalApprovedButNotLiveProducts = await Product.aggregate([
+                {
+                    $match: {
+                        createdBy: req.user._id
+                    }
+                },
+                { $unwind: "$products" },
+                {
+                    $group: {
+                        _id: {
+                            status: "$products.status",
+                            approved: "$products.approved"
+                        },
+                        count: { $sum: 1 }
+                    }
+                },
+                {
+                    $match: {
+                        "_id.status": { $ne: 'active' },
+                        "_id.approved.status": "approved"
+                    }
+                }
+
+            ]);
+
+            const totalUnapprovedProducts = await Product.aggregate([
+                {
+                    $match: {
+                        createdBy: req.user._id
+                    }
+                },
+                { $unwind: "$products" },
+                {
+                    $group: {
+                        _id: {
+                            status: "$products.status",
+                            approved: "$products.approved"
+                        },
+                        count: { $sum: 1 }
+                    }
+                },
+                {
+                    $match: {
+                        "_id.approved.status": "unapproved",
+                    }
+                }
+
+            ])
+            const totalPendingProducts = await Product.aggregate([
+                {
+                    $match: {
+                        createdBy: req.user._id
+                    }
+                },
+                { $unwind: "$products" },
+                {
+                    $group: {
+                        _id: {
+                            status: "$products.status",
+                            approved: "$products.approved"
+                        },
+                        count: { $sum: 1 }
+                    }
+                },
+                {
+                    $match: {
+                        "_id.approved.status": "pending",
+                    }
+                }
+
+            ]);
+
+            return res.status(200).json({
+                totalOrders,
+                totalDeliveredOrder,
+                totalTodayDeliveredOrder,
+                totalLast30DeliveredOrder,
+                totalPackedOrder,
+                totalOrderWithoutPending,
+                totalCancelledOrder,
+                totalTodayCancelledOrder,
+                totalLast30CancelledOrder,
+                totalOrderBetween24,
+                totalOrderBetween24to12,
+                totalOrderBefore24,
+                totalExpiredOrder,
+                totalPendingOrder,
+                totalProducts: totalProducts.length === 0 ? 0 : totalProducts[0].count,
+                totalApprovedProducts: totalApprovedProducts.length === 0 ? 0 : totalApprovedProducts[0].count,
+                totalApprovedLiveProducts: totalApprovedLiveProducts.length === 0 ? 0 : totalApprovedLiveProducts[0].count,
+                totalApprovedButNotLiveProducts: totalApprovedButNotLiveProducts.length === 0 ? 0 : totalApprovedButNotLiveProducts[0].count,
+                totalUnapprovedProducts: totalUnapprovedProducts.length === 0 ? 0 : totalUnapprovedProducts[0].count,
+                totalPendingProducts: totalPendingProducts.length === 0 ? 0 : totalPendingProducts[0].count
+            })
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.post('/api/dashboard/orderchart', requiredAuth, checkRole(['seller']), async (req, res) => {
+        const { endDate } = req.body;
+        try {
+            const orderGroupBydate = await Package.aggregate([
+                {
+                    $match: {
+                        seller: req.user._id,
+                        $expr:
+                        {
+                            $gte: [
+                                "$createdAt",
+                                {
+                                    $dateFromString: {
+                                        dateString: endDate,
+                                        format: "%Y-%m-%d"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        createdAt: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    }
+                },
+                {
+                    $group: {
+                        _id: "$createdAt",
+                        orders: {
+                            $sum: 1
+                        }
+                    }
+                },
+                { $sort: { _id: 1 } }
+            ])
+
+            return res.status(200).json(orderGroupBydate);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+
     });
 };
