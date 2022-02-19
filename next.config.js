@@ -4,11 +4,12 @@
 // })
 
 module.exports = {
+    swcMinify: true,
     env: {
         api: 'http://localhost:3000',
         TRACKINGID_PREFIX: 'BCD'
     },
     images: {
-        domains: ['localhost'],
+        domains: ['localhost', 'bcdigital.online'],
     },
 }
