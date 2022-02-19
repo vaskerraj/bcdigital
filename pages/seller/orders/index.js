@@ -248,7 +248,13 @@ const SellerOrders = ({ ordersData, total }) => {
     const getProductTotal = (products, activeTab) => {
         let getNonCancelProduct = 0;
         if (activeTab === 'cancelled') {
-            getNonCancelProduct = products.filter(product => product.orderStatusLog.some(item => item.status === 'cancelled_by_seller'));
+            getNonCancelProduct = products.filter(product => product.orderStatus === 'cancel_approve' ||
+                product.orderStatusLog.some(item =>
+                    item.status !== 'cancel_denide')
+                &&
+                (
+                    product.orderStatus === 'cancelled_by_seller'
+                ));
         } else if (activeTab === 'all') {
             getNonCancelProduct = products.filter(product => product.orderStatusLog.some(item => item.status !== 'cancelled_by_seller'));
         } else {
@@ -329,7 +335,7 @@ const SellerOrders = ({ ordersData, total }) => {
             title: 'Action',
             render: (text, record) => <div className="d-block">
                 {
-                    checkAllProductStatus(record.products, 'confirmed') ?
+                    checkAllProductStatus(record.products, 'confirmed') && activeTab !== 'cancelled' ?
                         <>
                             <Tag color="blue" className="d-block text-info cp"
                                 onClick={() => checkProductStatusWhileReadyToShip(record.products, record._id)}
@@ -344,20 +350,23 @@ const SellerOrders = ({ ordersData, total }) => {
                             </Tag>
                         </>
                         :
-                        <Dropdown
-                            overlay={
-                                <Menu onClick={(e) => handlePrintMenuClick(e, record._id)}>
-                                    <Menu.Item key="1">Print Shipping Label</Menu.Item>
-                                    <Menu.Item key="2" disabled>Print Order Details</Menu.Item>
-                                </Menu>
-                            }
-                            placement="bottomRight"
-                            trigger={['click']}
-                        >
-                            <Button>
-                                Print <DownOutlined />
-                            </Button>
-                        </Dropdown>
+                        activeTab !== 'cancelled' && activeTab !== 'return' && activeTab !== 'all' ?
+                            <Dropdown
+                                overlay={
+                                    <Menu onClick={(e) => handlePrintMenuClick(e, record._id)}>
+                                        <Menu.Item key="1">Print Shipping Label</Menu.Item>
+                                        <Menu.Item key="2" disabled>Print Order Details</Menu.Item>
+                                    </Menu>
+                                }
+                                placement="bottomRight"
+                                trigger={['click']}
+                            >
+                                <Button>
+                                    Print <DownOutlined />
+                                </Button>
+                            </Dropdown>
+                            :
+                            '-'
                 }
 
             </div >,
@@ -428,6 +437,10 @@ const SellerOrders = ({ ordersData, total }) => {
 
     return (
         <>
+            <Head>
+                <title>Manage Orders | BC Digital Seller Center</title>
+                <link rel="icon" href="/favicon.ico" />
+            </Head>
             <Modal
                 title="Add Tracking Id & Print Shipping Label"
                 visible={shippingIdModalVisible}
@@ -465,10 +478,6 @@ const SellerOrders = ({ ordersData, total }) => {
                 </form>
             </Modal>
             <Wrapper onActive="manageOrders" breadcrumb={["Manage Orders"]}>
-                <Head>
-                    <title>Manage Orders | BC Digital Seller Center</title>
-                    <link rel="icon" href="/favicon.ico" />
-                </Head>
                 <div className="d-flex mb-5" style={{ fontSize: '1.6rem', fontWeight: 600 }}>
                     <div className="filter-tab cp" onClick={() => handleStatusChange('all')}>
                         All

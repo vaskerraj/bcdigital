@@ -175,7 +175,6 @@ module.exports = function (server) {
 
             const orders = await Package.find(findByStatusType(status))
                 .find(findByOrderId(orderId))
-                .find(findBySellerId(sellerId))
                 .find(findByPaymentMethod(paymentMethod))
                 .find(findByDate(orderDate))
                 .populate({

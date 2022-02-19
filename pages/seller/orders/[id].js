@@ -36,7 +36,13 @@ const OrdersDetails = ({ order }) => {
 
     useEffect(() => {
         if (currentStatus === 'cancelled') {
-            const cancelledProduct = order.products.filter(product => product.orderStatusLog.some(item => item.status === 'cancelled_by_seller'));
+            const cancelledProduct = order.products.filter(product => product.orderStatus === 'cancel_approve' ||
+                product.orderStatusLog.some(item =>
+                    item.status !== 'cancel_denide')
+                &&
+                (
+                    product.orderStatus === 'cancelled_by_seller'
+                ));
             setfilteredProducts(cancelledProduct);
         } else {
             setfilteredProducts(order.products.filter(item => item.orderStatus === currentStatus))
@@ -46,7 +52,13 @@ const OrdersDetails = ({ order }) => {
     const getProductTotal = (products, currentOrder) => {
         let getNonCancelProduct = 0;
         if (currentOrder === 'cancelled') {
-            getNonCancelProduct = products.filter(product => product.orderStatusLog.some(item => item.status === 'cancelled_by_seller'));
+            getNonCancelProduct = products.filter(product => product.orderStatus === 'cancel_approve' ||
+                product.orderStatusLog.some(item =>
+                    item.status !== 'cancel_denide')
+                &&
+                (
+                    product.orderStatus === 'cancelled_by_seller'
+                ));
         } else {
             getNonCancelProduct = products.filter(item => item.orderStatus === currentOrder);
         }
@@ -306,20 +318,23 @@ const OrdersDetails = ({ order }) => {
                                             </Tag>
                                         </div>
                                         :
-                                        <Dropdown
-                                            overlay={
-                                                <Menu onClick={(e) => handlePrintMenuClick(e, order._id)}>
-                                                    <Menu.Item key="1">Print Shipping Label</Menu.Item>
-                                                    <Menu.Item key="2" disabled>Print Order Details</Menu.Item>
-                                                </Menu>
-                                            }
-                                            placement="bottomRight"
-                                            trigger={['click']}
-                                        >
-                                            <Button>
-                                                Print <DownOutlined />
-                                            </Button>
-                                        </Dropdown>
+                                        currentStatus !== 'cancelled' && currentStatus !== 'return' ?
+                                            <Dropdown
+                                                overlay={
+                                                    <Menu onClick={(e) => handlePrintMenuClick(e, order._id)}>
+                                                        <Menu.Item key="1">Print Shipping Label</Menu.Item>
+                                                        <Menu.Item key="2" disabled>Print Order Details</Menu.Item>
+                                                    </Menu>
+                                                }
+                                                placement="bottomRight"
+                                                trigger={['click']}
+                                            >
+                                                <Button>
+                                                    Print <DownOutlined />
+                                                </Button>
+                                            </Dropdown>
+                                            :
+                                            <></>
                                     }
                                 </div>
                             </div>

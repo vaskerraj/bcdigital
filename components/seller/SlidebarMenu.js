@@ -27,7 +27,7 @@ const SlidebarMenu = ({ onActive }) => {
             mode="inline"
         >
             <Menu.Item key="index" icon={<DesktopOutlined />}>
-                <Link href="/admin/"> Dashboard</Link>
+                <Link href="/seller/"> Dashboard</Link>
             </Menu.Item>
             <SubMenu key="sub1" icon={<BorderOutlined />} title="Product">
                 <Menu.Item key="manageproduct">
@@ -37,6 +37,9 @@ const SlidebarMenu = ({ onActive }) => {
                     <Link href="/seller/product/add">Add Product</Link>
                 </Menu.Item>
             </SubMenu>
+            <Menu.Item key="manageOrders" icon={<ShoppingCartOutlined />}>
+                <Link href="/seller/orders"> Manage Orders</Link>
+            </Menu.Item>
         </Menu>
     );
 }
