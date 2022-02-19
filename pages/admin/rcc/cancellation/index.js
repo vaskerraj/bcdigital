@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useSelector } from 'react-redux';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
 
@@ -15,15 +14,12 @@ import { orderStatusText, paymentTypeText } from '../../../../helpers/functions'
 const CancellationList = ({ cancellations }) => {
 
     const router = useRouter()
-
-    const { adminAuth } = useSelector(state => state.adminAuth);
-
+    console.log(router.query.search);
     const columns = [
         {
             title: 'Order Id',
-            dataIndex: ['order', '_id'],
             key: '_id',
-            render: text => <>{text.toUpperCase()}</>,
+            render: (record, text) => <>{record.order?._id.toUpperCase()}</>,
         },
         {
             title: 'Cancel Amount',
@@ -182,6 +178,10 @@ const CancellationList = ({ cancellations }) => {
         <Wrapper onActive="cancellationList" breadcrumb={["Return, Refund & Cancellation", "Canellation List"]}>
             <Table
                 rowKey="_id"
+                rowClassName={(record) => record.order._id === (router.query.search !== undefined ? router.query.search.toLowerCase() : null)
+                    ? 'table-row-highlight'
+                    : null
+                }
                 columns={columns}
                 expandable={{
                     expandedRowRender: record =>

@@ -244,6 +244,10 @@ const PendingCancellation = ({ cancellations }) => {
         <Wrapper onActive="cancellationPending" breadcrumb={["Return, Refund & Cancellation", "Pending Canellation"]}>
             <Table
                 rowKey="_id"
+                rowClassName={(record) => record.order._id === (router.query.search !== undefined ? router.query.search.toLowerCase() : null)
+                    ? 'table-row-highlight'
+                    : null
+                }
                 columns={columns}
                 expandable={{
                     expandedRowRender: record =>

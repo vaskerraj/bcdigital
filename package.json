@@ -9,6 +9,7 @@
     "start": "cross-env NODE_ENV=production node server/index.js"
   },
   "dependencies": {
+    "@antv/g2plot": "^2.4.8",
     "@ckeditor/ckeditor5-build-classic": "^27.1.0",
     "@ckeditor/ckeditor5-react": "^3.0.2",
     "@createnextapp/react-barcode": "^1.1.1",

@@ -1121,6 +1121,37 @@ ul.custom-rating-star li{
   background: #fff;
 }
 
+/* dashboard */
+.custom-card-header{
+  height: 22px;
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 14px;
+  line-height: 22px;
+}
+.custom-card-total{
+  height: 3.8rem;
+  margin-top: 4px;
+  margin-bottom: 0px;
+  overflow: hidden;
+  color: rgba(0, 0, 0, 0.85);
+  font-size: 30px;
+  line-height: 38px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  word-break: break-all;
+}
+.custom-card-content{
+  height: 4.7rem;
+}
+.custom-card-footer{
+  margin-top: 8px;
+  padding-top: 9px;
+  border-top: 1px solid rgb(240, 240, 240);
+}
+.table-row-highlight{
+  background-color: #ffcbcb;
+}
+
 .category-block{
   width: 30rem;
   margin-right: 1.5rem;

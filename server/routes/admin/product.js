@@ -141,6 +141,16 @@ module.exports = function (server) {
         return res.status(200).json(sellers);
     });
 
+    //  for seller autocomplete using mobile number
+    server.post('/api/search/sellers/mobile', async (req, res) => {
+        const { searchtext } = req.body;
+        const regex = new RegExp(searchtext, 'i');
+        const sellers = await User.find({ username: regex, role: 'seller' }, { username: 1 })
+            .select('name username _id')
+            .limit(10);
+        return res.status(200).json(sellers);
+    });
+
     //  for brand autocomplete
     server.post('/api/search/brands', async (req, res) => {
         const { searchtext } = req.body;

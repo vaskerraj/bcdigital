@@ -1,4 +1,5 @@
 import React from 'react';
+import { useRouter } from 'next/router';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
 
@@ -10,11 +11,12 @@ import Wrapper from '../../../../components/admin/Wrapper';
 import { orderStatusText, paymentTypeText } from '../../../../helpers/functions'
 
 const RefundList = ({ refunds }) => {
+    const router = useRouter();
 
     const columns = [
         {
-            title: 'ID',
-            dataIndex: "_id",
+            title: 'Order Id',
+            dataIndex: ["orderId", "_id"],
             key: '_id',
             render: text => <>{text.toUpperCase()}</>,
         },
@@ -281,9 +283,13 @@ const RefundList = ({ refunds }) => {
 
     return (
         <>
-            <Wrapper onActive="refundPending" breadcrumb={["Refund, Return & Cancellation", "Refund List"]}>
+            <Wrapper onActive="refundList" breadcrumb={["Refund, Return & Cancellation", "Refund List"]}>
                 <Table
                     rowKey="_id"
+                    rowClassName={(record) => record.order._id === (router.query.search !== undefined ? router.query.search.toLowerCase() : null)
+                        ? 'table-row-highlight'
+                        : null
+                    }
                     columns={columns}
                     expandable={{
                         expandedRowRender: record =>

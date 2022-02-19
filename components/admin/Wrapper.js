@@ -40,8 +40,8 @@ const MainSlider = ({ onActive, breadcrumb, children }) => {
                 <Link href="/admin/acccount-setting">
                     <a rel="noopener noreferrer">
                         <SettingOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
-                    Account Setting
-                </a>
+                        Account Setting
+                    </a>
                 </Link>
             </Menu.Item>
             <Menu.Item className="pl-5 pr-5">
@@ -90,7 +90,10 @@ const MainSlider = ({ onActive, breadcrumb, children }) => {
                             <Breadcrumb.Item key={breadList}>{breadList}</Breadcrumb.Item>
                         )}
                     </Breadcrumb>
-                    <div className="site-layout-background" style={{ padding: 24, minHeight: 360 }}>
+                    <div
+                        className={onActive !== 'index' ? 'site-layout-background' : ''}
+                        style={{ padding: onActive !== 'index' ? 24 : 0, minHeight: 360 }}
+                    >
                         {children}
                     </div>
                 </Content>

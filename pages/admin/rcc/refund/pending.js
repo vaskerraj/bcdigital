@@ -16,7 +16,7 @@ import Wrapper from '../../../../components/admin/Wrapper';
 import { orderStatusText, paymentTypeText } from '../../../../helpers/functions'
 
 const PendingRefund = ({ refunds }) => {
-    console.log(refunds);
+
     const [denideReasonModalVisible, setDenideReasonModalVisible] = useState(false);
     const [selectedRefundId, setSelectedRefundId] = useState(null);
 
@@ -27,8 +27,8 @@ const PendingRefund = ({ refunds }) => {
 
     const columns = [
         {
-            title: 'ID',
-            dataIndex: "_id",
+            title: 'Order Id',
+            dataIndex: ["orderId", "_id"],
             key: '_id',
             render: text => <>{text.toUpperCase()}</>,
         },
@@ -434,6 +434,10 @@ const PendingRefund = ({ refunds }) => {
             <Wrapper onActive="refundPending" breadcrumb={["Return, Refund & Cancellation", "Pending Refund"]}>
                 <Table
                     rowKey="_id"
+                    rowClassName={(record) => record.order._id === (router.query.search !== undefined ? router.query.search.toLowerCase() : null)
+                        ? 'table-row-highlight'
+                        : null
+                    }
                     columns={columns}
                     expandable={{
                         expandedRowRender: record =>
