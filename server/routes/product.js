@@ -244,30 +244,6 @@ module.exports = function (server) {
         }
     });
 
-    server.get('/api/products/auth', requiredAuth, checkRole(['admin', 'seller']), async (req, res) => {
-        try {
-            const products = await Product.find({ createdBy: req.user._id }).sort([['createdAt', -1]])
-                .lean()
-                .populate('brand')
-                .populate({
-                    path: 'category',
-                    select: 'name _id',
-                    populate: ({
-                        path: 'parentId',
-                        select: 'name _id',
-                        populate: ({
-                            path: 'parentId',
-                            select: 'name _id',
-                        })
-                    })
-                });
-            if (products) return res.status(200).json(products);
-        } catch (error) {
-            return res.status(422).json({ error: "Some error occur. Please try again later." });
-        }
-    });
-
-
     server.post('/api/product/editor', upload.single('upload'), function (req, res) {
         if (req.file) {
             console.log(req.file);
