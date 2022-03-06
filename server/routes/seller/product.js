@@ -36,7 +36,7 @@ module.exports = function (server) {
                 case 'inactive':
                     return {
                         createdBy: req.user._id,
-                        'products.status': { $ne: 'active' }
+                        'products.status': 'inactive'
                     }
                 case 'unapproved':
                     return {
@@ -45,7 +45,8 @@ module.exports = function (server) {
                     }
                 default:
                     return {
-                        createdBy: req.user._id
+                        createdBy: req.user._id,
+                        'products.price': { $exists: true }
                     }
             }
         }

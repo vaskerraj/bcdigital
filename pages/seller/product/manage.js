@@ -15,6 +15,7 @@ import { SearchOutlined, CloseOutlined, CheckOutlined, EditFilled, DeleteFilled,
 
 import Wrapper from '../../../components/seller/Wrapper';
 import AvailableModal from '../../../components/models/AvailableModel';
+import { checkProductDiscountValidity } from '../../../helpers/productDiscount';
 
 const ManageProduct = ({ productDatas }) => {
 
@@ -109,7 +110,11 @@ const ManageProduct = ({ productDatas }) => {
         },
         {
             title: 'Sale Price(Rs)',
-            dataIndex: "finalPrice",
+            render: (text, record) =>
+                checkProductDiscountValidity(record.promoStartDate, record.promoEndDate) === true
+                    ? record.finalPrice
+                    :
+                    record.price
         },
         {
             title: 'Available',
@@ -128,8 +133,8 @@ const ManageProduct = ({ productDatas }) => {
                     return (<div className='badge bg-warning'>Pending</div>);
                 } else if (record.approved === 'approved') {
                     return (<div className='badge bg-success'>Approved</div>);
-                } else if (record.approved === 'notApproved') {
-                    return (<div className='badge bg-danger'>Not approved"</div>);
+                } else if (record.approved === 'unapproved') {
+                    return (<div className='badge bg-danger'>UnApproved</div>);
                 }
             },
         },
