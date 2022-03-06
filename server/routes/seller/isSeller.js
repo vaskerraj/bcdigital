@@ -435,15 +435,13 @@ module.exports = function (server) {
                         createdBy: req.user._id,
                     }
                 },
+                { $unwind: "$products" },
                 {
-                    $group: {
-                        _id: {
-                            status: "$products.status",
-                        },
-                        count: { $sum: 1 }
+                    "$group": {
+                        "_id": "$id",
+                        "total": { "$sum": 1 }
                     }
                 }
-
             ]);
 
             const totalApprovedProducts = await Product.aggregate([
@@ -454,20 +452,16 @@ module.exports = function (server) {
                 },
                 { $unwind: "$products" },
                 {
-                    $group: {
-                        _id: {
-                            status: "$products.status",
-                            approved: "$products.approved"
-                        },
-                        count: { $sum: 1 }
+                    $match: {
+                        "products.approved.status": "approved"
                     }
                 },
                 {
-                    $match: {
-                        "_id.approved.status": "approved"
+                    "$group": {
+                        "_id": "$id",
+                        "total": { "$sum": 1 }
                     }
                 }
-
             ]);
 
             const totalApprovedLiveProducts = await Product.aggregate([
@@ -478,21 +472,17 @@ module.exports = function (server) {
                 },
                 { $unwind: "$products" },
                 {
-                    $group: {
-                        _id: {
-                            status: "$products.status",
-                            approved: "$products.approved"
-                        },
-                        count: { $sum: 1 }
+                    $match: {
+                        "products.status": "active",
+                        "products.approved.status": "approved"
                     }
                 },
                 {
-                    $match: {
-                        "_id.status": "active",
-                        "_id.approved.status": "approved"
+                    "$group": {
+                        "_id": "$id",
+                        "total": { "$sum": 1 }
                     }
                 }
-
             ]);
             const totalApprovedButNotLiveProducts = await Product.aggregate([
                 {
@@ -502,21 +492,16 @@ module.exports = function (server) {
                 },
                 { $unwind: "$products" },
                 {
-                    $group: {
-                        _id: {
-                            status: "$products.status",
-                            approved: "$products.approved"
-                        },
-                        count: { $sum: 1 }
+                    $match: {
+                        "products.status": 'inactive',
                     }
                 },
                 {
-                    $match: {
-                        "_id.status": { $ne: 'active' },
-                        "_id.approved.status": "approved"
+                    "$group": {
+                        "_id": "$id",
+                        "total": { "$sum": 1 }
                     }
                 }
-
             ]);
 
             const totalUnapprovedProducts = await Product.aggregate([
@@ -527,17 +512,14 @@ module.exports = function (server) {
                 },
                 { $unwind: "$products" },
                 {
-                    $group: {
-                        _id: {
-                            status: "$products.status",
-                            approved: "$products.approved"
-                        },
-                        count: { $sum: 1 }
+                    $match: {
+                        "products.approved.status": "unapproved",
                     }
                 },
                 {
-                    $match: {
-                        "_id.approved.status": "unapproved",
+                    "$group": {
+                        "_id": "$id",
+                        "total": { "$sum": 1 }
                     }
                 }
 
@@ -550,20 +532,16 @@ module.exports = function (server) {
                 },
                 { $unwind: "$products" },
                 {
-                    $group: {
-                        _id: {
-                            status: "$products.status",
-                            approved: "$products.approved"
-                        },
-                        count: { $sum: 1 }
+                    $match: {
+                        "products.approved.status": "pending",
                     }
                 },
                 {
-                    $match: {
-                        "_id.approved.status": "pending",
+                    "$group": {
+                        "_id": "$id",
+                        "total": { "$sum": 1 }
                     }
                 }
-
             ]);
 
             return res.status(200).json({
@@ -581,12 +559,12 @@ module.exports = function (server) {
                 totalOrderBefore24,
                 totalExpiredOrder,
                 totalPendingOrder,
-                totalProducts: totalProducts.length === 0 ? 0 : totalProducts[0].count,
-                totalApprovedProducts: totalApprovedProducts.length === 0 ? 0 : totalApprovedProducts[0].count,
-                totalApprovedLiveProducts: totalApprovedLiveProducts.length === 0 ? 0 : totalApprovedLiveProducts[0].count,
-                totalApprovedButNotLiveProducts: totalApprovedButNotLiveProducts.length === 0 ? 0 : totalApprovedButNotLiveProducts[0].count,
-                totalUnapprovedProducts: totalUnapprovedProducts.length === 0 ? 0 : totalUnapprovedProducts[0].count,
-                totalPendingProducts: totalPendingProducts.length === 0 ? 0 : totalPendingProducts[0].count
+                totalProducts: totalProducts.length === 0 ? 0 : totalProducts[0].total,
+                totalApprovedProducts: totalApprovedProducts.length === 0 ? 0 : totalApprovedProducts[0].total,
+                totalApprovedLiveProducts: totalApprovedLiveProducts.length === 0 ? 0 : totalApprovedLiveProducts[0].total,
+                totalApprovedButNotLiveProducts: totalApprovedButNotLiveProducts.length === 0 ? 0 : totalApprovedButNotLiveProducts[0].total,
+                totalUnapprovedProducts: totalUnapprovedProducts.length === 0 ? 0 : totalUnapprovedProducts[0].total,
+                totalPendingProducts: totalPendingProducts.length === 0 ? 0 : totalPendingProducts[0].total
             })
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });

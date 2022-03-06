@@ -130,7 +130,7 @@ const SellerDashbaord = ({
                                         </div>
                                     </div>
                                     <div>
-                                        <div id="ordersContainer"></div>
+                                        <div id="ordersContainer" style={{ height: 60 }}></div>
                                     </div>
                                 </div>
 
@@ -250,7 +250,7 @@ const SellerDashbaord = ({
                             </Card>
                         </div>
                         <div className="col-md-6 mt-3 mt-sm-0">
-                            <Card className="cp" style={{ width: '100%' }} onClick={() => router.push("/seller/orders")}>
+                            <Card className="cp" style={{ width: '100%' }} onClick={() => router.push("/seller/product/manage")}>
                                 <div className="d-flex justify-content-between">
                                     <div>
                                         <div className="custom-card-header">
