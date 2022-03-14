@@ -11,14 +11,13 @@ import axios from 'axios';
 import moment from 'moment';
 import { useForm } from 'react-hook-form';
 
-import { message, Modal, Tag, Dropdown, Menu, Button } from 'antd';
-import { CheckOutlined, CloseOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { message, Modal } from 'antd';
+import { CheckOutlined, CloseOutlined, ExclamationCircleOutlined, DownOutlined } from '@ant-design/icons';
 
 import Wrapper from '../../../components/admin/Wrapper';
 import { paymentTypeText, generateTrackingId } from '../../../helpers/functions';
 
 const AdminSellerOrdersDetails = ({ order }) => {
-    console.log(order);
 
     // define delivery address variable
     const deliveryAddress = order.delivery?.addresses[0];
@@ -61,7 +60,7 @@ const AdminSellerOrdersDetails = ({ order }) => {
                     || product.orderStatus === 'cancelled_by_admin'
                 ))
         }
-        console.log(cancelledProducts);
+
         let shippingCharge = 0;
         if (cancelledProducts.length === products.length) {
             shippingCharge = order.shippingCharge;
