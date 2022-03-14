@@ -98,8 +98,55 @@ const packageSchema = new mongoose.Schema({
         require: true
     },
     totalPointAmount: {
+        type: String, //need to update at delivery  
+    },
+    shipLocation: {
+        type: ObjectId,
+        ref: 'Users'
+    },
+    shipLocationString: {
         type: String,
-    }
+        default: 'other',
+        enum: [
+            'main_office',
+            'branch_office',
+            'shipping_vendor',
+            'other',
+        ]
+    },
+    shipDate: {
+        type: Date
+    },
+    totalAtDelivery: {
+        type: Number,
+    },
+    deliveryDate: {
+        type: Date
+    },
+    shippingClam: {
+        amount: {
+            type: Number,
+        },
+        reason: {
+            type: String,
+        },
+        clamedBy: { // `clam by` user who clam shipping
+            type: ObjectId,
+            ref: "Users"
+        },
+        clamedFor: { // `clam for` means clam to seller(seller have to pay)
+            type: ObjectId,
+            ref: "Users"
+        },
+        forAgent: {
+            type: ObjectId,
+            ref: "ShippingAgent"
+        },
+        clamedDate: {
+            type: Date
+        }
+    },
+
 }, { timestamps: true });
 
 mongoose.models.Package || mongoose.model('Package', packageSchema)

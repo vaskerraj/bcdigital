@@ -9,6 +9,7 @@ const User = mongoose.model('Users');
 const Payment = mongoose.model('Payment');
 const Cancellation = mongoose.model('Cancellation');
 const Refund = mongoose.model('Refund');
+const Users = mongoose.model('Users');
 
 const { requiredAuth, checkRole, checkAdminRole } = require('../middlewares/auth');
 
@@ -743,4 +744,139 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     })
+
+    ////////////////// Make ship ///////////////
+
+    server.get('/api/package/makeship/:id', async (req, res) => {
+        const packageId = req.params.id;
+        try {
+            const package = await Package.findById(packageId)
+                .lean()
+                .populate({
+                    path: 'orderId',
+                    populate: ([{
+                        path: 'shipping',
+                        select: 'name _id amount maxDeliveryTime minDeliveryTime isDefault',
+                        populate: ({
+                            path: 'shipAgentId',
+                            select: 'name _id number email address',
+                        })
+                    },
+                    {
+                        path: 'orderedBy',
+                        select: 'name username role picture _id',
+                    }
+                    ])
+                })
+                .populate({
+                    path: 'seller',
+                    select: 'name mobile email picture _id'
+                });
+            const getProductDetail = async (products) => {
+
+                const getProductIds = products.map(item => item.productId);
+                let relatedProducts = [];
+                await Promise.all(
+                    getProductIds.map(async (pro) => {
+                        const orderProducts = await Product.findOne(
+                            {
+                                'products._id': pro
+                            },
+                            {
+                                'products.$': 1
+                            })
+                            .select('_id name colour products package').lean();
+                        relatedProducts.push(orderProducts);
+                    })
+                );
+
+                const parseProducts = JSON.parse(JSON.stringify(relatedProducts));
+
+                // combine proucts details and productQty
+                const combineProductWithOrderitems = parseProducts.map(item => ({
+                    ...item,
+                    ...products.find(ele => ele.productId == item.products[0]._id)
+                }));
+
+                return combineProductWithOrderitems;
+            }
+            const getUserAddress = async (addressId) => {
+                const userAddress = await Users.findOne(
+                    {
+                        "addresses._id": addressId,
+                    }, { _id: 0 })
+                    .select('addresses')
+                    .lean()
+                    .populate('addresses.region', 'name')
+                    .populate('addresses.city', 'name')
+                    .populate('addresses.area', 'name');
+
+                return userAddress;
+            }
+
+            const packageObj = new Object();
+            packageObj['_id'] = package._id;
+            packageObj['products'] = await getProductDetail(package.products);
+            packageObj['shippingCharge'] = package.shippingCharge;
+            packageObj['delivery'] = await getUserAddress(package.orderId.delivery);
+            packageObj['deliveryMobile'] = package.orderId.deliveryMobile;
+            packageObj['paymentType'] = package.paymentType;
+            packageObj['paymentStatus'] = package.paymentStatus;
+            packageObj['seller'] = package.seller;
+            packageObj['orders'] = package.orderId;
+            packageObj['packageTotal'] = package.packageTotal;
+            packageObj['trackingId'] = package.trackingId;
+            packageObj['createdAt'] = package.createdAt;
+
+            return res.status(200).json(packageObj);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.put("/api/package/makeship", async (req, res) => {
+        const { packageId } = req.body;
+        try {
+            const shipStatusLog = {
+                status: 'shipped',
+                statusChangeBy: req.user?._id !== undefined ? req.user._id : null,
+                statusChangeDate: new Date()
+            }
+
+            const allProductFromPackage = await Package.findById(packageId, { _id: 0 }).select('products').lean();
+            const packedProductOnly = allProductFromPackage.products.filter(item => item.orderStatus === "packed");
+
+            await Promise.all(
+                packedProductOnly.map(async pro => {
+                    await Package.findOneAndUpdate({
+                        _id: packageId,
+                        'products._id': pro._id,
+                    },
+                        {
+                            $set: {
+                                "products.$.orderStatus": 'shipped',
+                            },
+                            $push: {
+                                'products.$.orderStatusLog': shipStatusLog
+                            }
+                        });
+                })
+            );
+
+            await Package.findOneAndUpdate({
+                _id: packageId
+            }, {
+
+                $set: {
+                    shipLocation: req.user?._id !== undefined ? req.user._id : null,
+                    shipDate: new Date()
+                }
+            })
+
+            return res.status(200).json({ msg: 'success' });
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    })
+
 };
