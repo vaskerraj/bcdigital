@@ -6,7 +6,8 @@ import { useSelector } from 'react-redux';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
 import axiosApi from '../../../helpers/api';
-import baseUrl from '../../../helpers/baseUrl';
+
+import CryptoJS from 'crypto-js';
 
 import Countdown from "react-countdown";
 import moment from 'moment';
@@ -354,6 +355,12 @@ const SellerOrder = ({ ordersData, total }) => {
         }
     };
 
+    const makeShipHandler = (packageId) => {
+        var originalText = CryptoJS.RC4Drop.encrypt(packageId, "BCxx20xx").toString();
+
+        return router.push(`/makeship/${encodeURIComponent(originalText)}`);
+    }
+
     const columns = [
         {
             title: 'ID',
@@ -379,12 +386,11 @@ const SellerOrder = ({ ordersData, total }) => {
         },
         {
             title: 'Shipping',
-            dataIndex: ['shippingCharge'],
-            key: ['shippingCharge'],
+            render: (text, record) => <>Rs.{getShippingCharge(record.products, record.shippingCharge, activeTab)}</>,
         },
         {
             title: 'Grand Total',
-            render: (text, record) => <>Rs.{getProductTotal(record.products, activeTab) + record.shippingCharge}</>,
+            render: (text, record) => <>Rs.{getProductTotal(record.products, activeTab) + getShippingCharge(record.products, record.shippingCharge, activeTab)}</>,
         },
         {
             title: 'Order By',
@@ -464,9 +470,13 @@ const SellerOrder = ({ ordersData, total }) => {
                             </button>
                         </>
                         :
-                        <>
-                            -
-                        </>
+                        activeTab === 'packed' ?
+                            <Button className="mt-2" onClick={() => makeShipHandler(record._id)}>
+                                <CheckOutlined />
+                                Make Ship
+                            </Button>
+                            :
+                            "-"
                 }
 
             </div >,
@@ -632,13 +642,40 @@ const SellerOrder = ({ ordersData, total }) => {
     const getProductTotal = (products, activeTab) => {
         let getNonCancelProduct = 0;
         if (activeTab === 'cancelled') {
-            getNonCancelProduct = products.filter(product => product.orderStatusLog.some(item => item.status === 'cancelled_by_seller' || item.status === 'cancelled_by_admin' || item.status === 'cancelled_by_user'));
-        } else if (activeTab === 'all') {
-            getNonCancelProduct = products.filter(product => product.orderStatusLog.some(item => item.status !== 'cancelled_by_seller'));
+            getNonCancelProduct = products.filter(product => product.orderStatus === 'cancel_approve' ||
+                product.orderStatusLog.some(item =>
+                    item.status !== 'cancel_denide')
+                &&
+                (
+                    product.orderStatus === 'cancelled_by_seller'
+                    || product.status === 'cancelled_by_admin'
+                    || product.status === 'cancelled_by_user'
+                ));
         } else {
             getNonCancelProduct = products.filter(item => item.orderStatus === activeTab);
         }
         return getNonCancelProduct.reduce((a, c) => (a + c.productQty * c.price), 0);
+    }
+
+    const getShippingCharge = (products, packageShippingCharge, currentOrder) => {
+        let cancelledProducts = products;
+        if (currentOrder === 'cancelled') {
+            cancelledProducts = products.filter(product => product.orderStatus === 'cancel_approve' ||
+                product.orderStatusLog.some(item =>
+                    item.status !== 'cancel_denide')
+                &&
+                (
+                    product.orderStatus === 'cancelled_by_seller'
+                    || product.orderStatus === 'cancelled_by_user'
+                    || product.orderStatus === 'cancelled_by_admin'
+                ))
+        }
+
+        let shippingCharge = 0;
+        if (cancelledProducts.length === products.length) {
+            shippingCharge = packageShippingCharge;
+        }
+        return shippingCharge;
     }
     const handleStatusChange = useCallback(value => {
         setOnFirstLoad(false);
