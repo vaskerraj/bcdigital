@@ -9,28 +9,188 @@ const { requiredAuth, checkRole, checkAdminRole } = require('../../middlewares/a
 
 module.exports = function (server) {
 
-    server.get('/api/admin/orders/own', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
+    server.post('/api/admin/orders/own', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
+        const { status, paymentMethod, orderId, orderDate, sort, page, limit } = req.body;
+        const findByStatusType = type => {
+            switch (type) {
+                case 'not_confirmed':
+                    return {
+                        sellerRole: 'own',
+                        'products.orderStatus': 'not_confirmed',
+                        $or: [
+                            { paymentType: 'cashondelivery' },
+                            {
+                                $and: [
+                                    { paymentType: { $ne: 'cashondelivery' } },
+                                    { paymentStatus: 'paid' }
+                                ]
+                            },
+                        ],
+                    }
+                case 'confirmed':
+                    return {
+                        sellerRole: 'own',
+                        'products.orderStatus': 'confirmed',
+                        $or: [
+                            { paymentType: 'cashondelivery' },
+                            {
+                                $and: [
+                                    { paymentType: { $ne: 'cashondelivery' } },
+                                    { paymentStatus: 'paid' }
+                                ]
+                            },
+                        ],
+                    }
+                case 'packed':
+                    return {
+                        sellerRole: 'own',
+                        'products.orderStatus': 'packed',
+                        $or: [
+                            { paymentType: 'cashondelivery' },
+                            {
+                                $and: [
+                                    { paymentType: { $ne: 'cashondelivery' } },
+                                    { paymentStatus: 'paid' }
+                                ]
+                            },
+                        ],
+                    }
+                case 'shipped':
+                    return {
+                        sellerRole: 'own',
+                        'products.orderStatus': 'shipped',
+                        $or: [
+                            { paymentType: 'cashondelivery' },
+                            {
+                                $and: [
+                                    { paymentType: { $ne: 'cashondelivery' } },
+                                    { paymentStatus: 'paid' }
+                                ]
+                            },
+                        ],
+                    }
+                case 'delivered':
+                    return {
+                        sellerRole: 'own',
+                        'products.orderStatus': 'delivered',
+                        $or: [
+                            { paymentType: 'cashondelivery' },
+                            {
+                                $and: [
+                                    { paymentType: { $ne: 'cashondelivery' } },
+                                    { paymentStatus: 'paid' }
+                                ]
+                            },
+                        ],
+                    }
+                case 'cancelled':
+                    return {
+                        sellerRole: 'own',
+                        'products.orderStatus': 'cancel_approve',
+                        products: {
+                            $elemMatch: { "orderStatusLog.status": ['cancelled_by_admin', 'cancelled_by_seller', 'cancelled_by_user'] }
+                        },
+
+                        $or: [
+                            { paymentType: 'cashondelivery' },
+                            {
+                                $and: [
+                                    { paymentType: { $ne: 'cashondelivery' } },
+                                    { paymentStatus: 'paid' }
+                                ]
+                            },
+                        ],
+                    }
+                case 'return':
+                    return {
+                        sellerRole: 'own',
+                        products: {
+                            $elemMatch: { "orderStatusLog.status": ['return_request'] }
+                        },
+                        $or: [
+                            { paymentType: 'cashondelivery' },
+                            {
+                                $and: [
+                                    { paymentType: { $ne: 'cashondelivery' } },
+                                    { paymentStatus: 'paid' }
+                                ]
+                            },
+                        ],
+                    }
+                default:
+                    return {
+                        sellerRole: 'own',
+                        $or: [
+                            { 'products.orderStatus': 'not_confirmed' },
+                            { 'products.orderStatus': 'confirmed' },
+                            { 'products.orderStatus': 'packed' },
+                            { 'products.orderStatus': 'shipped' },
+                            { 'products.orderStatus': 'for_delivery' },
+                            { 'products.orderStatus': 'delivered' },
+                            { 'products.orderStatus': 'cancelled_by_user' },
+                            { 'products.orderStatus': 'cancelled_by_seller' },
+                            { 'products.orderStatus': 'cancelled_by_admin' },
+                            { 'products.orderStatus': 'cancel_approve' },
+                            { 'products.orderStatus': 'cancel_denide' },
+                        ],
+                        $or: [
+                            { paymentType: 'cashondelivery' },
+                            {
+                                $and: [
+                                    { paymentType: { $ne: 'cashondelivery' } },
+                                    { paymentStatus: 'paid' }
+                                ]
+                            },
+                        ],
+                    }
+            }
+        }
+        const findByOrderId = (id) => {
+            if (id !== 'all') {
+                return {
+                    orderId: id
+                }
+            } else {
+                return {};
+            }
+        }
+        const findByDate = (date) => {
+            if (date != 'all') {
+                return {
+                    createdAt: {
+                        $gte: date.startDate, $lt: date.endDate
+                    }
+                }
+            } else {
+                return {};
+            }
+        }
+        const findByPaymentMethod = (method) => {
+            if (method != 'all') {
+                return { paymentType: method }
+            } else {
+                return {};
+            }
+        }
+
+        const sortBy = sort => {
+            switch (sort) {
+                case 'oldest':
+                    return [['createdAt', 1]]
+                case 'newest':
+                    return [['createdAt', - 1]]
+                default:
+                    return [['createdAt', - 1]]
+            }
+        }
+
+        const currentPage = page || 1;
+        const orderPerPage = limit || 30;
         try {
-            const orders = await Package.find({
-                'sellerRole': 'own',
-                $or: [
-                    { 'products.orderStatus': 'not_confirmed' },
-                    { 'products.orderStatus': 'confirmed' },
-                    { 'products.orderStatus': 'packed' },
-                    { 'products.orderStatus': 'shipped' },
-                    { 'products.orderStatus': 'for_delivery' },
-                    { 'products.orderStatus': 'delivered' },
-                ],
-                $or: [
-                    { paymentType: 'cashondelivery' },
-                    {
-                        $and: [
-                            { paymentType: { $ne: 'cashondelivery' } },
-                            { paymentStatus: 'paid' }
-                        ]
-                    },
-                ],
-            })
+            const orders = await Package.find(findByStatusType(status))
+                .find(findByOrderId(orderId))
+                .find(findByPaymentMethod(paymentMethod))
+                .find(findByDate(orderDate))
                 .populate({
                     path: 'orderId',
                     populate: ([{
@@ -46,16 +206,18 @@ module.exports = function (server) {
                         select: 'name _id code availableFor discountType discountAmount minBasket availableVoucher'
                     }, {
                         path: 'orderedBy',
-                        select: 'name username role picture _id',
+                        select: 'name mobile email username role picture _id',
                     }
                     ])
                 })
                 .populate({
                     path: 'seller',
-                    select: 'name picture _id',
+                    select: 'name mobile _id',
                 })
                 .lean()
-                .sort([['updatedAt', -1]]);
+                .sort(sortBy(sort))
+                .skip((currentPage - 1) * orderPerPage)
+                .limit(orderPerPage);
 
             const getProductDetail = async (products) => {
 
@@ -70,7 +232,7 @@ module.exports = function (server) {
                             {
                                 'products.$': 1
                             })
-                            .select('_id name colour products').lean();
+                            .select('name slug colour products _id').lean();
                         relatedProducts.push(orderProducts);
                     })
                 );
@@ -99,6 +261,7 @@ module.exports = function (server) {
                     productObj['paymentType'] = item.paymentType;
                     productObj['paymentStatus'] = item.paymentStatus;
                     productObj['seller'] = item.seller;
+                    productObj['sellerTime'] = item.sellerTime;
                     productObj['orders'] = item.orderId;
                     productObj['packageTotal'] = item.packageTotal;
                     productObj['createdAt'] = item.createdAt;
@@ -106,11 +269,21 @@ module.exports = function (server) {
                     orderProducts.push(productObj);
                 })
             )
-            return res.status(200).json(orderProducts);
+            const allOrders = await Package.find(findByStatusType(status))
+                .find(findByOrderId(orderId))
+                .find(findByPaymentMethod(paymentMethod))
+                .find(findByDate(orderDate))
+                .select('_id');
+
+            return res.status(200).json({
+                orders: orderProducts,
+                total: allOrders.length
+            });
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
+
     server.post('/api/admin/orders/seller', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
         const { status, paymentMethod, orderId, orderDate, sellerId, sort, page, limit } = req.body;
         const findByStatusType = type => {
@@ -401,7 +574,8 @@ module.exports = function (server) {
                 statusChangeBy: req.user._id,
                 statusChangeDate: new Date()
             }
-            await Package.findOneAndUpdate({
+            const updatePackage = await Package.findOneAndUpdate({
+                _id: tackingId,
                 'products._id': itemId,
             }, {
                 '$set': {
@@ -472,34 +646,31 @@ module.exports = function (server) {
         const { trackingId, packageId, productId } = req.body;
 
         try {
-            await Package.findOneAndUpdate({
-                'products._id': { $in: productId }
-            }, {
-                '$set': {
-                    "products.$.orderStatus": 'packed'
-                }
-            });
 
             const orderStatusLog = {
                 status: 'packed',
                 statusChangeBy: req.user._id,
                 statusChangeDate: new Date()
             }
-            await Package.findOneAndUpdate({
-                _id: packageId,
-                'products._id': { $in: productId }
-            },
-                {
-                    $push: {
-                        'products.$.orderStatusLog': orderStatusLog
+
+            await Promise.all(
+                productId.map(async (id) => {
+                    await Package.findOneAndUpdate({
+                        _id: packageId,
+                        'products._id': id
                     },
-                    $set: {
-                        trackingId
-                    }
-                },
-                {
-                    new: true
-                });
+                        {
+                            $set: {
+                                "products.$.orderStatus": 'packed',
+                                trackingId
+                            },
+                            $push: {
+                                'products.$.orderStatusLog': orderStatusLog
+                            }
+                        });
+                })
+            )
+
             return res.status(200).json({ msg: "success" });
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
@@ -824,7 +995,7 @@ module.exports = function (server) {
 
                 const shippingChargeOnCancel = cancelProductObj.shippingCharge;
 
-                const totalRefundAmount = parseInt(productTotalAmount) + parseInt(shippingChargeOnCancel);
+                const totalRefundCancelAmount = parseInt(productTotalAmount) + parseInt(shippingChargeOnCancel);
                 const cancelStatusLog = {
                     status: 'complete',
                     statusChangeBy: req.user._id,

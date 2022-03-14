@@ -21,6 +21,7 @@
     "bootstrap": "^5.0.0-alpha1",
     "child_process": "^1.0.2",
     "cross-env": "^7.0.3",
+    "crypto-js": "^4.1.1",
     "easyqrcodejs": "^4.4.10",
     "express": "^4.17.1",
     "firebase": "^8.6.7",
