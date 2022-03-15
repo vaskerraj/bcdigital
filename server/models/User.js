@@ -41,11 +41,15 @@ const userSchema = new mongoose.Schema({
         default: 'subscriber'
     },
     adminRole: {
-        type: String
+
     },
     sellerRole: {
         type: String,
         default: 'normal'
+    },
+    deliveryRole:
+    {
+        type: String  // main(shipping agent created by admin) / branch(branch head created by shipping agent) / rider 
     },
     registerMethod: {
         type: String,
