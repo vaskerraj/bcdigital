@@ -68,6 +68,7 @@ app.prepare().then(() => {
     glob.sync(rootPath + '/server/routes/user/*.js').forEach(controllerPath => require(controllerPath)(server));
     glob.sync(rootPath + '/server/routes/admin/*.js').forEach(controllerPath => require(controllerPath)(server));
     glob.sync(rootPath + '/server/routes/seller/*.js').forEach(controllerPath => require(controllerPath)(server));
+    glob.sync(rootPath + '/server/routes/delivery/*.js').forEach(controllerPath => require(controllerPath)(server));
 
     server.all('*', (req, res) => {
         return handle(req, res)

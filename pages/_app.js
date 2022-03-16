@@ -7,11 +7,12 @@ import '../styles/globals.css'
 import FirebaseAuthState from '../components/FirebaseAuthState';
 import FirebaseAdminAuthState from '../components/admin/FirebaseAdminAuthState';
 import FirebaseSellerAuthState from '../components/seller/FirebaseSellerAuthState';
+import FirebaseDeliveryAuthState from '../components/delivery/FirebaseDeliveryAuthState';
 
 import store from '../redux/store';
 import ad_store from '../redux/ad_store';
 import sell_store from '../redux/sell_store';
-import Wrapper from '../components/Wrapper';
+import del_store from '../redux/del_store';
 
 function MyApp({ Component, pageProps }) {
   const router = useRouter();
@@ -30,6 +31,14 @@ function MyApp({ Component, pageProps }) {
         <FirebaseSellerAuthState>
           <Component {...pageProps} />
         </FirebaseSellerAuthState>
+      </Provider>
+    )
+  } else if (router.asPath.indexOf("delivery") === 1) {
+    return (
+      <Provider store={del_store}>
+        <FirebaseDeliveryAuthState>
+          <Component {...pageProps} />
+        </FirebaseDeliveryAuthState>
       </Provider>
     )
   } else {
