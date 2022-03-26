@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import { User as UserIcon, ChevronDown, LogOut } from 'react-feather';
 
-import { signout } from '../../redux/actions/sellerAuthAction';
+import { signout } from '../../redux/actions/deliveryAuthAction';
 import SlidebarMenu from './SlidebarMenu';
 
 const MainSlider = ({ onActive, breadcrumb, planView, children }) => {
@@ -59,7 +59,7 @@ const MainSlider = ({ onActive, breadcrumb, planView, children }) => {
                     <Link href="/seller/">
                         <div className="logo" style={{ height: 'auto' }}>BC-DC</div>
                     </Link>
-                    <SlidebarMenu onActive={onActive} />
+                    <SlidebarMenu onActive={onActive} deliveryRole={deliveryAuth?.deliveryRole} />
                 </Sider>
             }
             <Layout className="site-layout">

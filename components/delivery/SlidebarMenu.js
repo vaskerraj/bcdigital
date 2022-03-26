@@ -8,7 +8,7 @@ import {
     PicCenterOutlined
 } from '@ant-design/icons';
 
-const SlidebarMenu = ({ onActive }) => {
+const SlidebarMenu = ({ onActive, deliveryRole }) => {
     return (
         <Menu theme="dark"
             defaultSelectedKeys={[onActive]}
@@ -24,12 +24,17 @@ const SlidebarMenu = ({ onActive }) => {
             <Menu.Item key="manageDelivery" icon={<ShoppingCartOutlined />}>
                 <Link href="/delivery/deliveries"> Deliveries</Link>
             </Menu.Item>
-            <Menu.Item key="manageRider" icon={<TeamOutlined />}>
-                <Link href="/delivery/manage-rider">Manage Rider</Link>
-            </Menu.Item >
-            <Menu.Item key="manageBranch" icon={<PicCenterOutlined />}>
-                <Link href="/delivery/manage-branch">Manage Branch</Link>
-            </Menu.Item>
+            {(deliveryRole === "main" || deliveryRole === "branch") &&
+                <Menu.Item key="manageRider" icon={<TeamOutlined />}>
+                    <Link href="/delivery/rider">Manage Riders</Link>
+                </Menu.Item >
+            }
+
+            {deliveryRole === "main" &&
+                <Menu.Item key="manageBranch" icon={<PicCenterOutlined />}>
+                    <Link href="/delivery/branch">Manage Branchs</Link>
+                </Menu.Item>
+            }
         </Menu >
     );
 }
