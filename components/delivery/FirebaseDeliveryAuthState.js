@@ -10,30 +10,35 @@ const FirebaseDeliveryAuthState = ({ children }) => {
     useEffect(() => {
         return firebase.auth().onIdTokenChanged(async (user) => {
             if (!user) {
-
                 // cookies
                 destroyCookie(null, "del_token");
-                setCookie(null, "del_token", "", {
-                    path: '/'
-                });
+                destroyCookie(null, "del_role");
 
                 await firebase.auth().signOut();
             } else {
-                const token = await user.getIdToken();
+                const idTokenResult = user.getIdTokenResult();
+                // Note: () position is very important
+                const deliveryRole = (await idTokenResult).claims?.deliveryRole;
+                const token = (await idTokenResult).token;
+
 
                 // set token to cookie
                 destroyCookie(null, "del_token");
+                destroyCookie(null, "del_role");
                 setCookie(null, "del_token", token, {
+                    path: '/'
+                });
+                setCookie(null, "del_role", deliveryRole, {
                     path: '/'
                 });
 
                 // dispatch login
                 const dispatchData = {
                     user: user.displayName,
-                    deliveryRole: user.deliveryRole,
+                    deliveryRole,
                     token
                 }
-                dispatch({ type: DELIVERY_SIGIN_SUCCESS, payload: dispatchData })
+                dispatch({ type: DELIVERY_SIGIN_SUCCESS, payload: dispatchData });
             }
         });
     }, []);
