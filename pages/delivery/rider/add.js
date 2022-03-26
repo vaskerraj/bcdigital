@@ -29,6 +29,16 @@ const AddRiderBranch = ({ deliveryData }) => {
 export async function getServerSideProps(context) {
     try {
         const cookies = parseCookies(context);
+        if (cookies.del_role === "rider") {
+            //only rider cant access
+            return {
+                redirect: {
+                    source: '/delivery/404',
+                    destination: '/delivery/404',
+                    permanent: false,
+                },
+            }
+        }
         const { data } = await axios.get(`${process.env.api}/api/isdelivery`, {
             headers: {
                 token: cookies.del_token,

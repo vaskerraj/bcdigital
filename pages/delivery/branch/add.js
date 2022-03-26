@@ -29,6 +29,15 @@ const AddDeliveryBranch = ({ cityList }) => {
 export async function getServerSideProps(context) {
     try {
         const cookies = parseCookies(context);
+        if (cookies.del_role !== "main") {
+            return {
+                redirect: {
+                    source: '/delivery/404',
+                    destination: '/delivery/404',
+                    permanent: false,
+                },
+            }
+        }
         const { data } = await axios.get(`${process.env.api}/api/related/citylist`, {
             headers: {
                 token: cookies.del_token,
