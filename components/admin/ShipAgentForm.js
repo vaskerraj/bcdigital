@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { message } from 'antd';
 
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 
 import axiosApi from '../../helpers/api';
 
@@ -15,8 +15,8 @@ message.config({
     duration: 3,
 });
 
-const BannerForm = (props) => {
-    const { action, agentData } = props;
+const ShipAgentForm = (props) => {
+    const { action, cities, agentData } = props;
 
     const router = useRouter();
 
@@ -24,14 +24,13 @@ const BannerForm = (props) => {
 
     const defaultValues = {
         name: action === "edit_agent" ? agentData.name : '',
-        email: action === "edit_agent" ? agentData.email : '',
         number: action === "edit_agent" ? agentData.number : '',
         address: action === "edit_agent" ? agentData.address : '',
         panNo: action === "edit_agent" ? agentData.panNo : '',
         minTime: action === "edit_agent" ? agentData.minDeliveryTime : '',
         maxTime: action === "edit_agent" ? agentData.minDeliveryTime : '',
     }
-    const { register, handleSubmit, errors, reset } = useForm({
+    const { register, handleSubmit, errors, reset, control, setValue } = useForm({
         defaultValues: defaultValues
     });
 
@@ -39,10 +38,15 @@ const BannerForm = (props) => {
         reset(defaultValues);
     }, []);
 
+    useEffect(() => {
+        register({ name: "relatedCity" });
+    }, [register]);
+
+
+    const onHandleChanage = (value, option) => setValue("relatedCity", option.key);
 
     const onSubmit = async (inputdata) => {
         if (action === 'add_agent') {
-            console.log(inputdata);
 
             try {
                 const data = await axiosApi.post("/api/shipagent", {
@@ -52,7 +56,9 @@ const BannerForm = (props) => {
                     number: inputdata.number,
                     panNo: inputdata.panNo,
                     minDeliveryTime: inputdata.minTime,
-                    maxDeliveryTime: inputdata.maxTime
+                    maxDeliveryTime: inputdata.maxTime,
+                    password: inputdata.password,
+                    relatedCity: inputdata.password
                 },
                     {
                         headers: {
@@ -144,17 +150,6 @@ const BannerForm = (props) => {
                         {errors.name && <p className="errorMsg">{errors.name.message}</p>}
                     </div>
                     <div className="col-sm-6 col-md-4 mt-4">
-                        <label className="cat-label">Email</label>
-                        <input type="email" name="email"
-                            className="form-control"
-                            autoComplete="none"
-                            ref={register({
-                                required: "Provide email"
-                            })}
-                        />
-                        {errors.email && <p className="errorMsg">{errors.email.message}</p>}
-                    </div>
-                    <div className="col-sm-6 col-md-4 mt-4">
                         <label className="cat-label">Number/Mobile</label>
                         <input type="number" name="number"
                             className="form-control"
@@ -184,6 +179,40 @@ const BannerForm = (props) => {
                             })}
                         />
                         {errors.panNo && <p className="errorMsg">{errors.panNo.message}</p>}
+                    </div>
+                    <div className="col-sm-6 col-md-4 mt-4">
+                        <label className="cat-label">Service At(City)</label>
+                        <Controller
+                            name="serviceCity"
+                            defaultValue={action === 'add_branch' ? "" : branchData.relatedCity.name}
+                            control={control}
+                            render={({ onChange, value, ref }) => (
+                                <Select
+                                    showSearch
+                                    className="d-block"
+                                    style={{ width: 250 }}
+                                    onChange={(value, option) => {
+                                        onChange(value);
+                                        onHandleChanage(value, option);
+                                    }
+                                    }
+                                    value={value}
+                                    placeholder="Select City"
+
+                                >
+                                    {cities.map(areas =>
+                                        <OptGroup key={areas._id} label={areas.name}>
+                                            {areas.children.map(city =>
+                                                <Option key={city._id} value={city.name}>{city.name}</Option>
+                                            )}
+                                        </OptGroup>
+                                    )}
+                                </Select>
+                            )}
+                            rules={{ required: "Provide city" }}
+                        />
+
+                        {errors.serviceCity && <p className="errorMsg">{errors.serviceCity.message}</p>}
                     </div>
                     <div className="col-sm-6 col-md-4 mt-4">
                         <label htmlFor="minTime" className="cat-label">MINIMUM DELIVERY TIME</label>
@@ -222,6 +251,52 @@ const BannerForm = (props) => {
                         {errors.maxTime && <p className="errorMsg">{errors.maxTime.message}</p>}
                     </div>
                 </div>
+                {action === 'add_agent' &&
+                    <div className="row">
+                        <div className="col-12 mt-4 font16">
+                            <strong>Login Detail</strong>
+                        </div>
+                        <div className="col-sm-6 mt-3 pt-1">
+                            <label className="cat-label">Email</label>
+                            <input type="email" name="email"
+                                className="form-control"
+                                autoComplete="none"
+                                ref={register({
+                                    required: "Provide email"
+                                })}
+                            />
+                            {errors.email && <p className="errorMsg">{errors.email.message}</p>}
+                        </div>
+                        <div className="col-sm-6">
+                            <div className="d-block position-relative mt-3 pt-1">
+                                <label>Password</label>
+                                <input type="text"
+                                    name="password"
+                                    className="form-control mt-1"
+                                    autoComplete="off"
+                                    ref={register({
+                                        required: true,
+                                        pattern: /^(?=.*\d)(?=.*[a-z])(?=.*[a-zA-Z]).{5,}$/i,
+                                        minLength: 5
+                                    })}
+                                />
+                                {errors.password && errors.password.type === "required" && (
+                                    <p className="errorMsg">Provide password</p>
+                                )}
+                                {errors.password && errors.password.type === "minLength" && (
+                                    <p className="errorMsg">
+                                        Password must be atleast 5 characters
+                                    </p>
+                                )}
+                                {errors.password && errors.password.type === "pattern" && (
+                                    <p className="errorMsg">
+                                        Password should contain letter and number
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
             <div className="d-block mt-5">
                 <button type="submit" className="btn c-btn-primary">
@@ -231,4 +306,4 @@ const BannerForm = (props) => {
         </form >
     )
 };
-export default BannerForm;
+export default ShipAgentForm;

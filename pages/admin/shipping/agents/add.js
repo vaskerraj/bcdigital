@@ -9,9 +9,7 @@ import { ChevronLeft } from 'react-feather';
 import Wrapper from '../../../../components/admin/Wrapper';
 import ShipAgentForm from '../../../../components/admin/ShipAgentForm';
 
-const AddBrands = ({ agents }) => {
-
-    const { adminAuth } = useSelector(state => state.adminAuth);
+const AddBrands = ({ cities }) => {
 
     return (
         <Wrapper onActive="agents" breadcrumb={["Shipping", "Agents", "Add Agent"]}>
@@ -25,6 +23,7 @@ const AddBrands = ({ agents }) => {
             </div>
             <ShipAgentForm
                 action="add_agent"
+                cities={cities}
             />
         </Wrapper>
     );
@@ -32,14 +31,14 @@ const AddBrands = ({ agents }) => {
 export async function getServerSideProps(context) {
     try {
         const cookies = parseCookies(context);
-        const { data } = await axios.get(`${process.env.api}/api/shipagent`, {
+        const { data } = await axios.get(`${process.env.api}/api/related/citylist`, {
             headers: {
                 token: cookies.ad_token,
             },
         });
         return {
             props: {
-                agents: data
+                cities: data
             }
         }
     } catch (err) {

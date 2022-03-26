@@ -176,6 +176,20 @@ module.exports = function (server) {
         }
     });
 
+    // city list for delivery and admin for shipingagent register, branch register and rider register
+    // 
+    server.get('/api/related/citylist', requiredAuth, checkRole(['delivery', 'admin']), async (req, res) => {
+        try {
+            const addresses = await DefaultAddress.find({}).lean();
+            // get list of categories with subs
+            const allAddresses = addressListWithSubs(addresses);
+            const filteredCity = allAddresses.filter(item => item.children.some(itm => itm._id !== undefined));
+            return res.status(200).json(filteredCity);
+        } catch (error) {
+            return res.status(422).json({ error: error });
+        }
+    });
+
     // shipping plan list (for both user who have address and doesnt have address)
     // user who have default address
     server.get('/api/shipping', requiredAuth, checkRole(['subscriber']), async (req, res) => {
