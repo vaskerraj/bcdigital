@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
+const { ObjectId } = mongoose.Schema;
 
 const shipAgentSchema = new mongoose.Schema({
+    userId: {
+        type: ObjectId,
+        ref: "Users"
+    },
     name: {
         type: String,
         require: true,
@@ -25,8 +30,7 @@ const shipAgentSchema = new mongoose.Schema({
     },
     panNo: {
         type: String,
-        require: true,
-        unique: true
+        require: true
     },
     minDeliveryTime: {
         type: Number,
@@ -35,6 +39,20 @@ const shipAgentSchema = new mongoose.Schema({
     maxDeliveryTime: {
         type: Number,
         require: true,
+    },
+    parentId: {
+        type: ObjectId,
+        ref: "Users"
+    },
+    branchName: {
+        type: String,
+    },
+    relatedCity: {
+        type: ObjectId,
+        ref: 'DefaultAddress'
+    },
+    deliveryRole: {
+        type: String  // main(shipping agent created by admin) / branch(branch head created by shipping agent) / rider 
     },
     status: {
         type: String,
