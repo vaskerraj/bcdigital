@@ -7,8 +7,6 @@ import { parseCookies } from 'nookies';
 import axios from 'axios';
 import axiosApi from '../../../helpers/api';
 
-import CryptoJS from 'crypto-js';
-
 import Countdown from "react-countdown";
 import moment from 'moment';
 
@@ -355,12 +353,6 @@ const SellerOrder = ({ ordersData, total }) => {
         }
     };
 
-    const makeShipHandler = (packageId) => {
-        var originalText = CryptoJS.RC4Drop.encrypt(packageId, "BCxx20xx").toString();
-
-        return router.push(`/makeship/${encodeURIComponent(originalText)}`);
-    }
-
     const columns = [
         {
             title: 'ID',
@@ -470,13 +462,7 @@ const SellerOrder = ({ ordersData, total }) => {
                             </button>
                         </>
                         :
-                        activeTab === 'packed' ?
-                            <Button className="mt-2" onClick={() => makeShipHandler(record._id)}>
-                                <CheckOutlined />
-                                Make Ship
-                            </Button>
-                            :
-                            "-"
+                        "-"
                 }
 
             </div >,
