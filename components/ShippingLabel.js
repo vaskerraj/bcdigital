@@ -4,6 +4,7 @@ import { useBarcode } from '@createnextapp/react-barcode';
 import moment from 'moment';
 
 const ShippingLabel = React.forwardRef(({ packageData }, ref) => {
+    console.log(packageData)
     const deliveryDetail = packageData.delivery?.addresses[0];
 
     const { inputRef: trackingIdRef } = useBarcode({
@@ -41,14 +42,21 @@ const ShippingLabel = React.forwardRef(({ packageData }, ref) => {
                 </div>
                 <div className="col-7 mt-2">
                     <svg ref={trackingIdRef} />
-                    <div className="d-block">
+                    <div className="d-block ml-3">
                         <div className="d-block">
-                            <strong>Order Id:{packageData.orders._id}</strong>
+                            <strong>Tracking Id:{packageData.trackingId}</strong>
+                        </div>
+                        <div className="d-block">
+                            Id:
+
+                            <span className="text-uppercase">
+                                {packageData.orders._id} | <strong>{packageData._id}</strong>
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     )
 })
 
