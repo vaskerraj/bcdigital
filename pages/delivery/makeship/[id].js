@@ -5,18 +5,14 @@ import { useRouter } from 'next/router';
 import { useSelector } from 'react-redux';
 import Image from 'next/image';
 import { parseCookies } from 'nookies';
-import CryptoJS from 'crypto-js';
 
-import axiosApi from '../../helpers/api';
+import axiosApi from '../../../helpers/api';
 import axios from 'axios';
 
 import moment from 'moment';
-import { useForm } from 'react-hook-form';
 
-import { message, Modal, Tag, Dropdown, Menu, Button } from 'antd';
-import { CheckOutlined, CloseOutlined, ExclamationCircleOutlined, DownOutlined } from '@ant-design/icons';
-
-import { paymentTypeText } from '../../helpers/functions';
+import { message, Button } from 'antd';
+import { CheckOutlined } from '@ant-design/icons';
 
 const MakeShipped = ({ order, error }) => {
 
@@ -25,33 +21,18 @@ const MakeShipped = ({ order, error }) => {
     // define delivery address variable
     const deliveryAddress = order?.delivery?.addresses[0];
 
-    const currentStatus = router.query.status;
-
-    const { register, handleSubmit, errors, } = useForm();
-
-    const getProductTotal = (products, currentOrder) => {
-        let getNonCancelProduct = [];
-        if (currentOrder === 'cancelled') {
-            getNonCancelProduct = products.filter(product => product.orderStatus === 'cancel_approve' ||
-                product.orderStatusLog.some(item =>
-                    item.status !== 'cancel_denide')
-                &&
-                (
-                    product.orderStatus === 'cancelled_by_seller'
-                    || product.orderStatus === 'cancelled_by_user'
-                    || product.orderStatus === 'cancelled_by_admin'
-                ));
-        } else {
-            getNonCancelProduct = products.filter(item => item.orderStatus === currentOrder);
-        }
-        return getNonCancelProduct.reduce((a, c) => (a + c.productQty * c.price), 0);
-    }
+    const { deliveryAuth } = useSelector(state => state.deliveryAuth);
 
     const proceedToShipHandler = async (packageId) => {
         try {
             const { data } = await axiosApi.put(`/api/package/makeship`,
                 {
                     packageId
+                },
+                {
+                    headers: {
+                        token: deliveryAuth.token
+                    }
                 });
             if (data) {
                 message.success({
@@ -64,7 +45,7 @@ const MakeShipped = ({ order, error }) => {
                     className: 'message-success',
                 });
 
-                return router.push(router.back);
+                return router.push("/delivery");
             }
         } catch (error) {
             message.warning({
@@ -264,29 +245,7 @@ const MakeShipped = ({ order, error }) => {
                         </div>
                     </div>
                     <div className="d-block d-sm-none mt-3 mb-5">
-                        <div
-                            className="title border p-3 pl-4 font13"
-                            style={{ backgroundColor: '#fafafa', borderRadius: '0.3rem' }}
-                        >
-                            <div className="d-block">
-                                <h2 style={{ fontWeight: 400 }}>Ship Summary</h2>
-                            </div>
 
-                            <div className="d-flex justify-content-between font-weight-bold">
-                                <div className="font15">Total Price:</div>
-                                <div className="font15" style={{ color: '#f33535' }}>Rs. {getProductTotal(order.products, currentStatus)}</div>
-                            </div>
-                            <div className="d-block text-right">
-                                <span className="text-muted mr-2">Paid By</span>
-                                {paymentTypeText(order.paymentType)}
-                                {order.paymentStatus !== 'paid' &&
-                                    <div className="d-block mt-2">
-                                        <span className="mr-2">Paid At:</span>
-                                        {moment(order.payementDate).format("DD MMM YYYY HH:mm")}
-                                    </div>
-                                }
-                            </div>
-                        </div>
                     </div>
                 </div>
                 :
@@ -301,10 +260,11 @@ export async function getServerSideProps(context) {
     try {
         const cookies = parseCookies(context);
         const { id } = context.params;
-        var decryptedBytes = CryptoJS.RC4Drop.decrypt(decodeURIComponent(id), "BCxx20xx");
-        var originalText = decryptedBytes.toString(CryptoJS.enc.Utf8);
-
-        const { data } = await axios.get(`${process.env.api}/api/package/makeship/${originalText}`);
+        const { data } = await axios.get(`${process.env.api}/api/package/makeship/${id}`, {
+            headers: {
+                token: cookies.del_token
+            }
+        });
         return {
             props: {
                 order: data
