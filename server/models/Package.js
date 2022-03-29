@@ -23,7 +23,7 @@ const packageSchema = new mongoose.Schema({
             require: true
         },
         pointAmount: {
-            type: String,
+            type: Number,
         },
         orderStatus: {
             type: String,
@@ -98,7 +98,12 @@ const packageSchema = new mongoose.Schema({
         require: true
     },
     totalPointAmount: {
-        type: String, //need to update at delivery  
+        type: Number, //need to update at delivery  
+    },
+    // ship agent id as deliveryRole="main"
+    shipping: {
+        type: ObjectId,
+        ref: 'ShippingAgent'
     },
     shipLocation: {
         type: ObjectId,
@@ -117,18 +122,31 @@ const packageSchema = new mongoose.Schema({
     shipDate: {
         type: Date
     },
+    // ship agent's branch id as deliveryRole="branch"
+    reachedLocation: {
+        type: ObjectId,
+        ref: 'ShippingAgent'
+    },
+    reachedDate: {
+        type: Date
+    },
     totalAtDelivery: {
         type: Number,
     },
     deliveryDate: {
         type: Date
     },
+    // ship agent'r rider id as deliveryRole="rider"
+    deliveredBy: {
+        type: ObjectId,
+        ref: 'ShippingAgent'
+    },
     shippingClam: {
         amount: {
-            type: Number,
+            type: Number
         },
         reason: {
-            type: String,
+            type: String
         },
         clamedBy: { // `clam by` user who clam shipping
             type: ObjectId,
@@ -145,7 +163,7 @@ const packageSchema = new mongoose.Schema({
         clamedDate: {
             type: Date
         }
-    },
+    }
 
 }, { timestamps: true });
 
