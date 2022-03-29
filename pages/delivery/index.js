@@ -18,11 +18,31 @@ const DeliveryDashbaord = () => {
     const [recivePackageTrackId, setRecivePackageTrackId] = useState(null);
 
     //modal
+    const [activeModel, setActiveModel] = useState(null);
     const [visible, setVisible] = useState(false);
     const [packgesWithSameTrackingId, setPackgesWithSameTrackingId] = useState([]);
 
+    // confirm modal while receiving package
+    const [visibleConfirmModal, setVisibleConfirmModal] = useState(false);
+    const [packgeForConfirm, setPackgeForConfirm] = useState({});
+    const [relatedCity, setRelatedCity] = useState(null);
+    const [ignoreRelatedCityNotMatch, setIgnoreRelatedCityNotMatch] = useState(false);
+
+
     const router = useRouter();
     const { deliveryAuth } = useSelector(state => state.deliveryAuth);
+
+    const handelModelClose = () => {
+        setActiveModel(null)
+        setPackgesWithSameTrackingId([]);
+        setVisible(false);
+    }
+
+    const handelConfirmModelClose = () => {
+        setActiveModel(null)
+        setPackgeForConfirm({});
+        setVisibleConfirmModal(false);
+    }
 
     const handlerShipPackage = async () => {
         try {
@@ -35,6 +55,7 @@ const DeliveryDashbaord = () => {
             if (data.msg === "found") {
                 if (data.packages.length > 1) {
                     setPackgesWithSameTrackingId(data.packages);
+                    setActiveModel("make_ship")
                     setVisible(true);
                 } else {
                     router.push(`delivery/makeship/${data.packages[0]._id}`);
@@ -63,8 +84,100 @@ const DeliveryDashbaord = () => {
         }
     }
 
-    const handlerReceivePackage = () => {
+    const handleReceivePacakgeUpdate = async (packageId) => {
+        try {
+            const { data } = await axiosApi.put(`/api/delivery/receive/package`,
+                {
+                    id: packageId
+                },
+                {
+                    headers: {
+                        token: deliveryAuth.token
+                    }
+                });
+            if (data) {
+                //close all modal
+                setVisibleConfirmModal(false);
+                setVisible(false);
+                message.success({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">Done</div>
+                            Now package can deliver via rider(s).
+                        </div>
+                    ),
+                    className: 'message-success',
+                });
+            }
+        } catch (error) {
+            //close all modal
+            setVisibleConfirmModal(false);
+            setVisible(false);
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
+    }
 
+    const handleReceivePacakgeAction = (packages, confirmModalStatus = null) => {
+        // at confirm model(when trackingId is not duplicate) packages will be package detail but at select package(when tacking id is duplicate) packages = packageId
+        // In short: if confirmModalStatus = null packages will be be packageId
+        //  if onfirmModalStatus = viewConfirmMoal packages will be be package detail
+        if (confirmModalStatus === "viewConfirmMoal") {
+            setPackgeForConfirm(packages)
+            setVisibleConfirmModal(true);
+        } else {
+            handleReceivePacakgeUpdate(packages)
+        }
+    }
+    const handlerReceivePackage = async () => {
+        try {
+            const { data } = await axiosApi.get(`/api/delivery/receive/package/${recivePackageTrackId}`,
+                {
+                    headers: {
+                        token: deliveryAuth.token
+                    }
+                });
+            if (data.msg === "found") {
+                console.log(data.packages)
+                if (data.packages.length > 1) {
+                    setPackgesWithSameTrackingId(data.packages);
+                    setRelatedCity(data.relatedCity);
+                    setActiveModel("receive_ship")
+                    setVisible(true);
+                } else {
+                    setRelatedCity(data.relatedCity);
+                    setIgnoreRelatedCityNotMatch(data.relatedCity === data.packages[0].deliveryCity ? false : true);
+                    handleReceivePacakgeAction(data.packages[0], "viewConfirmMoal");
+                }
+            } else {
+                message.warning({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">No Found</div>
+                            Package not found with this trackingId or package was already received.
+                        </div>
+                    ),
+                    className: 'message-success',
+                });
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
     }
 
     return (
@@ -74,29 +187,69 @@ const DeliveryDashbaord = () => {
                 visible={visible}
                 footer={null}
                 closable={true}
-                onCancel={() => setVisible(false)}
+                onCancel={() => handelModelClose()}
                 destroyOnClose={true}
             >
                 <div className="d-block">
                     {packgesWithSameTrackingId && packgesWithSameTrackingId.map(item =>
-                        <div className="d-flex align-items-center pt-3 pb-3 border-bottom">
-                            <div>
+                        <div className="pt-3 pb-3 border-bottom">
+                            {relatedCity === item.deliveryCity &&
+                                <div className="d-block text-danger text-right">Delivery City doesn't match with your city.</div>
+                            }
+                            <div className="d-flex align-items-center ">
                                 <div>
-                                    Seller : <b>{item.seller.name}</b> | {item.seller.mobile}
+                                    <div>
+                                        Seller : <b>{item.seller.name}</b> | {item.seller.mobile}
+                                    </div>
+                                    <div className="text-uppercase">Id: {item.orderId._id} | {item._id}</div>
                                 </div>
-                                <div className="text-uppercase">Id: {item.orderId._id} | {item._id}</div>
-                            </div>
-                            <div className="ml-4">
-                                <Button
-                                    size="small"
-                                    type="primary"
-                                    onClick={() => router.push(`delivery/makeship/${item._id}`)}
-                                >
-                                    Select
-                                </Button>
+                                <div className="ml-4">
+                                    <Button
+                                        size="small"
+                                        type="primary"
+                                        onClick={() =>
+                                            activeModel === "make_ship" ?
+                                                router.push(`delivery/makeship/${item._id}`)
+                                                :
+                                                handleReceivePacakgeUpdate(item._id)
+                                        }
+                                    >
+                                        {ignoreRelatedCityNotMatch ? "Select" : "Continue & Select"}
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     )}
+                </div>
+            </Modal>
+            <Modal
+                title="Confirm Package"
+                visible={visibleConfirmModal}
+                footer={null}
+                closable={false}
+                destroyOnClose={true}
+            >
+                <div className="d-block">
+                    <div className="d-flex align-items-center pt-3 pb-3 border-bottom">
+                        <div>
+                            <div>
+                                Seller : <b>{packgeForConfirm.seller?.name}</b> | {packgeForConfirm.seller?.mobile}
+                            </div>
+                            <div className="text-uppercase">Id: {packgeForConfirm.orderId?._id} | {packgeForConfirm._id}</div>
+                        </div>
+                    </div>
+                    <div className="d-block border-top mt-5 text-right">
+                        {relatedCity !== packgeForConfirm.deliveryCity &&
+                            <div className="d-block text-danger">Delivery City doesn't match with your related city. Are you still sure to continue?</div>
+                        }
+                        <button type="button" onClick={handelConfirmModelClose} className="btn btn-lg c-btn-light font16 mt-4 mr-5">
+                            Cancel
+                        </button>
+                        <button type="submit" onClick={() => handleReceivePacakgeUpdate(packgeForConfirm._id)} className="btn btn-lg c-btn-primary font16 mt-4">
+                            {!ignoreRelatedCityNotMatch ? "Confirm" : "Continue & Confirm"}
+                        </button>
+                    </div>
+
                 </div>
             </Modal>
             <Wrapper onActive="index" breadcrumb={["Dashboard"]} >
@@ -136,7 +289,7 @@ const DeliveryDashbaord = () => {
                         </Card>
                     </div>
                     <div className="col-12 col-md-6">
-                        <Card title="Receive Package">
+                        <Card title="Receive Package(Reach at city)">
                             <div className="d-flex">
                                 <div>
                                     <div className="d-block">Tracking Id </div>

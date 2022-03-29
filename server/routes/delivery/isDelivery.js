@@ -449,5 +449,109 @@ module.exports = function (server) {
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
-    })
+    });
+
+
+    // receive package
+    server.get('/api/delivery/receive/package/:id', requiredAuth, checkRole(['delivery']), async (req, res) => {
+        const currentUser = req.user._id;
+        const trackingId = req.params.id;
+        try {
+            const deliveryUser = await ShippingAgent.findOne({ userId: currentUser }).select("relatedCity").lean();
+            const packages = await Package.find({
+                trackingId,
+                "products.orderStatus": "shipped"
+            }).select("orderId seller _id")
+                .populate({
+                    path: 'orderId',
+                    populate: ([{
+                        path: 'shipping',
+                        select: 'name',
+                        populate: ({
+                            path: 'shipAgentId',
+                            select: 'name _id number email relatedCity',
+                        })
+                    }
+                    ])
+                })
+                .populate({
+                    path: 'seller',
+                    select: 'name mobile _id',
+                }).lean();
+            if (packages.length === 0) {
+                return res.status(200).json({ packages, msg: "not_found" });
+            } else {
+
+                const getUserAddress = async (addressId) => {
+                    const userAddress = await Users.findOne(
+                        {
+                            "addresses._id": addressId,
+                        }, { _id: 0 })
+                        .select('addresses')
+                        .lean();
+                    return userAddress.addresses[0].city;
+                }
+
+                let packagesArray = [];
+                await Promise.all(
+                    packages.map(async (item) => {
+                        const packageObj = new Object();
+                        packageObj['_id'] = item._id;
+                        packageObj['deliveryCity'] = await getUserAddress(item.orderId.delivery);
+                        packageObj['seller'] = item.seller;
+                        packageObj['orderId'] = item.orderId;
+
+                        packagesArray.push(packageObj);
+                    })
+                )
+
+                return res.status(200).json({
+                    packages: packagesArray,
+                    msg: "found",
+                    relatedCity: deliveryUser.relatedCity
+                });
+            }
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.put('/api/delivery/receive/package', requiredAuth, checkRole(['delivery']), async (req, res) => {
+        const currentUser = req.user._id;
+        const { id } = req.body;
+        try {
+            const shipStatusLog = {
+                status: 'reached_at_city',
+                statusChangeBy: req.user._id,
+                statusChangeDate: new Date()
+            }
+
+            const allProductFromPackage = await Package.findById(id, { _id: 0 }).select('products').lean();
+            const packedProductOnly = allProductFromPackage.products.filter(item => item.orderStatus === "shipped");
+
+            await Promise.all(
+                packedProductOnly.map(async pro => {
+                    await Package.findOneAndUpdate({
+                        _id: id,
+                        'products._id': pro._id,
+                    },
+                        {
+                            $set: {
+                                "products.$.orderStatus": 'reached_at_city',
+                                reachedLocation: currentUser,
+                                reachedDate: new Date()
+                            },
+                            $push: {
+                                'products.$.orderStatusLog': shipStatusLog
+                            }
+                        });
+                })
+            );
+
+            return res.status(200).json({ msg: "success" });
+
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
 }
