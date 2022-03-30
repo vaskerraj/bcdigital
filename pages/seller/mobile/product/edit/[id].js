@@ -3,10 +3,9 @@ import Link from 'next/link';
 import { useDispatch, useSelector } from 'react-redux';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
-import axiosApi from '../../../../helpers/api';
 
-import Wrapper from '../../../../components/seller/Wrapper';
-import EditProductForm from '../../../../components/forms/EditProductForm';
+import Wrapper from '../../../../../components/seller/Wrapper';
+import EditProductForm from '../../../../../components/forms/EditProductForm';
 
 const AddProduct = ({ product }) => {
     const dispatch = useDispatch();

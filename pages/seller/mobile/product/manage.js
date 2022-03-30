@@ -354,7 +354,7 @@ const ManageProduct = ({ productDatas }) => {
 export async function getServerSideProps(context) {
     try {
         const cookies = parseCookies(context);
-        const { data } = await axios.get(`${process.env.api}/api/products/auth`, {
+        const { data } = await axios.get(`${process.env.api}/api/seller/products`, {
             headers: {
                 token: cookies.sell_token,
             },
