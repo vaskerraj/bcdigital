@@ -33,7 +33,7 @@ const dev = process.env.NODE_ENV !== 'production'
 const app = next({ dev });
 const handle = app.getRequestHandler()
 
-mongoose.connect(process.env.MONGO_URI, {
+mongoose.connect('mongodb+srv://dharma:g5A1D2AhZED18BgJ@cluster0.8pdca.mongodb.net/bcdigital?retryWrites=true&w=majority', {
     useNewUrlParser: true,
     useCreateIndex: true,
     useUnifiedTopology: true,
