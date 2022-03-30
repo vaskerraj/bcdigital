@@ -5,7 +5,7 @@ const admin = require('../../firebase/firebaseAdmin');
 
 module.exports = function (server) {
 
-    server.post('/api/login', async (req, res) => {
+    server.post('../api/login', async (req, res) => {
         const { mobile, password } = req.body;
         if (!mobile || !password) {
             return res.status(422).json({ error: 'Provide both mobile number and password' });
