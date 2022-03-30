@@ -5,10 +5,10 @@
 
 module.exports = {
     env: {
-        api: 'http://localhost:3000',
+        api: 'https://bcdigital.vercel.app',
         TRACKINGID_PREFIX: 'BCD'
     },
     images: {
-        domains: ['localhost', 'bcdigital.online'],
+        domains: ['bcdigital.vercel.app', 'bcdigital.online'],
     },
 }
