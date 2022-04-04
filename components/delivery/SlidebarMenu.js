@@ -21,8 +21,18 @@ const SlidebarMenu = ({ onActive, deliveryRole }) => {
             <Menu.Item key="index" icon={<DesktopOutlined />}>
                 <Link href="/delivery/"> Dashboard</Link>
             </Menu.Item>
-            <Menu.Item key="manageDelivery" icon={<ShoppingCartOutlined />}>
-                <Link href="/delivery/deliveries"> Deliveries</Link>
+            <Menu.Item key="deliveries" icon={<ShoppingCartOutlined />}>
+                <Link href={
+                    deliveryRole === "main" ?
+                        "/delivery/deliveries/"
+                        : deliveryRole === "branch" ?
+                            "/delivery/deliveries/branch"
+                            : deliveryRole === "rider" ?
+                                "/delivery/deliveries/rider"
+                                : ""
+                }>
+                    Deliveries
+                </Link>
             </Menu.Item>
             {(deliveryRole === "main" || deliveryRole === "branch") &&
                 <Menu.Item key="manageRider" icon={<TeamOutlined />}>
