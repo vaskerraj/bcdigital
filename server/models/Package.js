@@ -39,6 +39,7 @@ const packageSchema = new mongoose.Schema({
                 "reached_at_city",
                 "for_delivery",
                 "delivered",
+                "not_delivered",
                 "return_request",
                 "return_approve",
                 "return_denide",
@@ -139,8 +140,23 @@ const packageSchema = new mongoose.Schema({
     // ship agent'r rider id as deliveryRole="rider"
     deliveredBy: {
         type: ObjectId,
-        ref: 'ShippingAgent'
+        ref: 'Users'
     },
+    // shipping agent have to try to delivery 3 time before cancel.
+    notDelivered: [
+        {
+            reason: {
+                type: String
+            },
+            date: {
+                type: Date
+            },
+            attemptBy: {
+                type: ObjectId,
+                ref: "Users"
+            }
+        }
+    ],
     shippingClam: {
         amount: {
             type: Number
