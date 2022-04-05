@@ -5,6 +5,7 @@ const Users = mongoose.model('Users');
 const Product = mongoose.model('Product');
 const ShippingAgent = mongoose.model('ShippingAgent');
 const Seller = mongoose.model('Seller');
+const Transaction = mongoose.model('Transaction');
 
 const { requiredAuth, checkRole } = require('../../middlewares/auth');
 const getProductDetail = async (products) => {
@@ -712,6 +713,100 @@ module.exports = function (server) {
 
             return res.status(200).json({ msg: "success" });
 
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.put('/api/delivery/delivered', requiredAuth, checkRole(['delivery']), async (req, res) => {
+        const { packageId } = req.body;
+        const currentUser = req.user._id;
+        try {
+            const allProductFromPackage = await Package.findById(packageId)
+                .select('products shippingCharge orderId seller')
+                .lean()
+                .populate({
+                    path: 'orderId',
+                    populate: ({
+                        path: 'orderedBy',
+                        select: '_id',
+                    })
+                });
+
+
+            const wayToDeliveryProductOnly = allProductFromPackage.products.filter(item => item.orderStatus === "for_delivery");
+            if (wayToDeliveryProductOnly.length === 0) {
+                return res.status(200).json({ msg: "not_found" });
+            }
+            // recalculate order total
+            // recalculate commission amount
+            // and insert at Package collection
+
+            const finalOrderTotal = wayToDeliveryProductOnly.reduce((a, c) => (a + (c.productQty * c.price)), 0);
+            const shippingCharge = allProductFromPackage.shippingCharge;
+
+            const totalAtDelivery = finalOrderTotal + shippingCharge;
+            //
+            const totalPointAmountAtDelivery = wayToDeliveryProductOnly.reduce((a, c) => (a + (c.pointAmount * c.productQty)), 0);
+
+            const deliveredDeliveryLog = {
+                status: 'delivered',
+                statusChangeBy: currentUser,
+                statusChangeDate: new Date()
+            };
+
+            await Promise.all(
+                wayToDeliveryProductOnly.map(async pro => {
+                    await Package.findOneAndUpdate({
+                        _id: packageId,
+                        'products._id': pro._id,
+                    },
+                        {
+                            $set: {
+                                "products.$.orderStatus": 'delivered',
+                                totalAtDelivery,
+                                totalPointAmount: totalPointAmountAtDelivery,
+                                deliveryDate: new Date(),
+                            },
+                            $push: {
+                                'products.$.orderStatusLog': deliveredDeliveryLog,
+                            }
+                        });
+                })
+            );
+
+            // also insert at Transcation collection
+            // Note: shipping charge have to add to transcation collection after package has been shipped.
+
+            // insert order total
+            const orderId = allProductFromPackage.orderId;
+            const orderByCreatedBy = allProductFromPackage.orderId.orderedBy._id;
+            const createdForUser_seller = allProductFromPackage.seller;
+
+            const newOrderTotal = new Transaction({
+                orderId,
+                packageId,
+                transType: 'orderTotal',
+                amount: finalOrderTotal,
+                createdBy: orderByCreatedBy,
+                createdForUser: createdForUser_seller,
+                createdForString: "seller",
+            });
+
+            await newOrderTotal.save();
+
+            //insert admin commission
+            const newComission = new Transaction({
+                orderId,
+                packageId,
+                transType: 'commission',
+                amount: totalPointAmountAtDelivery,
+                createdBy: orderByCreatedBy,
+                createdForString: "admin",
+            });
+            await newComission.save();
+
+            return res.status(200).json({ msg: "success" });
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }

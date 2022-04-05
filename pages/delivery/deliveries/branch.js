@@ -76,7 +76,6 @@ const BranchDeliveries = ({ deliveryData, total }) => {
                     }
                 });
             if (data) {
-                console.log(data)
                 setLoading(false);
                 setData(data.delivery);
                 setDeliveryTotal(data.total);
@@ -250,7 +249,7 @@ const BranchDeliveries = ({ deliveryData, total }) => {
             }</>,
         },
         {
-            title: 'Time',
+            title: 'Receive Time',
             dataIndex: ['reachedDate'],
             key: ['reachedDate'],
             render: (text) => <>{moment(text).fromNow()}</>,
@@ -278,18 +277,25 @@ const BranchDeliveries = ({ deliveryData, total }) => {
         {
             title: 'Picked',
             render: (text, record) =>
-                <Tooltip title={
-                    <div className="d-block">
-                        <div className="d-block">Mobile No.:{record.deliveredBy?.mobile} </div>
-                    </div>
-                }
-                    color={'#fff'}
-                    overlayInnerStyle={{ color: '#000' }}
-                >
-                    <div className="text-info">
-                        {record.deliveredBy.name}
-                    </div>
-                </Tooltip>
+                <>
+                    <Tooltip title={
+                        <div className="d-block">
+                            <div className="d-block">Mobile No.:{record.deliveredBy?.mobile} </div>
+                        </div>
+                    }
+                        color={'#fff'}
+                        overlayInnerStyle={{ color: '#000' }}
+                    >
+                        <div className="text-info">
+                            {record.deliveredBy?.name}
+                        </div>
+                    </Tooltip>
+                    {record.currentStatus === "delivered" &&
+                        <div className="font12 text-muted">
+                            {moment(record.deliveryDate).format("DD MMM YYYY HH:mm")}
+                        </div>
+                    }
+                </>
         },
         {
             title: 'Status',
