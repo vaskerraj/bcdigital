@@ -27,6 +27,7 @@ require('./models/Seller.js');
 require('./models/Payment.js');
 require('./models/Cancellation.js');
 require('./models/Refund.js');
+require('./models/Transaction.js');
 
 const port = parseInt(process.env.PORT, 10) || 3000
 const dev = process.env.NODE_ENV !== 'production'
