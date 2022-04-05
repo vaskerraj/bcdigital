@@ -9,7 +9,7 @@ import axiosApi from '../../../helpers/api';
 
 import moment from 'moment';
 
-import { message, Table, Input, Tag, Tooltip, Select, Button, Pagination } from 'antd';
+import { message, Modal, Table, Input, Tag, Tooltip, Select, Button, Pagination, Popconfirm } from 'antd';
 const { Option } = Select;
 import { SearchOutlined, CloseOutlined } from '@ant-design/icons';
 
@@ -25,7 +25,7 @@ message.config({
 });
 
 const BranchDeliveries = ({ deliveryData, total }) => {
-
+    console.log(deliveryData)
     const [activeTab, setActiveTab] = useState('pending');
 
     const [loading, setLoading] = useState(false);
@@ -46,13 +46,18 @@ const BranchDeliveries = ({ deliveryData, total }) => {
     // filter
     const [filter, setFilter] = useState(false);
 
+    // to show seller return details
+    const [packageToView, setPackageToView] = useState(null);
+    const [selectedSeller, setSelectedSeller] = useState(null);
+    const [sellerDetailModal, setSellerDetailModal] = useState(false);
+
     // pagation
     const [pagination, setPagination] = useState({ position: ['none', 'none'], defaultPageSize: sizePerPage });
 
     // router
     const router = useRouter();
 
-    const { deliveryAuth } = useSelector(state => state.deliveryAuth)
+    const { deliveryAuth } = useSelector(state => state.deliveryAuth);
 
     const recallDeliveryList = async (filterByTrackingId, filterByPaymentMethod) => {
         setLoading(true);
@@ -71,6 +76,7 @@ const BranchDeliveries = ({ deliveryData, total }) => {
                     }
                 });
             if (data) {
+                console.log(data)
                 setLoading(false);
                 setData(data.delivery);
                 setDeliveryTotal(data.total);
@@ -109,8 +115,109 @@ const BranchDeliveries = ({ deliveryData, total }) => {
 
         return getNonCancelProduct.reduce((a, c) => (a + c.productQty * c.price), 0);
     }
-    const handleMakeFailDelivery = async (packageId) => {
 
+    const handleSameCity = async (packageId, seller) => {
+        try {
+            const { data } = await axiosApi.put(`/api/delivery/fail/samecity`,
+                {
+                    type: "id",
+                    id: packageId,
+                },
+                {
+                    headers: {
+                        token: deliveryAuth.token
+                    }
+                });
+            if (data) {
+                if (data.msg === "not_found") {
+                    message.warning({
+                        content: (
+                            <div>
+                                <div className="font-weight-bold">No Found</div>
+                                Package not valid to update any changes.
+                            </div>
+                        ),
+                        className: 'message-warning',
+                    });
+                } else {
+                    // show modal with seller details
+                    setSelectedSeller(seller)
+                    setSellerDetailModal(true);
+                }
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
+    }
+
+    const handleViweSellerDetails = async (seller, packageId) => {
+        setPackageToView(packageId);
+        setSelectedSeller(seller)
+        setSellerDetailModal(true)
+    }
+
+    const handleHandoverToSeller = async (packageId) => {
+
+        try {
+            const { data } = await axiosApi.put(`/api/delivery/fail/handlerover`,
+                {
+                    type: "id",
+                    id: packageId,
+                },
+                {
+                    headers: {
+                        token: deliveryAuth.token
+                    }
+                });
+            if (data) {
+                setPackageToView(null)
+                setSelectedSeller(null)
+                setSellerDetailModal(false)
+                if (data.msg === "not_found") {
+                    message.warning({
+                        content: (
+                            <div>
+                                <div className="font-weight-bold">No Found</div>
+                                Package not found to handover.Please check again.
+                            </div>
+                        ),
+                        className: 'message-warning',
+                    });
+                } else {
+                    setPackageToView(null)
+                    setSelectedSeller(null)
+                    setSellerDetailModal(false)
+                    message.warning({
+                        content: (
+                            <div>
+                                <div className="font-weight-bold">No Found</div>
+                                Successfully package handover.
+                            </div>
+                        ),
+                        className: 'message-warning',
+                    });
+                    router.push(router.asPath);
+                }
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
     }
 
     const columns = [
@@ -193,7 +300,11 @@ const BranchDeliveries = ({ deliveryData, total }) => {
                             "Way To Delivery"
                             : record.currentStatus === 'not_delivered' ?
                                 "Not Delivered"
-                                : record.currentStatus
+                                :
+                                record.currentStatus === 'fail_delivery' ?
+                                    "Fail Delivery"
+                                    :
+                                    record.currentStatus
                     }
                 </Tag>
                 {
@@ -206,6 +317,26 @@ const BranchDeliveries = ({ deliveryData, total }) => {
                             Last Cause: <span className="text-muted font12">{record.notDelivered.at(-1).reason}</span>
                         </div>
                     </>
+                }
+
+                {
+                    record.currentStatus === 'fail_delivery' &&
+                    <Tag color={record.failDeliveryStatus?.status === 'fd_receivedBySeller' && "yellow"} className="text-capitalize mt-1">
+                        {
+                            record.failDeliveryStatus?.status === 'fd_dispatched' ?
+                                "Package dispatch"
+                                : record.currentStatus === 'fd_reachedSellerCity' ?
+                                    "At seller city"
+                                    :
+                                    record.failDeliveryStatus?.status === 'fd_receivedBySeller' ?
+                                        "Receive by seller"
+                                        :
+                                        record.failDeliveryStatus?.status === 'fd_sameCity' ?
+                                            "Same city"
+                                            :
+                                            record.failDeliveryStatus?.status
+                        }
+                    </Tag>
                 }
             </>
         },
@@ -221,9 +352,24 @@ const BranchDeliveries = ({ deliveryData, total }) => {
                                 Need to reattempt
                             </div>
                             :
-                            <Button size="small" danger onClick={() => handleMakeFailDelivery(record._id)}>Make Fail Delivery</Button>
+                            record.seller.addresses[0]?.city._id === record.delivery.city._id ?
+                                <>
+                                    <div className="text-danger font12">Seller from same city. Call seller to pick package</div>
+                                    <Button size="small" type="primary" onClick={() => handleSameCity(record._id, record.seller)}>Seller detail</Button>
+                                </>
+                                :
+                                <Link href={`/delivery/deliveries/print/${record._id}?type=fail`}>
+                                    <Button size="small" danger>Make Fail Delivery</Button>
+                                </Link>
                         }
+
                     </>
+                }
+                {record.currentStatus === "fail_delivery" && (record.failDeliveryStatus?.status === "fd_reachedSellerCity" || record.failDeliveryStatus?.status === "fd_sameCity") &&
+                    <div className="text-danger font12">
+                        Call seller to pick package
+                        <Button size="small" type="primary" onClick={() => handleViweSellerDetails(record.seller, record._id)}>Seller detail</Button>
+                    </div>
                 }
             </>,
         },
@@ -287,6 +433,51 @@ const BranchDeliveries = ({ deliveryData, total }) => {
                 <title> Deliveries | Delivery Center</title>
                 <link rel="icon" href="/favicon.ico" />
             </Head>
+            <Modal
+                title="Seller Return Details"
+                visible={sellerDetailModal}
+                footer={null}
+                closable={activeTab !== "fail_delivery" ? false : true}
+                onCancel={() => {
+                    setSelectedSeller(null);
+                    setSellerDetailModal(false)
+                }}
+                destroyOnClose={true}
+            >
+                {selectedSeller &&
+                    <div className="mt-2">
+                        <div className="font14 font-weight-bold">{selectedSeller.legalName}</div>
+                        <div className="font14">{selectedSeller.addresses[0]?.fullname}</div>
+                        <div className="font14">{selectedSeller.addresses[0]?.mobile}</div>
+                        <div className="font12 text-muted">
+                            {selectedSeller.addresses[0]?.street}
+                            {selectedSeller.addresses[0]?.area ? selectedSeller.addresses[0]?.area.name : ''}
+                            {',' + selectedSeller.addresses[0]?.city.name + ', ' + selectedSeller.addresses[0]?.region.name}
+                        </div>
+                    </div>
+                }
+
+                <div className="d-block border-top mt-5 text-right">
+                    <button type="button" onClick={() => {
+                        setSelectedSeller(null);
+                        setSellerDetailModal(false)
+                    }}
+                        className="btn btn-lg c-btn-light font16 mt-4 mr-5"
+                    >
+                        Close
+                    </button>
+                    <Popconfirm
+                        title="Are you sure handler this package to seller?"
+                        onConfirm={() => handleHandoverToSeller(packageToView)}
+                        okText="Yes"
+                        cancelText="No"
+                    >
+                        <button type="submit" className="btn btn-lg c-btn-primary font16 mt-4">
+                            Handover to seller
+                        </button>
+                    </Popconfirm>
+                </div>
+            </Modal>
             <Wrapper onActive="deliveries" breadcrumb={["Deliveries"]}>
                 <div className="d-flex mb-5" style={{ fontSize: '1.6rem', fontWeight: 600 }}>
                     <div className="filter-tab cp" onClick={() => handleStatusChange('all')}>
@@ -304,6 +495,10 @@ const BranchDeliveries = ({ deliveryData, total }) => {
                     <div className="filter-tab ml-4 cp" onClick={() => handleStatusChange('not_delivered')}>
                         Not Delivered
                         <div className={`activebar ${activeTab === 'not_delivered' ? 'active' : ''}`}></div>
+                    </div>
+                    <div className="filter-tab ml-4 cp" onClick={() => handleStatusChange('fail_delivery')}>
+                        Fail Delivery
+                        <div className={`activebar ${activeTab === 'fail_delivery' ? 'active' : ''}`}></div>
                     </div>
                     <div className="filter-tab ml-4 cp" onClick={() => handleStatusChange('delivered')}>
                         Delivered

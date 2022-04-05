@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useBarcode } from '@createnextapp/react-barcode';
 
 import moment from 'moment';
 
-const ShippingLabel = React.forwardRef(({ packageData }, ref) => {
-    console.log(packageData)
-    const deliveryDetail = packageData.delivery?.addresses[0];
+const ShippingLabel = React.forwardRef(({ packageData, sellerReturnAddress = false, type = null }, ref) => {
+
+    const deliveryDetail = sellerReturnAddress ? packageData.returnAddress?.addresses[0] : packageData.delivery?.addresses[0];
 
     const { inputRef: trackingIdRef } = useBarcode({
         value: packageData.trackingId,
@@ -24,16 +24,28 @@ const ShippingLabel = React.forwardRef(({ packageData }, ref) => {
                     <img src="/logo192.png" height="30px" />
                 </div>
                 <div className="col-7" style={{ borderLeft: '1px solid #ccc' }}>
-                    <div className="ml-2">
-                        <strong>From: {packageData.seller.name}</strong>
-                    </div>
+                    {!sellerReturnAddress ?
+                        <div className="ml-2">
+                            <strong>From: {packageData.seller.name}</strong>
+                        </div>
+                        :
+                        type === "fail"
+                            ?
+                            <div className="ml-2">
+                                Return <strong>Fail Delivery</strong>
+                            </div>
+                            :
+                            <div className="ml-2">
+                                <strong>Return Delivery</strong>
+                            </div>
+                    }
                 </div>
             </div>
             <div className="row border-top mt-2">
                 <div className="col-5">
                     <strong>To:</strong>
                     <div className="d-block">
-                        <div className="d-block font-weight-bold">{deliveryDetail.name}</div>
+                        <div className="d-block font-weight-bold">{!sellerReturnAddress ? deliveryDetail.name : packageData.seller.name}</div>
                         {deliveryDetail.street}
                         {deliveryDetail.area ? ',' + deliveryDetail.area.name : ''}
                         {',' + deliveryDetail.city.name + ',' + deliveryDetail.region.name}
@@ -48,7 +60,6 @@ const ShippingLabel = React.forwardRef(({ packageData }, ref) => {
                         </div>
                         <div className="d-block">
                             Id:
-
                             <span className="text-uppercase">
                                 {packageData.orders._id} | <strong>{packageData._id}</strong>
                             </span>

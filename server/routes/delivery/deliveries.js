@@ -4,6 +4,7 @@ const Package = mongoose.model('Package');
 const Users = mongoose.model('Users');
 const Product = mongoose.model('Product');
 const ShippingAgent = mongoose.model('ShippingAgent');
+const Seller = mongoose.model('Seller');
 
 const { requiredAuth, checkRole } = require('../../middlewares/auth');
 const getProductDetail = async (products) => {
@@ -64,6 +65,14 @@ module.exports = function (server) {
                         reachedLocation: req.user._id,
                         'products.orderStatus': 'for_delivery',
                     }
+                case 'fail_delivery':
+                    return {
+                        'products.orderStatus': 'fail_delivery',
+                        $or: [
+                            { reachedLocation: req.user._id },
+                            { 'failDeliveryStatus.location': req.user._id }
+                        ],
+                    }
                 case 'delivered':
                     return {
                         reachedLocation: req.user._id,
@@ -115,6 +124,7 @@ module.exports = function (server) {
 
         const currentPage = page || 1;
         const orderPerPage = limit || 30;
+
         try {
             const orders = await Package.find(findByStatusType(status))
                 .find(findByTrackingId(trackingId))
@@ -143,6 +153,20 @@ module.exports = function (server) {
                 .skip((currentPage - 1) * orderPerPage)
                 .limit(orderPerPage);
 
+            const getSellerAddress = async (sellerId) => {
+                const sellerAddress = await Seller.findOne({
+                    userId: sellerId,
+                    'addresses.label': 'return'
+                }, {
+                    'addresses.$': 1
+                }).select('addresses legalName')
+                    .lean()
+                    .populate('addresses.region', 'name')
+                    .populate('addresses.city', 'name')
+                    .populate('addresses.area', 'name');
+                return sellerAddress;
+            }
+
 
             let orderProducts = [];
             await Promise.all(
@@ -151,6 +175,7 @@ module.exports = function (server) {
                     productObj['_id'] = item._id;
                     productObj['products'] = await getProductDetail(item.products);
                     productObj['delivery'] = await getUserAddress(item.orderId.delivery);
+                    productObj['seller'] = await getSellerAddress(item.seller);
                     productObj['shippingCharge'] = item.shippingCharge;
                     productObj['grandTotal'] = item.grandTotal;
                     productObj['paymentType'] = item.paymentType;
@@ -161,6 +186,7 @@ module.exports = function (server) {
                     productObj['reachedDate'] = item.reachedDate;
                     productObj['deliveredBy'] = item.deliveredBy;
                     productObj['notDelivered'] = item.notDelivered;
+                    productObj['failDeliveryStatus'] = item.failDeliveryStatus;
                     productObj['currentStatus'] = status == "all" ?
                         item.deliveryDate !== undefined ?
                             'delivered'
@@ -344,34 +370,7 @@ module.exports = function (server) {
                     }
                     ])
                 });
-            const getProductDetail = async (products) => {
 
-                const getProductIds = products.map(item => item.productId);
-                let relatedProducts = [];
-                await Promise.all(
-                    getProductIds.map(async (pro) => {
-                        const orderProducts = await Product.findOne(
-                            {
-                                'products._id': pro
-                            },
-                            {
-                                'products.$': 1
-                            })
-                            .select('_id name products colour package').lean();
-                        relatedProducts.push(orderProducts);
-                    })
-                );
-
-                const parseProducts = JSON.parse(JSON.stringify(relatedProducts));
-
-                // combine proucts details and productQty
-                const combineProductWithOrderitems = parseProducts.map(item => ({
-                    ...item,
-                    ...products.find(ele => ele.productId == item.products[0]._id)
-                }));
-
-                return combineProductWithOrderitems;
-            }
             const getUserAddress = async (addressId) => {
                 const userAddress = await Users.findOne(
                     {
@@ -536,4 +535,185 @@ module.exports = function (server) {
         }
     });
 
+    // in case of rider unable to delivered 3 time
+    // in case delivery city and seller's return city are different
+    server.put('/api/delivery/makefaildelivery', requiredAuth, checkRole(['delivery']), async (req, res) => {
+        const { type, id } = req.body;
+        const currentUser = req.user._id;
+        try {
+            const failDeliveryStatusLog = {
+                status: 'fail_delivery',
+                statusChangeBy: currentUser,
+                statusChangeDate: new Date()
+            }
+            let allProductFromPackage;
+            // type = id(packageId) or trackingId
+            if (type === "id") {
+                allProductFromPackage = await Package.findById(id, { _id: 0 }).select('products').lean();
+
+            } else {
+                allProductFromPackage = await Package.findOne({ trackingId: id }, { _id: 0 }).select('products').lean();
+            }
+
+            const reachedProductOnly = allProductFromPackage.products.filter(item => item.orderStatus === "not_delivered");
+
+            if (reachedProductOnly.length === 0) {
+                return res.status(200).json({ msg: "not_found" });
+            }
+            await Promise.all(
+                reachedProductOnly.map(async pro => {
+                    await Package.findOneAndUpdate({
+                        _id: id,
+                        'products._id': pro._id,
+                    },
+                        {
+                            $set: {
+                                "products.$.orderStatus": 'fail_delivery',
+                            },
+                            $push: {
+                                'products.$.orderStatusLog': failDeliveryStatusLog,
+                            }
+                        }
+                    )
+                })
+            );
+
+            const failDeliveryLog = {
+                status: 'fd_dispatched',
+                statusChangeBy: currentUser,
+                statusChangeDate: new Date()
+            };
+
+            await Package.findByIdAndUpdate(id,
+                {
+                    $set: {
+                        "failDeliveryStatus.status": 'fd_dispatched',
+                        "failDeliveryStatus.location": currentUser,
+                    },
+                    $push: {
+                        'failDeliveryStatus.statusLog': failDeliveryLog,
+                    }
+                });
+
+            return res.status(200).json({ msg: "success" });
+
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.put('/api/delivery/fail/samecity', requiredAuth, checkRole(['delivery']), async (req, res) => {
+        const { type, id } = req.body;
+        const currentUser = req.user._id;
+        try {
+            let allProductFromPackage;
+            // type = id(packageId) or trackingId
+            if (type === "id") {
+                allProductFromPackage = await Package.findById(id, { _id: 0 }).select('products failDeliveryStatus').lean();
+
+            } else {
+                allProductFromPackage = await Package.findOne({ trackingId: id }, { _id: 0 }).select('products failDeliveryStatus').lean();
+            }
+
+            //check same city status, this is useful whn delivery branch view seller info second time
+            const checkSameCity = allProductFromPackage.failDeliveryStatus?.status === "fd_sameCity" ? true : false;
+
+            if (!checkSameCity) {
+
+                const notDeliveredProductOnly = allProductFromPackage.products.filter(item => item.orderStatus === "not_delivered");
+                if (notDeliveredProductOnly.length === 0) {
+                    return res.status(200).json({ msg: "not_found" });
+                }
+
+                const failDeliveryStatusLog = {
+                    status: 'fail_delivery',
+                    statusChangeBy: currentUser,
+                    statusChangeDate: new Date()
+                }
+
+                await Promise.all(
+                    notDeliveredProductOnly.map(async pro => {
+                        await Package.findOneAndUpdate({
+                            _id: id,
+                            'products._id': pro._id,
+                        },
+                            {
+                                $set: {
+                                    "products.$.orderStatus": 'fail_delivery',
+                                },
+                                $push: {
+                                    'products.$.orderStatusLog': failDeliveryStatusLog,
+                                }
+                            }
+                        )
+                    })
+                );
+
+                const failDeliveryLog = {
+                    status: 'fd_sameCity',
+                    statusChangeBy: currentUser,
+                    statusChangeDate: new Date()
+                };
+
+                await Package.findByIdAndUpdate(id,
+                    {
+                        $set: {
+                            "failDeliveryStatus.status": 'fd_sameCity',
+                            "failDeliveryStatus.location": currentUser,
+                        },
+                        $push: {
+                            'failDeliveryStatus.statusLog': failDeliveryLog,
+                        }
+                    });
+            }
+
+            return res.status(200).json({ msg: "success" });
+
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.put('/api/delivery/fail/handlerover', requiredAuth, checkRole(['delivery']), async (req, res) => {
+        const { type, id } = req.body;
+        const currentUser = req.user._id;
+        try {
+            let allProductFromPackage;
+            // type = id(packageId) or trackingId
+            if (type === "id") {
+                allProductFromPackage = await Package.findById(id, { _id: 0 }).select('products failDeliveryStatus').lean();
+
+            } else {
+                allProductFromPackage = await Package.findOne({ trackingId: id }, { _id: 0 }).select('products failDeliveryStatus').lean();
+            }
+
+
+            const notDeliveredProductOnly = allProductFromPackage.products.filter(item => item.orderStatus === "fail_delivery");
+            if (notDeliveredProductOnly.length === 0) {
+                return res.status(200).json({ msg: "not_found" });
+            }
+
+            const failDeliveryLog = {
+                status: 'fd_receivedBySeller',
+                statusChangeBy: currentUser,
+                statusChangeDate: new Date()
+            };
+
+            await Package.findByIdAndUpdate(id,
+                {
+                    $set: {
+                        "failDeliveryStatus.status": 'fd_receivedBySeller',
+                        "failDeliveryStatus.location": currentUser,
+                    },
+                    $push: {
+                        'failDeliveryStatus.statusLog': failDeliveryLog,
+                    }
+                });
+
+            return res.status(200).json({ msg: "success" });
+
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
 }

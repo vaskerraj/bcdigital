@@ -40,6 +40,7 @@ const packageSchema = new mongoose.Schema({
                 "for_delivery",
                 "delivered",
                 "not_delivered",
+                "fail_delivery",
                 "return_request",
                 "return_approve",
                 "return_denide",
@@ -157,6 +158,33 @@ const packageSchema = new mongoose.Schema({
             }
         }
     ],
+    failDeliveryStatus: {
+        status: {
+            type: String,
+            enum: [
+                'fd_dispatched',
+                'fd_reachedSellerCity',
+                'fd_sameCity',
+                'fd_receivedBySeller',
+            ]
+        },
+        location: {
+            type: ObjectId,
+            ref: 'Users'
+        },
+        statusLog: [{
+            status: {
+                type: String
+            },
+            statusChangeBy: {
+                type: ObjectId,
+                ref: 'Users'
+            },
+            statusChangeDate: {
+                type: Date
+            }
+        }]
+    },
     shippingClam: {
         amount: {
             type: Number

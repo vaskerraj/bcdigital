@@ -7,6 +7,7 @@ const DefaultAddress = mongoose.model('DefaultAddress');
 const ShippingCost = mongoose.model('ShippingPlan');
 const Coupon = mongoose.model('Coupon');
 const Seller = mongoose.model('Seller');
+const Package = mongoose.model('Package');
 
 const admin = require('../../firebase/firebaseAdmin');
 const { requiredAuth, checkRole } = require('../middlewares/auth');
@@ -246,6 +247,53 @@ module.exports = function (server) {
         try {
             const coupons = await Coupon.findById(couponId).populate('categoryId').lean();
             return res.status(200).json(coupons);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    // get seller return address with package detail
+    server.get('/api/delivery/seller/return/:id', requiredAuth, checkRole(['delivery', 'subscriber']), async (req, res) => {
+        const packageId = req.params.id;
+        try {
+            const package = await Package.findById(packageId)
+                .select('_id orderId seller delivery orders trackingId notDelivered createdAt')
+                .lean()
+                .populate({
+                    path: 'orderId',
+                    populate: ([{
+                        path: 'orderedBy',
+                        select: 'name _id',
+                    }
+                    ])
+                })
+                .populate({
+                    path: 'seller',
+                    select: 'name email mobile _id',
+                });
+
+            const sellerId = package.seller._id;
+            const sellerAddress = await Seller.findOne({
+                userId: sellerId,
+                'addresses.label': 'return'
+            }, {
+                'addresses.$': 1
+            }).select('addresses')
+                .lean()
+                .populate('addresses.region', 'name')
+                .populate('addresses.city', 'name')
+                .populate('addresses.area', 'name');
+
+            const packageObj = new Object();
+            packageObj['_id'] = package._id;
+            packageObj['orders'] = package.orderId;
+            packageObj['seller'] = package.seller;
+            packageObj['returnAddress'] = sellerAddress;
+            packageObj['trackingId'] = package.trackingId;
+            packageObj['notDelivered'] = package.notDelivered;
+            packageObj['createdAt'] = package.createdAt;
+
+            return res.status(200).json(packageObj);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
