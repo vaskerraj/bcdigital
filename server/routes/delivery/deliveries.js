@@ -747,7 +747,7 @@ module.exports = function (server) {
 
             const totalAtDelivery = finalOrderTotal + shippingCharge;
             //
-            const totalPointAmountAtDelivery = wayToDeliveryProductOnly.reduce((a, c) => (a + (c.pointAmount * c.productQty)), 0);
+            const totalPointAmountAtDelivery = wayToDeliveryProductOnly.reduce((a, c) => (a + c.pointAmount), 0);
 
             const deliveredDeliveryLog = {
                 status: 'delivered',
