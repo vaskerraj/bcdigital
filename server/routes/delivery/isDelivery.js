@@ -5,7 +5,7 @@ const ShippingAgent = mongoose.model('ShippingAgent');
 const Package = mongoose.model('Package');
 const Users = mongoose.model('Users');
 const Product = mongoose.model('Product');
-const DefaultAddress = mongoose.model('DefaultAddress');
+const Transaction = mongoose.model('Transaction');
 
 const { requiredAuth, checkRole } = require('../../middlewares/auth');
 
@@ -415,36 +415,72 @@ module.exports = function (server) {
                 statusChangeDate: new Date()
             }
 
-            const allProductFromPackage = await Package.findById(packageId, { _id: 0 }).select('products').lean();
+            const allProductFromPackage = await Package.findById(packageId).
+                select('orderId products shippingCharge')
+                .lean()
+                .populate({
+                    path: 'orderId',
+                    populate: ([{
+                        path: 'shipping',
+                        select: ' _id ',
+                        populate: ({
+                            path: 'shipAgentId',
+                            select: '_id',
+                        })
+                    },
+                    {
+                        path: 'orderedBy',
+                        select: '_id',
+                    }
+                    ])
+                });
             const packedProductOnly = allProductFromPackage.products.filter(item => item.orderStatus === "packed");
 
-            await Promise.all(
-                packedProductOnly.map(async pro => {
-                    await Package.findOneAndUpdate({
-                        _id: packageId,
-                        'products._id': pro._id,
-                    },
-                        {
-                            $set: {
-                                "products.$.orderStatus": 'shipped',
-                            },
-                            $push: {
-                                'products.$.orderStatusLog': shipStatusLog
-                            }
-                        });
+            if (packedProductOnly.length !== 0) {
+
+                await Promise.all(
+                    packedProductOnly.map(async pro => {
+                        await Package.findOneAndUpdate({
+                            _id: packageId,
+                            'products._id': pro._id,
+                        },
+                            {
+                                $set: {
+                                    "products.$.orderStatus": 'shipped',
+                                },
+                                $push: {
+                                    'products.$.orderStatusLog': shipStatusLog
+                                }
+                            });
+                    })
+                );
+
+                await Package.findOneAndUpdate({
+                    _id: packageId
+                }, {
+
+                    $set: {
+                        shipLocation: req.user?._id !== undefined ? req.user._id : null,
+                        shipDate: new Date()
+                    }
                 })
-            );
 
-            await Package.findOneAndUpdate({
-                _id: packageId
-            }, {
+                //insert shippingcharge for shipping agent after package been shipped
+                const orderId = allProductFromPackage.orderId;
+                const orderByCreatedBy = allProductFromPackage.orderId.orderedBy._id;
+                const createdForUser_shipAgent = allProductFromPackage.orderId.shipping.shipAgentId._id;
 
-                $set: {
-                    shipLocation: req.user?._id !== undefined ? req.user._id : null,
-                    shipDate: new Date()
-                }
-            })
-
+                const newComission = new Transaction({
+                    orderId,
+                    packageId,
+                    transType: 'shippingFeePaidByCustomer',
+                    amount: allProductFromPackage.shippingCharge,
+                    createdBy: orderByCreatedBy,
+                    createdForShippingAgent: createdForUser_shipAgent,
+                    createdForString: "delivery",
+                });
+                await newComission.save();
+            }
             return res.status(200).json({ msg: 'success' });
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
