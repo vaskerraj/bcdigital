@@ -47,6 +47,11 @@ const transactionSchema = new mongoose.Schema({
     },
     createdForString: {
         type: String,
+    },
+    //  maturity date use at package delivery which is 7 days later then delivered date
+    // this is used for return package or product and reversalCommission
+    maturityDate: {
+        type: Date
     }
 }, { timestamps: true });
 
