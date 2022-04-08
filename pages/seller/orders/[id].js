@@ -292,7 +292,7 @@ const OrdersDetails = ({ order }) => {
                                 {order.paymentStatus === 'paid' &&
                                     <div className="d-block mt-2">
                                         <span className="mr-2">Paid At:</span>
-                                        {moment(order.payementDate).format("DD MMM YYYY HH:mm")}
+                                        {moment(order.paymentDate).format("DD MMM YYYY HH:mm")}
                                     </div>
                                 }
                             </div>

@@ -128,7 +128,7 @@ const OrdersDetails = ({ order, deliveryAddress, packages }) => {
                                     </div>
                                     {pack.paymentStatus === 'paid' &&
                                         <div className="d-block">
-                                            Paid At : {moment(pack.payementDate).format("DD MMMM YYYY")}
+                                            Paid At : {moment(pack.paymentDate).format("DD MMMM YYYY")}
                                         </div>
                                     }
                                 </div>

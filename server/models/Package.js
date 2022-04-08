@@ -78,7 +78,7 @@ const packageSchema = new mongoose.Schema({
         require: true,
         default: 'notpaid'
     },
-    payementDate: {
+    paymentDate: {
         type: Date
     },
     seller: {

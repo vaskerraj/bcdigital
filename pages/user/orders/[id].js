@@ -8,7 +8,6 @@ import { parseCookies } from 'nookies';
 import { useSelector } from 'react-redux';
 
 import axios from 'axios';
-import axiosApi from '../../../helpers/api';
 
 import moment from 'moment';
 
@@ -174,7 +173,7 @@ const OrdersDetails = ({ order, deliveryAddress, packages }) => {
                                                         </div>
                                                         {pack.paymentStatus === 'paid' &&
                                                             <div className="d-block">
-                                                                Paid At : {moment(pack.payementDate).format("DD MMMM YYYY")}
+                                                                Paid At : {moment(pack.paymentDate).format("DD MMMM YYYY")}
                                                             </div>
                                                         }
                                                     </div>
@@ -341,7 +340,6 @@ export async function getServerSideProps(context) {
     try {
         const cookies = parseCookies(context);
         const { id } = context.params;
-        console.log(id)
         const { data } = await axios.get(`${process.env.api}/api/orders/detail/${id}`, {
             headers: {
                 token: cookies.token,

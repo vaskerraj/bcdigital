@@ -432,7 +432,7 @@ module.exports = function (server) {
                         $set: {
                             paymentStatus: 'paid',
                             paymentId: payment._id,
-                            payementDate: new Date()
+                            paymentDate: new Date()
                         }
                     });
 
@@ -458,7 +458,7 @@ module.exports = function (server) {
                         $set: {
                             paymentStatus: 'paid',
                             paymentId: payment._id,
-                            payementDate: new Date()
+                            paymentDate: new Date()
                         }
                     });
 
