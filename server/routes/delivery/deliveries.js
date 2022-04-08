@@ -1,10 +1,12 @@
 const mongoose = require('mongoose');
 
 const Package = mongoose.model('Package');
+const Order = mongoose.model('Order');
 const Users = mongoose.model('Users');
 const Product = mongoose.model('Product');
 const ShippingAgent = mongoose.model('ShippingAgent');
 const Seller = mongoose.model('Seller');
+const Payment = mongoose.model('Payment');
 const Transaction = mongoose.model('Transaction');
 const SellerInvoiceDates = mongoose.model('SellerInvoiceDates');
 
@@ -727,7 +729,7 @@ module.exports = function (server) {
         const currentUser = req.user._id;
         try {
             const allProductFromPackage = await Package.findById(packageId)
-                .select('products shippingCharge orderId seller')
+                .select('products shippingCharge orderId seller paymentType')
                 .lean()
                 .populate({
                     path: 'orderId',
@@ -813,13 +815,33 @@ module.exports = function (server) {
                 })
             );
 
+            const orderId = allProductFromPackage.orderId;
+            const orderByCreatedBy = allProductFromPackage.orderId.orderedBy._id;
+
+            if (allProductFromPackage.paymentType === "cashondelivery") {
+                const newPayment = new Payment({
+                    orderId,
+                    packageId,
+                    amount: totalAtDelivery,
+                    paymentType: 'cashondelivery',
+                    transactionId: 'cashondelivery',
+                    paidBy: orderByCreatedBy
+                });
+                const payment = await newPayment.save();
+                await Package.findByIdAndUpdate(packageId, {
+                    paymentStatus: 'paid',
+                    paymentId: payment._id,
+                    paymentDate: new Date()
+                });
+                await Order.findOneAndUpdate({ orderId: allProductFromPackage.orderId._id }, {
+                    paymentStatus: "paid"
+                });
+            }
+
             // also insert at Transcation collection
             // Note: shipping charge have to add to transcation collection after package has been shipped.
 
             // insert order total
-            const orderId = allProductFromPackage.orderId;
-            const orderByCreatedBy = allProductFromPackage.orderId.orderedBy._id;
-
             const newOrderTotal = new Transaction({
                 orderId,
                 packageId,
