@@ -143,6 +143,11 @@ const packageSchema = new mongoose.Schema({
         type: ObjectId,
         ref: 'Users'
     },
+    //  maturity date use at package delivery which is 7 days later then delivered date
+    // this is used for return package or product
+    maturityDate: {
+        type: Date
+    },
     // shipping agent have to try to delivery 3 time before cancel.
     notDelivered: [
         {
