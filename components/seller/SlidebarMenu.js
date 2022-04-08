@@ -4,12 +4,6 @@ import { Menu } from 'antd';
 import {
     DesktopOutlined,
     BorderOutlined,
-    TagsOutlined,
-    GiftOutlined,
-    FundProjectionScreenOutlined,
-    TeamOutlined,
-    UserOutlined,
-    PieChartOutlined,
     BarChartOutlined,
     SettingOutlined,
     ShoppingCartOutlined,
@@ -22,7 +16,9 @@ const SlidebarMenu = ({ onActive }) => {
             defaultSelectedKeys={[onActive]}
             defaultOpenKeys={[
                 onActive === 'manageproduct' || onActive === 'addproduct' || onActive === 'delivery'
-                    ? 'sub1' : ''
+                    ? 'sub1' :
+                    onActive === 'finance' || onActive === 'transcation'
+                        ? 'sub2' : ''
             ]}
             mode="inline"
         >
@@ -40,6 +36,14 @@ const SlidebarMenu = ({ onActive }) => {
             <Menu.Item key="manageOrders" icon={<ShoppingCartOutlined />}>
                 <Link href="/seller/orders"> Manage Orders</Link>
             </Menu.Item>
+            <SubMenu key="sub2" icon={<BarChartOutlined />} title="Finance">
+                <Menu.Item key="finance">
+                    <Link href="/seller/finance">Account</Link>
+                </Menu.Item>
+                <Menu.Item key="transcation">
+                    <Link href="/seller/finance/transcation">Transaction</Link>
+                </Menu.Item>
+            </SubMenu>
         </Menu>
     );
 }
