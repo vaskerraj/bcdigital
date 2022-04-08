@@ -729,7 +729,7 @@ module.exports = function (server) {
         const currentUser = req.user._id;
         try {
             const allProductFromPackage = await Package.findById(packageId)
-                .select('products shippingCharge orderId seller paymentType')
+                .select('products shippingCharge orderId seller sellerRole paymentType')
                 .lean()
                 .populate({
                     path: 'orderId',
@@ -817,6 +817,7 @@ module.exports = function (server) {
 
             const orderId = allProductFromPackage.orderId;
             const orderByCreatedBy = allProductFromPackage.orderId.orderedBy._id;
+            const sellerRole = allProductFromPackage.sellerRole;
 
             if (allProductFromPackage.paymentType === "cashondelivery") {
                 const newPayment = new Payment({
@@ -849,7 +850,7 @@ module.exports = function (server) {
                 amount: finalOrderTotal,
                 createdBy: orderByCreatedBy,
                 createdForUser: createdForUser_seller,
-                createdForString: "seller",
+                createdForString: sellerRole === 'own' ? 'own_seler' : "seller",
             });
 
             await newOrderTotal.save();
@@ -866,7 +867,7 @@ module.exports = function (server) {
             await newComission.save();
 
             //insert dates on sellerinvoicedates collections
-            if (checkSellerInvoiceDate === 0) {
+            if (checkSellerInvoiceDate === 0 && sellerRole !== 'own') {
                 const newSellerInvoiceDate = new SellerInvoiceDates({
                     sellerId: createdForUser_seller,
                     dateFrom: invoiceStartDate,
