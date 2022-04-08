@@ -6,8 +6,12 @@ const Product = mongoose.model('Product');
 const ShippingAgent = mongoose.model('ShippingAgent');
 const Seller = mongoose.model('Seller');
 const Transaction = mongoose.model('Transaction');
+const SellerInvoiceDates = mongoose.model('SellerInvoiceDates');
+
+const moment = require('moment');
 
 const { requiredAuth, checkRole } = require('../../middlewares/auth');
+
 const getProductDetail = async (products) => {
 
     const getProductIds = products.map(item => item.productId);
@@ -738,6 +742,36 @@ module.exports = function (server) {
             if (wayToDeliveryProductOnly.length === 0) {
                 return res.status(200).json({ msg: "not_found" });
             }
+
+            // sellerId
+            const createdForUser_seller = allProductFromPackage.seller;
+
+            //create invoice statement for seller between each 15 days
+            const currentDate = moment();
+            const currentDay = currentDate.format('DD');
+            const thisMonthStartDate = moment().startOf('month').format('YYYY-MM-DD');
+            const thisMonthEndDate = moment().endOf('month').format('YYYY-MM-DD');
+
+            let invoiceStartDate;
+            let invoiceEndDate;
+            if (currentDay <= 15) {
+                invoiceStartDate = thisMonthStartDate;
+                invoiceEndDate = moment(thisMonthStartDate, 'YYYY-MM-DD').add(14, 'days').format('YYYY-MM-DD');
+
+            } else {
+                invoiceStartDate = moment(thisMonthStartDate, 'YYYY-MM-DD').add(15, 'days').format('YYYY-MM-DD');
+                invoiceEndDate = thisMonthEndDate
+            }
+
+            const checkSellerInvoiceDate = await SellerInvoiceDates.countDocuments({
+                sellerId: createdForUser_seller,
+                $and:
+                    [
+                        { dateFrom: { $gte: invoiceStartDate } },
+                        { dateTo: { $lte: invoiceEndDate } }
+                    ]
+            });
+
             // recalculate order total
             // recalculate commission amount
             // and insert at Package collection
@@ -755,6 +789,9 @@ module.exports = function (server) {
                 statusChangeDate: new Date()
             };
 
+
+            const maturityDate = moment().add(7, 'days');
+
             await Promise.all(
                 wayToDeliveryProductOnly.map(async pro => {
                     await Package.findOneAndUpdate({
@@ -767,6 +804,7 @@ module.exports = function (server) {
                                 totalAtDelivery,
                                 totalPointAmount: totalPointAmountAtDelivery,
                                 deliveryDate: new Date(),
+                                maturityDate,
                             },
                             $push: {
                                 'products.$.orderStatusLog': deliveredDeliveryLog,
@@ -781,7 +819,6 @@ module.exports = function (server) {
             // insert order total
             const orderId = allProductFromPackage.orderId;
             const orderByCreatedBy = allProductFromPackage.orderId.orderedBy._id;
-            const createdForUser_seller = allProductFromPackage.seller;
 
             const newOrderTotal = new Transaction({
                 orderId,
@@ -801,10 +838,20 @@ module.exports = function (server) {
                 packageId,
                 transType: 'commission',
                 amount: totalPointAmountAtDelivery,
-                createdBy: orderByCreatedBy,
+                createdBy: createdForUser_seller,
                 createdForString: "admin",
             });
             await newComission.save();
+
+            //insert dates on sellerinvoicedates collections
+            if (checkSellerInvoiceDate === 0) {
+                const newSellerInvoiceDate = new SellerInvoiceDates({
+                    sellerId: createdForUser_seller,
+                    dateFrom: invoiceStartDate,
+                    dateTo: invoiceEndDate
+                });
+                await newSellerInvoiceDate.save();
+            }
 
             return res.status(200).json({ msg: "success" });
         } catch (error) {
