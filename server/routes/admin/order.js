@@ -643,7 +643,7 @@ module.exports = function (server) {
     });
 
     server.put('/api/admin/orderstatus/trackingid', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
-        const { trackingId, packageId, productId } = req.body;
+        const { packageId, productId } = req.body;
 
         try {
 
@@ -653,25 +653,63 @@ module.exports = function (server) {
                 statusChangeDate: new Date()
             }
 
-            await Promise.all(
-                productId.map(async (id) => {
-                    await Package.findOneAndUpdate({
-                        _id: packageId,
-                        'products._id': id
-                    },
-                        {
-                            $set: {
-                                "products.$.orderStatus": 'packed',
-                                trackingId
-                            },
-                            $push: {
-                                'products.$.orderStatusLog': orderStatusLog
-                            }
-                        });
-                })
-            )
+            const createRandomId = () => {
+                const hex = "0123456789";
+                const model = "xxxxxxxxx";
+                var str = "";
+                for (var i = 0; i < model.length; i++) {
+                    var rnd = Math.floor(Math.random() * hex.length);
+                    str += model[i] == "x" ? hex[rnd] : model[i];
+                }
 
-            return res.status(200).json({ msg: "success" });
+                const addStrWithDate = Number(str) + Number(new Date())
+                return process.env.TRACKINGID_PREFIX + addStrWithDate.toString().slice(-9);
+            }
+            const trackingId = createRandomId();
+
+            const package = await Package.findById(packageId).select('trackingId').lean();
+            if (package.trackingId) {
+                await Promise.all(
+                    productId.map(async (id) => {
+                        await Package.findOneAndUpdate({
+                            _id: packageId,
+                            'products._id': id
+                        },
+                            {
+                                $set: {
+                                    "products.$.orderStatus": 'packed',
+                                },
+                                $push: {
+                                    'products.$.orderStatusLog': orderStatusLog
+                                }
+                            });
+                    })
+                )
+
+                return res.status(200).json({ packageId, trackingId: package.trackingId });
+            } else {
+
+                await Promise.all(
+                    productId.map(async (id) => {
+                        await Package.findOneAndUpdate({
+                            _id: packageId,
+                            'products._id': id
+                        },
+                            {
+                                $set: {
+                                    "products.$.orderStatus": 'packed',
+                                    trackingId
+                                },
+                                $push: {
+                                    'products.$.orderStatusLog': orderStatusLog
+                                }
+                            });
+                    })
+                )
+
+                return res.status(200).json({ packageId, trackingId });
+            }
+
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }

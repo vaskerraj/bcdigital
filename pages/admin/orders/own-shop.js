@@ -18,7 +18,7 @@ const { RangePicker } = DatePicker;
 import { SearchOutlined, DownOutlined, CheckOutlined, CloseOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
 import Wrapper from '../../../components/admin/Wrapper';
-import { orderStatusText, paymentTypeText, generateTrackingId } from '../../../helpers/functions'
+import { orderStatusText, paymentTypeText } from '../../../helpers/functions'
 
 // config antdesign message
 message.config({
@@ -31,9 +31,9 @@ const SellerOrder = ({ ordersData, total }) => {
 
     const [activeTab, setActiveTab] = useState('not_confirmed');
 
-    const [allProductIdForPackedUpdate, setAllProductIdForPackedUpdate] = useState([]);
     const [shippingIdModalVisible, setShippingIdModalVisible] = useState(false);
     const [readyPackageId, setReadyPackageId] = useState(null);
+    const [trackingId, setTrackingId] = useState(null);
 
     const [loading, setLoading] = useState(false);
     const [onFirstLoad, setOnFirstLoad] = useState(true);
@@ -688,11 +688,10 @@ const SellerOrder = ({ ordersData, total }) => {
         )
     }
 
-    const updateOrderStatusTrackingId = async (trackingId, packageId, productId) => {
+    const updateOrderStatusTrackingId = async (packageId, productId) => {
         try {
             const { data } = await axiosApi.put(`/api/admin/orderstatus/trackingid`,
                 {
-                    trackingId,
                     packageId,
                     productId
                 },
@@ -701,18 +700,10 @@ const SellerOrder = ({ ordersData, total }) => {
                         token: adminAuth.token
                     }
                 });
-            if (data) {
-                setShippingIdModalVisible(false);
-                message.success({
-                    content: (
-                        <div>
-                            <div className="font-weight-bold">Success</div>
-                            Please print shipping level to process further.
-                        </div>
-                    ),
-                    className: 'message-success',
-                });
-                return router.push(`/admin/orders/print/${packageId}`);
+            if (data.trackingId) {
+                setShippingIdModalVisible(true);
+                setReadyPackageId(packageId)
+                setTrackingId(data.trackingId)
             }
         } catch (error) {
             message.warning({
@@ -729,20 +720,13 @@ const SellerOrder = ({ ordersData, total }) => {
 
     const checkProductStatusWhileReadyToShip = async (products, packageId) => {
         const allProductId = products.map(item => item._id);
-        setAllProductIdForPackedUpdate(allProductId);
-        setShippingIdModalVisible(true);
-        setReadyPackageId(packageId);
+        updateOrderStatusTrackingId(packageId, allProductId);
     }
 
     const handleShippedModalCancel = () => {
         setShippingIdModalVisible(false);
         return router.push(router.asPath)
     }
-    const onTackingIdSubmit = async (inputdata) => {
-        const trackingId = inputdata.trackingId;
-        updateOrderStatusTrackingId(trackingId, readyPackageId, allProductIdForPackedUpdate);
-    }
-
 
     const handleStatusChange = useCallback(value => {
         setOnFirstLoad(false);
@@ -813,40 +797,38 @@ const SellerOrder = ({ ordersData, total }) => {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
             <Modal
-                title="Add Tracking Id & Print Shipping Label"
+                title="Print Shipping Label"
                 visible={shippingIdModalVisible}
                 footer={null}
                 closable={false}
                 destroyOnClose={true}
             >
-                <form onSubmit={handleSubmit(onTackingIdSubmit)}>
-                    <div className="d-block">
-                        <label>Tracking Id</label>
-                        <input
-                            name="trackingId"
-                            className="form-control"
-                            id="trackingId"
-                            autoComplete="off"
-                            ref={register({
-                                required: "Provide tracking id"
-                            })}
-                        />
-
-                        {errors.trackingId && <p className="errorMsg">{errors.trackingId.message}</p>}
-                        <div className="d-block text-right text-primary cp" onClick={() => generateTrackingId('trackingId')}>
-                            Generate Id
-                        </div>
-                    </div>
-                    <div className="d-block border-top mt-5 text-right">
-                        <button type="button" onClick={handleShippedModalCancel} className="btn btn-lg c-btn-light font16 mt-4 mr-5">
-                            Cancel
-                        </button>
-
+                <div>
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Tracking Id</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>{readyPackageId ? readyPackageId.toUpperCase() : ''}</td>
+                                <td><strong>{trackingId}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div className="d-block border-top mt-5 text-right">
+                    <button type="button" onClick={handleShippedModalCancel} className="btn btn-lg c-btn-light font16 mt-4 mr-5">
+                        Cancel
+                    </button>
+                    <Link href={`/admin/orders/print/${readyPackageId}`}>
                         <button type="submit" className="btn btn-lg c-btn-primary font16 mt-4">
-                            SAVE & PRINT
+                            CONFIRM & PRINT
                         </button>
-                    </div>
-                </form>
+                    </Link>
+                </div>
             </Modal>
             <Wrapper onActive="ownShopOrders" breadcrumb={["Orders", "Seller's Orders"]}>
                 <div className="d-flex mb-5" style={{ fontSize: '1.6rem', fontWeight: 600 }}>
