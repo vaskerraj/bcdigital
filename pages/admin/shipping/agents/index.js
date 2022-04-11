@@ -103,26 +103,11 @@ const AgentList = ({ agents }) => {
             show: true,
             Cell: ({ row: { original } }) => (
                 <>
-                    <button className="btn btn-success mr-2"
-                        onClick={() => viewAnalyticsHandler(original._id)}>
-                        Analytics
-                    </button>
                     <Link href={`/admin/shipping/agents/edit/${original._id}`}>
                         <button className="btn btn-info mr-2">
                             <EditFilled />
                         </button>
                     </Link>
-                    <Popconfirm
-                        title="Are you sure to delete this agent?"
-                        onConfirm={() => deleteAgentHandler(original._id)}
-                        okText="Yes"
-                        cancelText="No"
-                    >
-                        <button className="btn btn-warning">
-                            <DeleteFilled />
-                        </button>
-                    </Popconfirm>
-
                 </>
             )
         }
@@ -215,7 +200,7 @@ const AgentList = ({ agents }) => {
     });
 
     return (
-        <Wrapper onActive="shipping" breadcrumb={["Shipping"]}>
+        <Wrapper onActive="agents" breadcrumb={["Shipping"]}>
             <div className="d-flex" style={{ fontSize: '1.6rem', fontWeight: 600 }}>
                 <div className="filter-tab cp" onClick={() => setActiveTab('approved')}>
                     Approved Agents

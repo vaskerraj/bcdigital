@@ -25,7 +25,7 @@ const SlidebarMenu = ({ onActive }) => {
         <Menu theme="dark"
             defaultSelectedKeys={[onActive]}
             defaultOpenKeys={[
-                onActive === 'agents' || onActive === 'shipping' || onActive === 'delivery'
+                onActive === 'agents' || onActive === 'shipping'
                     ? 'sub3'
                     : onActive === 'ownShopOrders' || onActive === 'sellerOrders'
                         ? 'sub1'
@@ -132,9 +132,6 @@ const SlidebarMenu = ({ onActive }) => {
             <SubMenu key="sub3" icon={<Truck />} title=" Shipping">
                 <Menu.Item key="shipping">
                     <Link href="/admin/shipping/">Shipping Plan</Link>
-                </Menu.Item>
-                <Menu.Item key="delivery">
-                    <Link href="/admin/shipping/delivery/">Delivery Users</Link>
                 </Menu.Item>
                 <Menu.Item key="agents">
                     <Link href="/admin/shipping/agents">Agents</Link>
