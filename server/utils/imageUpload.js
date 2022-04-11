@@ -1,6 +1,6 @@
 const fs = require('fs');
 const axios = require('axios');
-const FormData = require('form-data');
+const FormData = require('form-data'); // fix missing module by npm i form-data --save
 
 const singleImageUpload = async (req, type) => {
     const form = new FormData();
