@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSelector } from 'react-redux';
 
-import { message } from 'antd';
+import { message, Select } from 'antd';
+const { Option, OptGroup } = Select;
 
 import { useForm, Controller } from 'react-hook-form';
 
@@ -17,7 +18,6 @@ message.config({
 
 const ShipAgentForm = (props) => {
     const { action, cities, agentData } = props;
-
     const router = useRouter();
 
     const { adminAuth } = useSelector(state => state.adminAuth);
@@ -42,6 +42,10 @@ const ShipAgentForm = (props) => {
         register({ name: "relatedCity" });
     }, [register]);
 
+    useEffect(() => {
+        if (action === "edit_agent") setValue("relatedCity", agentData.relatedCity._id)
+    }, [action]);
+
 
     const onHandleChanage = (value, option) => setValue("relatedCity", option.key);
 
@@ -58,7 +62,7 @@ const ShipAgentForm = (props) => {
                     minDeliveryTime: inputdata.minTime,
                     maxDeliveryTime: inputdata.maxTime,
                     password: inputdata.password,
-                    relatedCity: inputdata.password
+                    relatedCity: inputdata.relatedCity
                 },
                     {
                         headers: {
@@ -95,12 +99,9 @@ const ShipAgentForm = (props) => {
                 const data = await axiosApi.put(`/api/shipagent`, {
                     shipAgentId: agentData._id,
                     name: inputdata.name,
-                    email: inputdata.email,
-                    address: inputdata.address,
                     number: inputdata.number,
-                    panNo: inputdata.panNo,
-                    minDeliveryTime: inputdata.minTime,
-                    maxDeliveryTime: inputdata.maxTime
+                    address: inputdata.address,
+                    relatedCity: inputdata.relatedCity,
                 },
                     {
                         headers: {
@@ -182,15 +183,16 @@ const ShipAgentForm = (props) => {
                     </div>
                     <div className="col-sm-6 col-md-4 mt-4">
                         <label className="cat-label">Service At(City)</label>
+                        {agentData.relatedCity.name}
                         <Controller
                             name="serviceCity"
-                            defaultValue={action === 'add_branch' ? "" : branchData.relatedCity.name}
+                            defaultValue={action === 'add_agent' ? "" : agentData.relatedCity.name}
                             control={control}
                             render={({ onChange, value, ref }) => (
                                 <Select
                                     showSearch
                                     className="d-block"
-                                    style={{ width: 250 }}
+                                    style={{ width: '100%' }}
                                     onChange={(value, option) => {
                                         onChange(value);
                                         onHandleChanage(value, option);

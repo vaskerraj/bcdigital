@@ -8,7 +8,7 @@ import { ChevronLeft } from 'react-feather';
 import Wrapper from '../../../../../components/admin/Wrapper';
 import ShipAgentForm from '../../../../../components/admin/ShipAgentForm';
 
-const EditAgent = ({ agent }) => {
+const EditAgent = ({ cities, agent }) => {
     return (
         <Wrapper onActive="agents" breadcrumb={["Shipping", "Agents", "Edit Agent"]}>
             <div className="d-block text-right">
@@ -21,6 +21,7 @@ const EditAgent = ({ agent }) => {
             </div>
             <ShipAgentForm
                 action="edit_agent"
+                cities={cities}
                 agentData={agent}
             />
         </Wrapper >
@@ -35,9 +36,15 @@ export async function getServerSideProps(context) {
                 token: cookies.ad_token,
             },
         });
+        const { data: cityData } = await axios.get(`${process.env.api}/api/related/citylist`, {
+            headers: {
+                token: cookies.ad_token,
+            },
+        });
 
         return {
             props: {
+                cities: cityData,
                 agent: data
             }
         }

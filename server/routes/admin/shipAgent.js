@@ -80,7 +80,11 @@ module.exports = function (server) {
     server.get('/api/shipagent/:id', requiredAuth, checkRole(['admin']), async (req, res) => {
         const shipAgentId = req.params.id;
         try {
-            const shipAgent = await ShippingAgent.findById(shipAgentId).lean();
+            const shipAgent = await ShippingAgent.findById(shipAgentId)
+                .lean()
+                .populate('userId', 'name username mobile email deliveryRole')
+                .populate('relatedCity', '_id name')
+
             return res.status(200).json(shipAgent);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
@@ -100,18 +104,19 @@ module.exports = function (server) {
     });
 
     server.put('/api/shipagent', requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'contentManager']), async (req, res) => {
-        const { name, email, number, address, panNo, minDeliveryTime, maxDeliveryTime, shipAgentId } = req.body;
+        const { shipAgentId, name, number, address, relatedCity } = req.body;
         try {
-            await ShippingAgent.findByIdAndUpdate(shipAgentId, {
+            const updateShippingAgent = await ShippingAgent.findByIdAndUpdate(shipAgentId, {
                 name,
                 slug: slugify(name),
-                email,
                 number,
                 address,
-                panNo,
-                minDeliveryTime,
-                maxDeliveryTime
+                relatedCity
             });
+            await User.findByIdAndUpdate(updateShippingAgent.userId, {
+                name,
+                mobile: number,
+            })
             return res.status(200).json({ msg: "success" });
         }
         catch (error) {
