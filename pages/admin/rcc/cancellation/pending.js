@@ -12,7 +12,7 @@ import { message, Table, Tag, Image, Tooltip, Button } from 'antd';
 import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 
 import Wrapper from '../../../../components/admin/Wrapper';
-import { orderStatusText, paymentTypeText } from '../../../../helpers/functions'
+import { customImageLoader, orderStatusText, paymentTypeText } from '../../../../helpers/functions'
 
 const PendingCancellation = ({ cancellations }) => {
 
@@ -185,6 +185,7 @@ const PendingCancellation = ({ cancellations }) => {
                                                                     width="100px"
                                                                     height="100px"
                                                                     quality="50"
+                                                                    loader={customImageLoader}
                                                                 />
                                                                 <div className="product-detail ml-3" style={{ width: '100%' }}>
                                                                     <div className="product-name">{item.name}</div>

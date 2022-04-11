@@ -17,6 +17,7 @@ import { LoadingOutlined } from '@ant-design/icons';
 import useWindowDimensions from '../../../helpers/useWindowDimensions';
 import UserSidebarNav from '../../../components/nav/UserSidebarNav';
 import Wrapper from '../../../components/Wrapper';
+import { customImageLoader } from '../../../helpers/functions';
 
 const CancelRequest = ({ packages, defaultItemForCancel }) => {
     console.log(packages)
@@ -209,6 +210,7 @@ const CancelRequest = ({ packages, defaultItemForCancel }) => {
                                                                             objectFit="cover"
                                                                             objectPosition="top center"
                                                                             quality="50"
+                                                                            loader={customImageLoader}
                                                                         />
                                                                         <div className="product-detail ml-3" style={{ width: '100%' }}>
                                                                             <div className="product-name">{item.name}</div>

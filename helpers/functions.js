@@ -63,3 +63,7 @@ export const sellerStatusText = (status) => {
             return status;
     }
 }
+
+export const customImageLoader = ({ src, width, height, quality }) => {
+    return `${process.env.NEXT_PUBLIC_CUSTOM_IMAGECDN}/${src}?w=${width}?h=${height}&q=${quality || 75}`
+}

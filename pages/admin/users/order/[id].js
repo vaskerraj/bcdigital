@@ -9,7 +9,7 @@ import axios from 'axios';
 import moment from 'moment';
 
 import Wrapper from '../../../../components/admin/Wrapper';
-import { paymentTypeText } from '../../../../helpers/functions';
+import { customImageLoader, paymentTypeText } from '../../../../helpers/functions';
 
 const OrdersDetails = ({ order, deliveryAddress, packages }) => {
 
@@ -148,6 +148,7 @@ const OrdersDetails = ({ order, deliveryAddress, packages }) => {
                                                                 objectFit="cover"
                                                                 objectPosition="top center"
                                                                 quality="50"
+                                                                loader={customImageLoader}
                                                             />
                                                             <div className="product-detail ml-3" style={{ width: '100%' }}>
                                                                 <div className="product-name">{item.name}</div>

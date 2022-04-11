@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import ProductStarIcon from './ProductStarIcon';
 import { checkProductDiscountValidity } from '../../helpers/productDiscount';
+import { customImageLoader } from '../../helpers/functions';
 
 const ProductCard = ({ data }) => {
     const isPromoValidate = checkProductDiscountValidity(data.products[0].promoStartDate, data.products[0].promoEndDate);
@@ -30,6 +31,7 @@ const ProductCard = ({ data }) => {
                             objectFit="cover"
                             objectPosition="top center"
                             quality="40"
+                            loader={customImageLoader}
                         />
                     </div>
                     <div className="product-title" title={data.name}>

@@ -6,8 +6,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
 
-import { useForm } from 'react-hook-form';
-
 import axiosApi from '../../../helpers/api';
 import { Popconfirm, Select, message } from 'antd';
 const { Option, OptGroup } = Select;
@@ -20,6 +18,7 @@ import arrayMove from 'array-move';
 import Wrapper from '../../../components/admin/Wrapper';
 import ChooseCategory from '../../../components/ChooseCategory';
 import { allSellers } from '../../../redux/actions/sellerAction';
+import { customImageLoader } from '../../../helpers/functions';
 
 const Brands = ({ banner }) => {
     const [bannerItem, setBannerItem] = useState([]);
@@ -163,7 +162,8 @@ const Brands = ({ banner }) => {
         <div className="col-sm-6 col-md-6 col-lg-4 mt-4">
             <div className="brand-block d-block p-3 mt-3 mt-sm-0">
                 <div className="rounded img-thumbnail text-center">
-                    <Image src={`/uploads/banners/${value.mobileImage}`} height="160" width="330" />
+                    <Image src={`/uploads/banners/${value.mobileImage}`} height="160" width="330"
+                        loader={customImageLoader} />
                 </div>
                 <div className="d-block mt-4 font-weight-bold font16">
                     {value.name}

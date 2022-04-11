@@ -13,6 +13,7 @@ import moment from 'moment';
 
 import { message, Button } from 'antd';
 import { CheckOutlined } from '@ant-design/icons';
+import { customImageLoader } from '../../../helpers/functions';
 
 const MakeShipped = ({ order, error }) => {
 
@@ -208,6 +209,7 @@ const MakeShipped = ({ order, error }) => {
                                                             objectFit="cover"
                                                             objectPosition="top center"
                                                             quality="50"
+                                                            loader={customImageLoader}
                                                         />
                                                         <div className="product-detail ml-3" style={{ width: '100%' }}>
                                                             <div className="product-name">{item.name}</div>

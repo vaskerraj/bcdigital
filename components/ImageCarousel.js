@@ -2,6 +2,7 @@ import React from 'react';
 import { Carousel } from 'antd';
 import Link from 'next/link';
 import Image from 'next/image';
+import { customImageLoader } from '../helpers/functions';
 
 const ImageCarousel = ({ data, autoplay, autoplaySpeed, imgWidth, imgHeight, imgQuality }) => {
     return (
@@ -25,6 +26,7 @@ const ImageCarousel = ({ data, autoplay, autoplaySpeed, imgWidth, imgHeight, img
                                             height={imgHeight}
                                             quality={imgQuality}
                                             priority={index === 0 ? true : false}
+                                            loader={customImageLoader}
                                         />
                                     </a>
                                 </Link>
@@ -35,6 +37,7 @@ const ImageCarousel = ({ data, autoplay, autoplaySpeed, imgWidth, imgHeight, img
                                         height={imgHeight}
                                         quality={imgQuality}
                                         priority={index === 0 ? true : false}
+                                        loader={customImageLoader}
                                     />
                                 </div>
                         }

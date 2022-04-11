@@ -9,7 +9,7 @@ import moment from 'moment';
 import { Table, Tag, Image } from 'antd';
 
 import Wrapper from '../../../../components/admin/Wrapper';
-import { orderStatusText, paymentTypeText } from '../../../../helpers/functions'
+import { customImageLoader, orderStatusText, paymentTypeText } from '../../../../helpers/functions'
 
 const CancellationList = ({ cancellations }) => {
 
@@ -134,6 +134,7 @@ const CancellationList = ({ cancellations }) => {
                                                                     width="100px"
                                                                     height="100px"
                                                                     quality="50"
+                                                                    loader={customImageLoader}
                                                                 />
                                                                 <div className="product-detail ml-3" style={{ width: '100%' }}>
                                                                     <div className="product-name">{item.name}</div>

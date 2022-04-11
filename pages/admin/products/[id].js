@@ -15,6 +15,7 @@ import ShowMore from 'react-show-more-button';
 
 import Wrapper from '../../../components/admin/Wrapper';
 import { checkProductDiscountValidity } from '../../../helpers/productDiscount';
+import { customImageLoader } from '../../../helpers/functions';
 
 // config antdesign message
 message.config({
@@ -252,6 +253,7 @@ const OverAllProductDetails = ({ product }) => {
                                         width={200}
                                         height={220}
                                         src={`/uploads/products/${mainProductImage}`}
+                                        loader={customImageLoader}
                                     />
                                 </div>
                                 <div className="d-flex" style={{ flexWrap: 'wrap' }}>
@@ -261,6 +263,7 @@ const OverAllProductDetails = ({ product }) => {
                                                 width={112}
                                                 height={110}
                                                 src={`/uploads/products/${img}`}
+                                                loader={customImageLoader}
                                             />
                                         </div>
                                     ))}

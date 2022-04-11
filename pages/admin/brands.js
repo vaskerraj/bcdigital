@@ -13,6 +13,7 @@ import arrayMove from 'array-move';
 
 import Wrapper from '../../components/admin/Wrapper';
 import BrandModal from '../../components/admin/BrandModal';
+import { customImageLoader } from '../../helpers/functions';
 
 const Brands = ({ brands }) => {
     const [brandItem, setBrandItem] = useState(Object.values(brands));
@@ -77,7 +78,7 @@ const Brands = ({ brands }) => {
         <div className="col-sm-6 col-md-3 mt-4">
             <div className="brand-block d-block p-3 mt-3 mt-sm-0">
                 <div className="rounded img-thumbnail text-center">
-                    <Image src={`/uploads/brands/${value.image}`} height="140" width="auto" />
+                    <Image src={`/uploads/brands/${value.image}`} height="140" width="100%" loader={customImageLoader} />
                 </div>
                 <div className="d-block mt-4 font-weight-bold font16">
                     {value.name}

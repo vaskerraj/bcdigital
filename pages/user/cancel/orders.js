@@ -21,6 +21,7 @@ import { useForm } from 'react-hook-form';
 import useWindowDimensions from '../../../helpers/useWindowDimensions';
 import UserSidebarNav from '../../../components/nav/UserSidebarNav';
 import Wrapper from '../../../components/Wrapper';
+import { customImageLoader } from '../../../helpers/functions';
 
 const CancelOrders = ({ orders }) => {
 
@@ -531,6 +532,7 @@ const CancelOrders = ({ orders }) => {
                                                                                         objectFit="cover"
                                                                                         objectPosition="top center"
                                                                                         quality="40"
+                                                                                        loader={customImageLoader}
                                                                                     />
                                                                                     <div className="product-detail ml-3" style={{ width: '100%' }}>
                                                                                         <div className="product-name">{item.name}</div>

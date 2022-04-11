@@ -14,7 +14,7 @@ import { message, Modal, Tag, Dropdown, Menu, Button } from 'antd';
 import { DownOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
 import Wrapper from '../../../components/seller/Wrapper';
-import { paymentTypeText, generateTrackingId } from '../../../helpers/functions';
+import { paymentTypeText, generateTrackingId, customImageLoader } from '../../../helpers/functions';
 
 const OrdersDetails = ({ order }) => {
     const [filteredProducts, setfilteredProducts] = useState([]);
@@ -358,6 +358,7 @@ const OrdersDetails = ({ order }) => {
                                                         objectFit="cover"
                                                         objectPosition="top center"
                                                         quality="50"
+                                                        loader={customImageLoader}
                                                     />
                                                     <div className="product-detail ml-3" style={{ width: '100%' }}>
                                                         <div className="product-name">{item.name}</div>

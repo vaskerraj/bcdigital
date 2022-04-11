@@ -18,6 +18,7 @@ import { ArrowLeft } from 'react-feather';
 import useWindowDimensions from '../../../helpers/useWindowDimensions';
 import UserSidebarNav from '../../../components/nav/UserSidebarNav';
 import Wrapper from '../../../components/Wrapper';
+import { customImageLoader } from '../../../helpers/functions';
 
 // config antdesign message
 message.config({
@@ -125,6 +126,7 @@ const ReviewDetails = ({ product, review }) => {
                                                     objectFit="cover"
                                                     objectPosition="top center"
                                                     quality="50"
+                                                    loader={customImageLoader}
                                                 />
                                                 <div className="product-detail ml-3" style={{ width: '100%' }}>
                                                     <div className="product-name">{product.name}</div>

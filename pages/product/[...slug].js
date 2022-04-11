@@ -30,6 +30,8 @@ import { addToCart, removeOrderFromCart } from '../../redux/actions/cartAction';
 import Loading from '../../components/Loading';
 import moment from 'moment';
 
+import { customImageLoader } from '../../helpers/functions';
+
 
 // config antdesign message
 message.config({
@@ -103,7 +105,7 @@ const ProductDetail = ({ product, pr, qty, as }) => {
         let sliderImageData = [];
         product.colour[0].images.map(item => {
             const imageObj = new Object();
-            imageObj['image'] = `/uploads/products/${item}`;
+            imageObj['image'] = `${process.env.NEXT_PUBLIC_CUSTOM_IMAGECDN}/uploads/products/${item}`;
             imageObj['text'] = product.name;
             sliderImageData.push(imageObj);
         });
@@ -409,8 +411,9 @@ const ProductDetail = ({ product, pr, qty, as }) => {
                                     {
                                         product.colour[0].images.map(item => (
                                             <Image key={item._id} src={`/uploads/products/${item}`} layout="responsive"
-                                                width=""
-                                                height=""
+                                                width="100%"
+                                                height="100%"
+                                                loader={customImageLoader}
                                             />
                                         ))
                                     }

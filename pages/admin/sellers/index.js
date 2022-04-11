@@ -13,6 +13,7 @@ import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 import Wrapper from '../../../components/admin/Wrapper';
 import baseUrl from '../../../helpers/baseUrl';
 import { ReactTable } from '../../../components/helpers/ReactTable';
+import { customImageLoader } from '../../../helpers/functions';
 
 // config antdesign message
 message.config({
@@ -40,6 +41,7 @@ const SellerList = ({ sellers }) => {
                     <div className="">
                         <Image src={`${baseUrl}/uploads/sellers/${original.userId.picture}`}
                             className="img-thumbnail" width="50" height="50"
+                            loader={customImageLoader}
                         />
                     </div>
                     <div>

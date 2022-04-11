@@ -21,6 +21,7 @@ import { updateCartQty, removeOrderFromCart } from '../redux/actions/cartAction'
 
 import Wrapper from '../components/Wrapper';
 import Loading from '../components/Loading';
+import { customImageLoader } from '../helpers/functions';
 
 // config antdesign message
 message.config({
@@ -363,6 +364,7 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
                                                                                 objectFit="cover"
                                                                                 objectPosition="top center"
                                                                                 quality="100"
+                                                                                loader={customImageLoader}
                                                                             />
                                                                         </a>
                                                                     </Link>
@@ -426,6 +428,7 @@ const cart = ({ parseCartItems, cartProducts, shippingPlans }) => {
                                                                         objectFit="cover"
                                                                         objectPosition="top center"
                                                                         quality="100"
+                                                                        loader={customImageLoader}
                                                                     />
                                                                 </a>
                                                             </Link>

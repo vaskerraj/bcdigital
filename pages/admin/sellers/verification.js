@@ -13,6 +13,7 @@ import { CloseOutlined, CheckOutlined, DownloadOutlined } from '@ant-design/icon
 
 import Wrapper from '../../../components/admin/Wrapper';
 import baseUrl from '../../../helpers/baseUrl';
+import { customImageLoader } from '../../../helpers/functions';
 
 const SellerVerification = ({ seller }) => {
     console.log(seller);
@@ -202,6 +203,7 @@ const SellerVerification = ({ seller }) => {
                                             <div className="text-center">
                                                 <Image src={`/uploads/sellers/docs/${record.documentFile}`}
                                                     height='200px'
+                                                    loader={customImageLoader}
                                                 />
                                             </div>
                                             :
@@ -280,6 +282,7 @@ const SellerVerification = ({ seller }) => {
                                             <div className="text-center">
                                                 <Image src={`/uploads/sellers/docs/${record.account.chequeFile}`}
                                                     height='200px'
+                                                    loader={customImageLoader}
                                                 />
                                             </div>
                                             :

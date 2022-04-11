@@ -15,7 +15,7 @@ import { message, Modal } from 'antd';
 import { CheckOutlined, CloseOutlined, ExclamationCircleOutlined, DownOutlined } from '@ant-design/icons';
 
 import Wrapper from '../../../components/admin/Wrapper';
-import { paymentTypeText, generateTrackingId } from '../../../helpers/functions';
+import { paymentTypeText, generateTrackingId, customImageLoader } from '../../../helpers/functions';
 
 const AdminSellerOrdersDetails = ({ order }) => {
 
@@ -346,6 +346,7 @@ const AdminSellerOrdersDetails = ({ order }) => {
                                                         objectFit="cover"
                                                         objectPosition="top center"
                                                         quality="50"
+                                                        loader={customImageLoader}
                                                     />
                                                     <div className="product-detail ml-3" style={{ width: '100%' }}>
                                                         <div className="product-name">{item.name}</div>
