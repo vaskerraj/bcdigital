@@ -2,14 +2,8 @@ const mongoose = require('mongoose');
 const Users = mongoose.model('Users');
 const Seller = mongoose.model('Seller');
 const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
-const sellerImagePath = "/../../public/uploads/sellers";
 
 var storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(path.dirname(__dirname), sellerImagePath))
-    },
     filename: function (req, file, cb) {
         cb(null, Date.now() + '_' + file.originalname)
     }
@@ -18,6 +12,7 @@ var storage = multer.diskStorage({
 var upload = multer({ storage: storage });
 
 const admin = require('../../../firebase/firebaseAdmin');
+const { singleImageUpload, updateSingleImage, deleteImage } = require('../../utils/imageUpload');
 
 const { requiredAuth, checkRole, checkAdminRole } = require('../../middlewares/auth');
 
@@ -46,6 +41,7 @@ module.exports = function (server) {
             let sellerPicture;
             if (req.file) {
                 sellerPicture = req.file.filename;
+                await singleImageUpload(req, 'seller');
             }
             const user = await Users.findOne({ username: mobile, method: 'custom', role: 'seller' });
             if (user) {
@@ -97,9 +93,7 @@ module.exports = function (server) {
         try {
             const deletedSeller = await Users.findByIdAndRemove(sellerId);
             if (deletedSeller) {
-                if (fs.existsSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + deletedSeller.picture))) {
-                    fs.unlinkSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + deletedSeller.picture))
-                }
+                await deleteImage(deletedSeller.picture, 'seller');
                 return res.status(200).json({ msg: 'success' });
             }
         } catch (error) {
@@ -116,6 +110,7 @@ module.exports = function (server) {
             let docFile;
             if (req.file) {
                 docFile = req.file.filename;
+                await singleImageUpload(req, 'seller');
             }
 
             const seller = new Seller({
@@ -160,6 +155,7 @@ module.exports = function (server) {
             let copyOfCheque;
             if (req.file) {
                 copyOfCheque = req.file.filename;
+                await singleImageUpload(req, 'sellerDoc');
             }
             await Seller.findOneAndUpdate({ userId: id },
                 {
@@ -193,10 +189,7 @@ module.exports = function (server) {
 
                 const preDocImage = await Seller.findOne({ userId: id }).select('documentFile');
                 if (preDocImage) {
-                    // check file
-                    if (fs.existsSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preDocImage.documentFile))) {
-                        fs.unlinkSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preDocImage.documentFile))
-                    }
+                    await updateSingleImage(req, preDocImage.account.documentFile, 'sellerDoc');
                 }
                 await Seller.findOneAndUpdate({ userId: id }, { documentFile: docFile });
             }
@@ -302,10 +295,7 @@ module.exports = function (server) {
                 const preBankImage = await Seller.findOne({ userId: id }).select('account.chequeFile');
 
                 if (preBankImage) {
-                    // check file
-                    if (fs.existsSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preBankImage.account.documentFile))) {
-                        fs.unlinkSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preBankImage.account.chequeFile))
-                    }
+                    await updateSingleImage(req, preBankImage.account.chequeFile, 'sellerDoc');
                 }
                 await Seller.findOneAndUpdate({ userId: id }, { 'account.chequeFile': copyOfCheque });
             }

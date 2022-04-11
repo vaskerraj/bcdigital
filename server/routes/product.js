@@ -7,19 +7,8 @@ const slugify = require('slugify');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const productImagePath = "/../public/uploads/products";
-const productImageTempPath = "/../public/uploads/products/temp";
-const editorImagePath = "/../public/uploads/products/editor";
 
 var storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        if (file.fieldname === 'upload') {
-            cb(null, path.join(path.dirname(__dirname), editorImagePath))
-        } else {
-            cb(null, path.join(path.dirname(__dirname), productImagePath))
-        }
-
-    },
     filename: function (req, file, cb) {
         if (file.fieldname === 'upload') {
             cb(null, Date.now() + '_' + file.originalname)
@@ -33,28 +22,14 @@ var upload = multer({ storage: storage });
 
 
 var colorImageTempStorage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(path.dirname(__dirname), productImageTempPath))
-    },
     filename: function (req, file, cb) {
         cb(null, Date.now() + '_' + file.originalname)
     }
 })
-
-
 var uploadImageBaseOnColor = multer({ storage: colorImageTempStorage });
 
-const moveImageAndFile = async (oldPath, newPath) => {
-    try {
-        if (fs.existsSync(oldPath)) {
-            await fs.renameSync(oldPath, newPath);
-        }
-    } catch (err) {
-        return res.status(422).json({ error: "Something went wrong. Please try again later" });
-    }
-}
-
 const { requiredAuth, checkRole } = require('../middlewares/auth');
+const { singleImageUpload, multipleImageUpload, moveProductImages } = require('../utils/imageUpload');
 
 module.exports = function (server) {
     server.post('/api/product', requiredAuth, checkRole(['admin', 'seller']), async (req, res) => {
@@ -78,11 +53,10 @@ module.exports = function (server) {
         try {
 
             // move picture from temp folder to parent folder
-            colour.map(item => {
+            colour.map(async item => {
                 var files = item.images;
-                files.map(file => {
-                    moveImageAndFile(path.join(path.dirname(__dirname), "/../public/uploads/products/temp/" + file),
-                        path.join(path.dirname(__dirname), "/../public/uploads/products/" + file));
+                files.map(async file => {
+                    await moveProductImages(file);
                 })
             });
             const newProduct = new Product({
@@ -141,11 +115,10 @@ module.exports = function (server) {
         } } = req.body
         try {
             // move picture from temp folder to parent folder
-            colour.map(item => {
+            colour.map(async item => {
                 var files = item.images;
-                files.map(file => {
-                    moveImageAndFile(path.join(path.dirname(__dirname), "/../public/uploads/products/temp/" + file),
-                        path.join(path.dirname(__dirname), "/../public/uploads/products/" + file));
+                files.map(async file => {
+                    await moveProductImages(file);
                 })
             });
 
@@ -244,14 +217,16 @@ module.exports = function (server) {
         }
     });
 
-    server.post('/api/product/editor', upload.single('upload'), function (req, res) {
+    server.post('/api/product/editor', upload.single('upload'), async (req, res) => {
         if (req.file) {
             console.log(req.file);
+            await singleImageUpload(req, 'productEditor');
         }
     });
 
-    server.post('/api/product/colour/images', uploadImageBaseOnColor.any(), function (req, res) {
-        var filenames = req.files.map(file => file.filename)
+    server.post('/api/product/colour/images', uploadImageBaseOnColor.any(), async (req, res) => {
+        var filenames = req.files.map(file => file.filename);
+        await multipleImageUpload(req, 'productTemp');
         return res.status(200).json({ filename: filenames });
     });
 

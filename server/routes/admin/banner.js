@@ -7,9 +7,6 @@ const path = require('path');
 const bannerImagePath = "/../../public/uploads/banners";
 
 var storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(path.dirname(__dirname), bannerImagePath))
-    },
     filename: function (req, file, cb) {
         cb(null, Date.now() + '_' + file.originalname)
     }
@@ -24,8 +21,8 @@ var bannerUpload = upload.fields([
         maxCount: 1
     }])
 
-const { requiredAuth, checkRole, checkAdminRole } = require('../../middlewares/auth');
-
+const { requiredAuth, checkRole } = require('../../middlewares/auth');
+const { singleButDiffFieldImageUpload, updateSingleButDiffFieldImageUpload, deleteImage } = require('../../utils/imageUpload');
 
 module.exports = function (server) {
     server.get('/api/admin/banner', requiredAuth, checkRole(['admin']), async (req, res) => {
@@ -44,11 +41,16 @@ module.exports = function (server) {
             let mobilePicture;
             if (req.files['webImage'][0]) {
                 webPicture = req.files['webImage'][0].filename;
+
+                await singleButDiffFieldImageUpload(req.files['webImage'][0], 'banner');
             }
 
             if (req.files['mobileImage'][0]) {
                 mobilePicture = req.files['mobileImage'][0].filename;
+
+                await singleButDiffFieldImageUpload(req.files['mobileImage'][0], 'banner');
             }
+
 
             const banner = new Banner({
                 bannerPosition, bannerFor, sellerId,
@@ -111,10 +113,7 @@ module.exports = function (server) {
                 }
                 const preBannerWebImage = await Banner.findById(bannerId).select('webImage');
                 if (preBannerWebImage) {
-                    // check file
-                    if (fs.existsSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + preBannerWebImage.webImage))) {
-                        fs.unlinkSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + preBannerWebImage.webImage))
-                    }
+                    await updateSingleButDiffFieldImageUpload(req.files['webImage'][0], preBannerWebImage.webImage, 'banner');
                 }
                 await Banner.findByIdAndUpdate(bannerId, {
                     webImage: webPicture
@@ -126,9 +125,7 @@ module.exports = function (server) {
                 }
                 const preBannerMobileImage = await Banner.findById(bannerId).select('mobileImage');
                 if (preBannerMobileImage) {
-                    if (fs.existsSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + preBannerMobileImage.mobileImage))) {
-                        fs.unlinkSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + preBannerMobileImage.mobileImage))
-                    }
+                    await updateSingleButDiffFieldImageUpload(req.files['webImage'][0], preBannerMobileImage.mobileImage, 'banner');
                 }
                 await Banner.findByIdAndUpdate(bannerId, {
                     mobileImage: mobilePicture
@@ -153,12 +150,10 @@ module.exports = function (server) {
         try {
             const deletedBanner = await Banner.findByIdAndRemove(bannerId);
             if (deletedBanner) {
-                if (fs.existsSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + deletedBanner.webImage))) {
-                    fs.unlinkSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + deletedBanner.webImage))
-                }
-                if (fs.existsSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + deletedBanner.mobileImage))) {
-                    fs.unlinkSync(path.join(path.dirname(__dirname), bannerImagePath + '/' + deletedBanner.mobileImage))
-                }
+
+                await deleteImage(deletedBanner.webImage, 'banner');
+                await deleteImage(deletedBanner.mobileImage, 'banner');
+
                 return res.status(200).json({ msg: 'success' })
             }
         } catch {

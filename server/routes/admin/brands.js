@@ -2,14 +2,8 @@ const mongoose = require('mongoose');
 const Brand = mongoose.model('Brand');
 const slugify = require('slugify');
 const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
-const brandImagePath = "/../../public/uploads/brands";
 
 var storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(path.dirname(__dirname), brandImagePath))
-    },
     filename: function (req, file, cb) {
         cb(null, Date.now() + '_' + file.originalname)
     }
@@ -18,6 +12,7 @@ var storage = multer.diskStorage({
 var upload = multer({ storage: storage })
 
 const { requiredAuth, checkRole, checkAdminRole } = require('../../middlewares/auth');
+const { singleImageUpload, updateSingleImage, deleteImage } = require('../../utils/imageUpload');
 
 
 module.exports = function (server) {
@@ -36,6 +31,7 @@ module.exports = function (server) {
             let brandPicture;
             if (req.file) {
                 brandPicture = req.file.filename;
+                await singleImageUpload(req, 'brand');
             }
             const brands = new Brand({ name, slug: slugify(name), image: brandPicture, cretedBy: req.user.id });
             await brands.save();
@@ -69,10 +65,7 @@ module.exports = function (server) {
 
                 const preBrandImage = await Brand.findById(brandId).select('image');
                 if (preBrandImage) {
-                    // check file
-                    if (fs.existsSync(path.join(path.dirname(__dirname), brandImagePath + '/' + preBrandImage.image))) {
-                        fs.unlinkSync(path.join(path.dirname(__dirname), brandImagePath + '/' + preBrandImage.image))
-                    }
+                    await updateSingleImage(req, preBrandImage.image, 'brand');
                 }
                 await Brand.findByIdAndUpdate(brandId, { image: brandPicture });
             }
@@ -88,9 +81,7 @@ module.exports = function (server) {
         try {
             const deletedBrand = await Brand.findByIdAndRemove(brandId);
             if (deletedBrand) {
-                if (fs.existsSync(path.join(path.dirname(__dirname), brandImagePath + '/' + deletedBrand.image))) {
-                    fs.unlinkSync(path.join(path.dirname(__dirname), brandImagePath + '/' + deletedBrand.image))
-                }
+                await deleteImage(deletedBrand.image, 'brand');
                 return res.status(200).json({ msg: 'success' })
             }
         } catch {

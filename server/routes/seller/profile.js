@@ -1,14 +1,8 @@
 const mongoose = require('mongoose');
 const Seller = mongoose.model('Seller');
 const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
-const sellerImagePath = "/../../public/uploads/sellers/docs";
 
 var storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(path.dirname(__dirname), sellerImagePath))
-    },
     filename: function (req, file, cb) {
         cb(null, Date.now() + '_' + file.originalname)
     }
@@ -17,6 +11,7 @@ var storage = multer.diskStorage({
 var upload = multer({ storage: storage })
 
 const { requiredAuth, checkRole } = require('../../middlewares/auth');
+const { updateSingleImage } = require('../../utils/imageUpload');
 
 module.exports = function (server) {
 
@@ -31,10 +26,7 @@ module.exports = function (server) {
 
                 const preDocImage = await Seller.findOne({ userId: req.user._id }).select('documentFile');
                 if (preDocImage) {
-                    // check file
-                    if (fs.existsSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preDocImage.documentFile))) {
-                        fs.unlinkSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preDocImage.documentFile))
-                    }
+                    await updateSingleImage(req, preDocImage.documentFile, 'sellerDoc');
                 }
                 await Seller.findOneAndUpdate({ userId: req.user._id }, { documentFile: docFile });
             }
@@ -141,10 +133,7 @@ module.exports = function (server) {
                 const preBankImage = await Seller.findOne({ userId: req.user._id }).select('account.chequeFile');
 
                 if (preBankImage) {
-                    // check file
-                    if (fs.existsSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preBankImage.account.documentFile))) {
-                        fs.unlinkSync(path.join(path.dirname(__dirname), sellerImagePath + '/' + preBankImage.account.chequeFile))
-                    }
+                    await updateSingleImage(req, preBankImage.account.chequeFile, 'sellerDoc');
                 }
                 await Seller.findOneAndUpdate({ userId: req.user._id }, { 'account.chequeFile': copyOfCheque });
             }

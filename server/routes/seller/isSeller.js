@@ -5,17 +5,10 @@ const Product = mongoose.model('Product');
 const Package = mongoose.model('Package');
 
 const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
 const moment = require('moment');
 
-const sellerDocsImagePath = "/../../public/uploads/sellers/docs";
-const sellerlogoPath = "/../../public/uploads/sellers";
 
 var storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(path.dirname(__dirname), sellerDocsImagePath))
-    },
     filename: function (req, file, cb) {
         cb(null, Date.now() + '_' + file.originalname)
     }
@@ -23,19 +16,9 @@ var storage = multer.diskStorage({
 
 var upload = multer({ storage: storage })
 
-var sellerLogoStorage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(path.dirname(__dirname), sellerlogoPath))
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + '_' + file.originalname)
-    }
-})
-
-
-var uploadImageBaseOnColor = multer({ storage: sellerLogoStorage });
-
 const { requiredAuth, checkRole } = require('../../middlewares/auth');
+
+const { singleImageUpload, updateSingleImage, deleteImage } = require('../../utils/imageUpload');
 
 module.exports = function (server) {
 
@@ -57,6 +40,7 @@ module.exports = function (server) {
             let docFile;
             if (req.file) {
                 docFile = req.file.filename;
+                await singleImageUpload(req, 'sellerDoc');
             }
             const seller = new Seller({
                 userId: req.user._id,
@@ -100,6 +84,7 @@ module.exports = function (server) {
             let copyOfCheque;
             if (req.file) {
                 copyOfCheque = req.file.filename;
+                await singleImageUpload(req, 'sellerDoc');
             }
             await Seller.findOneAndUpdate({ userId: req.user._id },
                 {
@@ -120,7 +105,7 @@ module.exports = function (server) {
         }
     });
 
-    server.post('/api/seller/logo', uploadImageBaseOnColor.single('file'), async (req, res) => {
+    server.post('/api/seller/logo', upload.single('file'), async (req, res) => {
         const { id } = req.query;
         try {
             let filename;
@@ -129,10 +114,7 @@ module.exports = function (server) {
 
                 const preSellerLogo = await User.findById(id).select('picture');
                 if (preSellerLogo) {
-                    // check file
-                    if (fs.existsSync(path.join(path.dirname(__dirname), sellerlogoPath + '/' + preSellerLogo.picture))) {
-                        fs.unlinkSync(path.join(path.dirname(__dirname), sellerlogoPath + '/' + preSellerLogo.picture))
-                    }
+                    await updateSingleImage(req,preSellerLogo.picture, 'seller');
                 }
                 await User.findByIdAndUpdate(id, { picture: filename });
             }
