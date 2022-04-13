@@ -183,7 +183,6 @@ const ShipAgentForm = (props) => {
                     </div>
                     <div className="col-sm-6 col-md-4 mt-4">
                         <label className="cat-label">Service At(City)</label>
-                        {agentData.relatedCity.name}
                         <Controller
                             name="serviceCity"
                             defaultValue={action === 'add_agent' ? "" : agentData.relatedCity.name}
