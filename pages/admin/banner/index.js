@@ -57,7 +57,7 @@ const Brands = ({ banner }) => {
 
     }, [confirmCategory]);
 
-    const router = useRouter;
+    const router = useRouter();
     const dispatch = useDispatch();
 
     const { adminAuth } = useSelector(state => state.adminAuth);

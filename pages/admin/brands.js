@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Image from 'next/image'
+import { useRouter } from 'next/router';
 import { useSelector } from 'react-redux';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
@@ -21,6 +22,8 @@ const Brands = ({ brands }) => {
     const [modalTitle, setModalTitle] = useState('');
     const [modalAction, setmodalAction] = useState('');
     const [brandsData, setBrandsData] = useState();
+
+    const router = useRouter();
 
     const { adminAuth } = useSelector(state => state.adminAuth);
 
