@@ -23,7 +23,8 @@ module.exports = function (server) {
                 password,
                 role: 'seller',
                 method: 'custom',
-                registerMethod
+                registerMethod,
+                status: 'approved'
             });
             await user.save();
 
@@ -62,6 +63,12 @@ module.exports = function (server) {
 
         const user = await User.findOne({ username: mobile, mobile, method: 'custom', role: 'seller' });
         if (!user) {
+            return res.status(422).json({ error: 'Invalid mobile number or password.' });
+        }
+        else if (user.status === "blocked") {
+            return res.status(422).json({ error: 'Your account has been blocked.' });
+        }
+        else if (user.status === "deleted") {
             return res.status(422).json({ error: 'Invalid mobile number or password.' });
         }
         try {

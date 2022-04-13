@@ -319,7 +319,14 @@ module.exports = function (server) {
         const sellerId = req.params.id;
         const status = req.params.status;
         try {
-            await Seller.findByIdAndUpdate(sellerId, { 'status.title': status, 'status.actionBy': req.user._id });
+            const seller = await Seller.findByIdAndUpdate(sellerId, {
+                'status.title': status,
+                'status.actionBy': req.user._id
+            });
+
+            await Users.findByIdAndUpdate(seller.userId, {
+                status
+            })
             return res.status(200).json({ msg: 'success' });
         } catch (error) {
             return res.status(422).json({ error: "Something went wrong. Please try again later." })

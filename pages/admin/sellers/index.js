@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import Link from 'next/link'
 import { useSelector } from 'react-redux';
 import { parseCookies } from 'nookies';
 import axios from 'axios';
@@ -59,21 +58,11 @@ const SellerList = ({ sellers }) => {
             key: 'name',
             render: (text, record) =>
                 <>
-                    <div className="d-flex align-items-center" style={{ verticalAlign: 'middle' }}>
-                        <div className="">
-                            <Image src={`/uploads/sellers/${record.userId.picture}`}
-                                className="img-thumbnail"
-                                width="50"
-                                height="50"
-                                loader={customImageLoader}
-                            />
-                        </div>
-                        <div>
-                            {record.userId.name}
-                            {record.userId.sellerRole === "own" &&
-                                <Tag color="green">Own shop</Tag>
-                            }
-                        </div>
+                    <div>
+                        {record.userId.name}
+                        {record.userId.sellerRole === "own" &&
+                            <Tag color="green">Own shop</Tag>
+                        }
                     </div>
                 </>
         },
@@ -139,7 +128,7 @@ const SellerList = ({ sellers }) => {
                                     <Switch
                                         checkedChildren={<CheckOutlined />}
                                         unCheckedChildren={<CloseOutlined />}
-                                        onChange={() => changeSellerStatusHandler(record._id, 'unapproved')}
+                                        onChange={() => changeSellerStatusHandler(record._id, 'blocked')}
                                     />
                                     :
                                     <Switch
