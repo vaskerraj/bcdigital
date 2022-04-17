@@ -16,9 +16,8 @@ import baseUrl from '../../../helpers/baseUrl';
 import { customImageLoader } from '../../../helpers/functions';
 
 const SellerVerification = ({ seller }) => {
-    console.log(seller);
     const [commissionAmt, setCommissionAmt] = useState('');
-    const [commissionStatus, setCommissionStatus] = useState(seller.commission ? true : false);
+    const [commissionStatus, setCommissionStatus] = useState(false);
     const router = useRouter()
 
     const { adminAuth } = useSelector(state => state.adminAuth);
@@ -33,7 +32,7 @@ const SellerVerification = ({ seller }) => {
         {
             title: 'ID',
             dataIndex: ['userId', '_id'],
-            key: ['userId', '_id'],
+            key: '_id',
             render: text => <>{text}</>,
         },
         {
@@ -146,7 +145,7 @@ const SellerVerification = ({ seller }) => {
     const expandedRowRender = (record) => {
         return (
             <div className="col">
-                {!commissionStatus ?
+                {(!commissionStatus && record.commission === undefined) ?
                     <div className="row">
                         <div className="d-block"><strong>Set Commission(at Percentage)</strong></div>
                         <div className="d-flex" style={{ width: '30rem' }}>
@@ -319,6 +318,7 @@ const SellerVerification = ({ seller }) => {
     return (
         <Wrapper onActive="verify" breadcrumb={["Sellers", "Pending Verification"]}>
             <Table
+                rowKey="_id"
                 columns={columns}
                 expandable={{
                     expandedRowRender: record =>
