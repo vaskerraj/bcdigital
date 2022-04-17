@@ -186,6 +186,42 @@ module.exports = function (server) {
         return res.status(200).json(brands);
     });
 
+    server.get('/api/admin/product/:id', requiredAuth, checkRole(['admin']), async (req, res) => {
+        const productId = req.params.id;
+        try {
+            const products = await Product.findById(productId)
+                .lean()
+                .populate('brand')
+                .populate({
+                    path: 'category',
+                    select: 'name slug _id',
+                    populate: ({
+                        path: 'parentId',
+                        select: 'name slug _id',
+                        populate: ({
+                            path: 'parentId',
+                            select: 'name slug _id',
+                        })
+                    })
+                })
+                .populate({
+                    path: 'createdBy',
+                    select: '_id name'
+                })
+                .populate('review.postedBy', 'name');
+
+            const seller = await Seller.findOne({ userId: products.createdBy._id }).select('userId commission status stepComplete documentVerify account').lean().populate('userId');
+
+            if (products)
+                return res.status(200).json({
+                    products,
+                    seller
+                });
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
     server.put('/api/product/all/status/:id/:status', requiredAuth, checkRole(['admin', 'seller']), async (req, res) => {
         const productId = req.params.id;
         const productStatus = req.params.status;

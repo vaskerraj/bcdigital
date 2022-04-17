@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { parseCookies } from 'nookies';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
 import baseUrl from '../../../helpers/baseUrl';
@@ -15,7 +16,6 @@ import ShowMore from 'react-show-more-button';
 
 import Wrapper from '../../../components/admin/Wrapper';
 import { checkProductDiscountValidity } from '../../../helpers/productDiscount';
-import { customImageLoader } from '../../../helpers/functions';
 
 // config antdesign message
 message.config({
@@ -25,7 +25,7 @@ message.config({
 });
 
 
-const OverAllProductDetails = ({ product }) => {
+const OverAllProductDetails = ({ product, seller }) => {
 
     const [mainProductImage, setMainProductImage] = useState([]);
     const [restProductImages, setRestProductImages] = useState([]);
@@ -50,36 +50,12 @@ const OverAllProductDetails = ({ product }) => {
             setMainProductImage(product.colour[0].images.slice(0, 1)[0]);
 
             setRestProductImages(product.colour[0].images.slice(1, 8));
-
-            setSellerLoading(true);
-            const getSellerInfo = async () => {
-                try {
-                    const { data } = await axios.get(`${process.env.api}/api/seller/${product.createdBy}`);
-                    if (data) {
-                        setCommissionPercantage(product.point !== undefined ? product.point : data.commission);
-                        setSellerLoading(false);
-                        setSellerData(data);
-                    }
-                } catch (error) {
-                    message.warning({
-                        content: (
-                            <div>
-                                <div className="font-weight-bold">Error</div>
-                                {error.response ? error.response.data.error : error.message}
-                            </div>
-                        ),
-                        className: 'message-warning',
-                    });
-                }
-            }
-            getSellerInfo();
+            setCommissionPercantage(product.point !== undefined ? product.point : seller.commission);
         }
     }, [product]);
 
     const onSubmitCommissionChange = async (inputData) => {
-        console.log(inputData)
         const amount = inputData.commission;
-        console.log(amount)
         try {
             const { data } = await axios.put(`${process.env.api}/api/admin/product/commission`, {
                 productId: product._id,
@@ -175,24 +151,82 @@ const OverAllProductDetails = ({ product }) => {
         {
             title: 'Action',
             key: 'action',
-            render: (text, record) => (
-                record.approved.status === 'approved'
-                    ?
-                    <Switch
-                        checkedChildren={<CheckOutlined />}
-                        unCheckedChildren={<CloseOutlined />}
-                        onChange={() => handleProductStatus(record._id, 'unapproved')}
-                        defaultChecked
-                    />
-                    :
-                    <Switch
-                        checkedChildren={<CheckOutlined />}
-                        unCheckedChildren={<CloseOutlined />}
-                        onChange={() => handleProductStatus(record._id, 'approved')}
-                    />
-            ),
-        },
+            render: (text, record) =>
+                <>
+                    {(seller.status.title === "blocked" || seller.status.title === "deleted") ?
+                        <div className="text-capitalized font12 text-danger">Seller {seller.status.title}</div>
+                        :
+                        (seller.documentVerify === "pending" || seller.account.bankVerify === "pending")
+                            ?
+                            <>
+                                <div className="text-capitalized font12 text-center text-danger">Need seller approval</div>
+                                <div className="d-block text-center">OR</div>
+                                <Button size="small" danger onClick={() => handleProductStatus(record._id, 'unapproved')}>
+                                    Unapproved
+                                </Button>
+                            </>
+                            :
+                            seller?.commission === undefined ?
+                                <div className="text-capitalized font12 text-danger">Set commission first</div>
+                                :
+                                <>
+                                    {
+                                        record.approved.status === 'approved'
+                                            ?
+                                            <Switch
+                                                checkedChildren={<CheckOutlined />}
+                                                unCheckedChildren={<CloseOutlined />}
+                                                onChange={() => handleProductStatus(record._id, 'unapproved')}
+                                                defaultChecked
+                                            />
+                                            :
+                                            <Switch
+                                                checkedChildren={<CheckOutlined />}
+                                                unCheckedChildren={<CloseOutlined />}
+                                                onChange={() => handleProductStatus(record._id, 'approved')}
+                                            />
+                                    }
+                                </>
+                    }
+
+                </>
+        }
     ];
+
+    const handleAllProductStatus = async (id, status) => {
+        try {
+            const { data } = await axios.put(`${process.env.api}/api/product/all/status/${id}/${status}`, {},
+                {
+                    headers: {
+                        token: adminAuth.token,
+                    }
+                });
+            if (data) {
+                message.success({
+                    content: (
+                        <div>
+                            <div className="font-weight-bold">Success</div>
+                            Product status successfully updated.
+                        </div>
+                    ),
+                    className: 'message-warning',
+                });
+                setTimeout(() => {
+                    return router.reload();
+                }, 2000);
+            }
+        } catch (error) {
+            message.warning({
+                content: (
+                    <div>
+                        <div className="font-weight-bold">Error</div>
+                        {error.response ? error.response.data.error : error.message}
+                    </div>
+                ),
+                className: 'message-warning',
+            });
+        }
+    }
 
     const handleProductStatus = async (id, status) => {
         try {
@@ -233,11 +267,51 @@ const OverAllProductDetails = ({ product }) => {
         <Wrapper onActive={status} breadcrumb={["Products Details"]}>
             <div className="d-flex justify-content-between align-items-center">
                 <div className="fontb" style={{ fontSize: '2.2rem', fontWeight: 600 }}>
-                    Product Name
+                    {product.name}
                 </div>
-                <div className="">
+                <div className="d-flex align-items-center">
+                    {status === "pendingProduct" &&
+                        <>
+                            {(seller.status.title === "blocked" || seller.status.title === "deleted") ?
+                                <div className="text-capitalized font12 text-danger">Seller {seller.status.title}</div>
+                                :
+                                (seller.documentVerify === "pending" || seller.account.bankVerify === "pending")
+                                    ?
+                                    <>
+                                        <div className="text-capitalized font12 text-center text-danger">Need seller approval</div>
+                                        <div className="d-block text-center pl-2 pr-2">OR</div>
+                                        <Button size="small" danger onClick={() => handleAllProductStatus(product._id, 'unapproved')}>
+                                            Unapproved
+                                        </Button>
+                                    </>
+                                    :
+                                    seller?.commission === undefined ?
+                                        <div className="text-capitalized font12 text-danger">Set commission first</div>
+                                        :
+                                        <>
+                                            {
+                                                product.products[0].approved.status === 'approved'
+                                                    ?
+                                                    <Switch
+                                                        checkedChildren={<CheckOutlined />}
+                                                        unCheckedChildren={<CloseOutlined />}
+                                                        onChange={() => handleAllProductStatus(product._id, 'unapproved')}
+                                                        defaultChecked
+                                                    />
+                                                    :
+                                                    <Switch
+                                                        checkedChildren={<CheckOutlined />}
+                                                        unCheckedChildren={<CloseOutlined />}
+                                                        onChange={() => handleAllProductStatus(product._id, 'approved')}
+                                                    />
+                                            }
+                                        </>
+                            }
+
+                        </>
+                    }
                     <Link href={`${baseUrl}/product/${product._id}/${product.slug}`}>
-                        <a target="_blank">
+                        <a target="_blank" className="ml-3">
                             <Button type="primary" shape="round">Preview</Button>
                         </a>
                     </Link>
@@ -250,20 +324,18 @@ const OverAllProductDetails = ({ product }) => {
                             <div className="d-flex">
                                 <div className="m-1" style={{ width: 200 }}>
                                     <Image
+                                        src={`${process.env.NEXT_PUBLIC_CUSTOM_IMAGECDN}/uploads/products/${mainProductImage}`}
                                         width={200}
                                         height={220}
-                                        src={`/uploads/products/${mainProductImage}`}
-                                        loader={customImageLoader}
                                     />
                                 </div>
                                 <div className="d-flex" style={{ flexWrap: 'wrap' }}>
                                     {restProductImages.map(img => (
                                         <div key={img} className="m-1">
                                             <Image
+                                                src={`${process.env.NEXT_PUBLIC_CUSTOM_IMAGECDN}/uploads/products/${img}`}
                                                 width={112}
                                                 height={110}
-                                                src={`/uploads/products/${img}`}
-                                                loader={customImageLoader}
                                             />
                                         </div>
                                     ))}
@@ -293,7 +365,7 @@ const OverAllProductDetails = ({ product }) => {
                             </div>
                             <div>
                                 <div style={{ fontWeight: 500 }}>Brand</div>
-                                <div>{product.brand.name}</div>
+                                <div>{product.brand?.name}</div>
                             </div>
                             <div>
                                 <div style={{ fontWeight: 500 }}>Average Rating</div>
@@ -331,46 +403,39 @@ const OverAllProductDetails = ({ product }) => {
                 <div className="col-3">
                     <div style={{ border: '2px solid #ddd', borderRadius: 8, padding: 10 }}>
                         <div className="font15" style={{ fontWeight: 700 }}>Seller Info</div>
-                        {!sellerLoading
-                            ?
-                            <div className="d-block">
-                                <div className="d-block" >
-                                    <span className="font14" style={{ fontWeight: 500 }}>Name</span>: {sellerData.userId?.name}
-                                    {sellerData.userId?.sellerRole === 'own' &&
-                                        <span className="badge bg-warning ml-3">Own</span>
-                                    }
-                                </div>
-                                <div className="d-block" >
-                                    <span className="font14" style={{ fontWeight: 500 }}>Mobile</span>: {sellerData.userId?.mobile}
-                                </div>
-                                <div className="d-block" >
-                                    <span className="font14" style={{ fontWeight: 500 }}>Email</span>: {sellerData.userId?.email}
-                                </div>
-                                <div className="d-block" >
-                                    <span className="font14" style={{ fontWeight: 500 }}>Join Date</span>: {moment(sellerData.userId?.createdAt).format("DD MMM YYYY")}
-                                </div>
-                                <div className="d-block" >
-                                    <span className="font14" style={{ fontWeight: 500 }}>Status</span>: {sellerData.status?.title === 'approved'
-                                        ?
-                                        <span span className="badge bg-success ml-3">Approved</span>
-                                        :
-                                        <span span className="badge bg-danger ml-3">UnApproved</span>
-                                    }
-                                </div>
-                                <div className="d-block border-top font14 mt-2 pt-2" style={{ fontWeight: 500 }}>
-                                    <span className="mr-2">
-                                        Commission Rate:
-                                    </span>
-                                    <span className="font16">
-                                        {sellerData.commission} %
-                                    </span>
-                                </div>
+                        <div className="d-block">
+                            <div className="d-block" >
+                                <span className="font14" style={{ fontWeight: 500 }}>Name</span>: {seller.userId?.name}
+                                {seller.userId?.sellerRole === 'own' &&
+                                    <span className="badge bg-warning ml-3">Own</span>
+                                }
                             </div>
-                            :
-                            <div className="text-center mt-2 mb-2">
-                                <LoadingOutlined size={30} />
+                            <div className="d-block" >
+                                <span className="font14" style={{ fontWeight: 500 }}>Mobile</span>: {seller.userId?.mobile}
                             </div>
-                        }
+                            <div className="d-block" >
+                                <span className="font14" style={{ fontWeight: 500 }}>Email</span>: {seller.userId?.email}
+                            </div>
+                            <div className="d-block" >
+                                <span className="font14" style={{ fontWeight: 500 }}>Join Date</span>: {moment(seller.userId?.createdAt).format("DD MMM YYYY")}
+                            </div>
+                            <div className="d-block" >
+                                <span className="font14" style={{ fontWeight: 500 }}>Status</span>: {seller.status?.title === 'approved'
+                                    ?
+                                    <span span className="badge bg-success ml-3">Approved</span>
+                                    :
+                                    <span span className="badge bg-danger ml-3">UnApproved</span>
+                                }
+                            </div>
+                            <div className="d-block border-top font14 mt-2 pt-2" style={{ fontWeight: 500 }}>
+                                <span className="mr-2">
+                                    Commission Rate:
+                                </span>
+                                <span className="font16">
+                                    {seller.commission} %
+                                </span>
+                            </div>
+                        </div>
                     </div>
                     <div className="mt-4" style={{ border: '2px solid #ddd', borderRadius: 8, padding: 10 }}>
                         <div className="font14" style={{ fontWeight: 700 }}>Change Commission Rate For Product?</div>
@@ -382,7 +447,7 @@ const OverAllProductDetails = ({ product }) => {
                                             <div className="d-block  font-weight-bold">
                                                 {!changeCommissionRate ?
                                                     <>
-                                                        {product.point ? product.point : sellerData.commission} %
+                                                        {product.point ? product.point : seller.commission} %
                                                         <span className="text-info font-weight-normal ml-3 cp"
                                                             onClick={() => setChangeCommissionRate(true)}
                                                         >
@@ -395,7 +460,7 @@ const OverAllProductDetails = ({ product }) => {
                                                         <div className="d-flex">
                                                             <Controller
                                                                 name="commission"
-                                                                defaultValue={product.point ? product.point : sellerData.commission}
+                                                                defaultValue={product.point ? product.point : seller.commission}
                                                                 control={control}
                                                                 render={({ onChange, value, onBlur, onFocus, ref }) => (
                                                                     <Input allowClear
@@ -439,13 +504,18 @@ const OverAllProductDetails = ({ product }) => {
 
 export async function getServerSideProps(context) {
     try {
-
+        const cookies = parseCookies(context);
         const { id } = context.params;
-        const { data } = await axios.get(`${process.env.api}/api/product/${id}`);
+        const { data } = await axios.get(`${process.env.api}/api/admin/product/${id}`, {
+            headers: {
+                token: cookies.ad_token,
+            }
+        });
 
         return {
             props: {
-                product: data,
+                product: data.products,
+                seller: data.seller,
             }
         }
     } catch (err) {

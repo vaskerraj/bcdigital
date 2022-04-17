@@ -142,19 +142,6 @@ module.exports = function (server) {
         }
     });
 
-    // seller details
-    server.get('/api/seller/:id', async (req, res) => {
-        const sellerId = req.params.id;
-        try {
-            const sellers = await Seller.findOne({ userId: sellerId })
-                .populate('userId')
-                .select('commission status');
-            return res.status(200).json(sellers);
-        } catch (error) {
-            return res.status(422).json({ error: "Something went wrong. Please try again later." })
-        }
-    });
-
     // default address of service at region city
     server.get('/api/defaultaddress', async (req, res) => {
         try {
