@@ -277,7 +277,7 @@ const AdminIndex = ({
 
                             </div>
                             <div className="d-block custom-card-footer">
-                                <Link href="admin/orders/own-shop">
+                                <Link href="/admin/products/pending">
                                     <a>
                                         <span className="font14">Pending</span>
                                         <span className="ml-2 mr-2 p-2 font-weight-bold font16">{todayPendingProducts}</span>
@@ -319,7 +319,7 @@ const AdminIndex = ({
 
                             </div>
                             <div className="d-block custom-card-footer">
-                                <Link href="/admin/rrc/cancellation/pending">
+                                <Link href="/admin/rcc/cancellation/pending">
                                     <a>
                                         <span className="font14">Cancellation</span>
                                         <span className="ml-2 mr-2 p-2 font-weight-bold font16">{totalPendingCancellation}</span>
@@ -369,7 +369,7 @@ const AdminIndex = ({
 
                             </div>
                             <div className="d-block custom-card-footer">
-                                <Link href="admin/orders/own-shop">
+                                <Link href="/admin/sellers/verification">
                                     <a>
                                         <span className="font14">Pending Verification</span>
                                         <span className="ml-2 mr-2 p-2 font-weight-bold font16">{totalPendingVerification}</span>
