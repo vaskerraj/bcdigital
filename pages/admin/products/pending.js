@@ -171,15 +171,37 @@ const PendingProducts = ({ productData, total }) => {
             title: 'Action',
             key: 'action',
             render: (text, record) => (
-                <Space size="middle">
-                    <Tooltip title="Approved">
-                        <CheckOutlined color={'yellow'} className="cp" onClick={() => handleProductStatus(record._id, 'approved')} />
-                    </Tooltip>
+                // <Space size="middle">
+                //     <Tooltip title="Approved">
+                //         <CheckOutlined color={'yellow'} className="cp" onClick={() => handleProductStatus(record._id, 'approved')} />
+                //     </Tooltip>
 
-                    <Tooltip title="UnApproved">
-                        <CloseOutlined className="cp" onClick={() => handleProductStatus(record._id, 'unapproved')} />
-                    </Tooltip>
-                </Space >
+                //     <Tooltip title="UnApproved">
+                //         <CloseOutlined className="cp" onClick={() => handleProductStatus(record._id, 'unapproved')} />
+                //     </Tooltip>
+                // </Space>
+                <>
+                    {(record.seller.status.title === "blocked" || record.seller.status.title === "deleted") ?
+                        <div className="text-capitalized font12 text-danger">Seller {record.seller.status.title}</div>
+                        :
+                        (record.seller.documentVerify === "pending" || record.seller.account.bankVerify === "pending")
+                            ?
+                            <>
+                                <div className="text-capitalized font12 text-center text-danger">Need seller approval</div>
+                                <div className="d-block text-center">OR</div>
+                                <Button size="small" danger onClick={() => handleProductStatus(record._id, 'unapproved')}>
+                                    Unapproved
+                                </Button>
+                            </>
+                            :
+                            record.seller?.commission === undefined ?
+                                <div className="text-capitalized font12 text-danger">Set commission first</div>
+                                :
+                                <Link href={`/admin/products/${record._id}?status=pendingProduct`}>
+                                    <Button size="small" type="primary">View</Button>
+                                </Link>
+                    }
+                </>
             ),
         },
 

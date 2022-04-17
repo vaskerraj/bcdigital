@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Product = mongoose.model('Product');
 const User = mongoose.model('Users');
 const Brand = mongoose.model('Brand');
+const Seller = mongoose.model('Seller');
 
 const { requiredAuth, checkRole, checkAdminRole } = require('../../middlewares/auth');
 
@@ -92,7 +93,7 @@ module.exports = function (server) {
                 .find(findByProductId(productId))
                 .find(findByBrand(brand))
                 .find(findBySeller(seller))
-                .select('_id name slug brand colour size category products createdBy createdAt')
+                .select('_id name brand colour products category createdBy createdAt')
                 .lean()
                 .populate('brand')
                 .populate({
@@ -120,11 +121,35 @@ module.exports = function (server) {
                 .find(findByProductId(productId))
                 .find(findByBrand(brand))
                 .find(findBySeller(seller))
-                .select('_id');
+                .select('_id')
+                .lean();
+
+            const getSellerInfo = async (sellerId) => {
+                return await Seller.findOne({ userId: sellerId }).select('commission status stepComplete documentVerify account').lean();
+            }
+
+            const productArray = [];
+
+            await Promise.all(
+                products.map(async (item) => {
+                    const productObj = new Object();
+                    productObj['_id'] = item._id;
+                    productObj['name'] = item.name;
+                    productObj['brand'] = item.brand;
+                    productObj['colour'] = item.colour;
+                    productObj['category'] = item.category;
+                    productObj['products'] = item.products;
+                    productObj['createdBy'] = item.createdBy;
+                    productObj['seller'] = await getSellerInfo(item.createdBy._id);
+                    productObj['createdAt'] = item.createdAt;
+
+                    productArray.push(productObj)
+                })
+            )
 
             if (products && allProduct) return res.status(200).json({
                 total: allProduct.length,
-                products
+                products: productArray
             });
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
