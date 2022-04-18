@@ -97,7 +97,7 @@ const EditProductForm = (props) => {
         obj['uid'] = productData._id + '_' + index;
         obj['name'] = img;
         obj['status'] = 'done';
-        obj['url'] = `${baseUrl}/uploads/products/${img}`;
+        obj['url'] = `${process.env.NEXT_PUBLIC_CUSTOM_IMAGECDN}/uploads/products/${img}`;
 
         fileList.push(obj);
     });
@@ -113,7 +113,7 @@ const EditProductForm = (props) => {
     const [productWarranty, setProductWarranty] = useState(true);
 
     useEffect(() => {
-        setProductWarranty(productData.warranty.warrantyType !== null ? true : false);
+        setProductWarranty(productData.warranty?.warrantyType !== undefined ? true : false);
     }, [productData]);
 
     const router = useRouter();
@@ -121,8 +121,8 @@ const EditProductForm = (props) => {
         categoryId: productData.category._id,
         productname: productData.name,
         brand: productData.brand !== null ? productData.brand._id : "null",
-        warrantyType: productData.warranty.warrantyType !== null ? productData.warranty.warrantyType : '',
-        warrantyPeriod: productData.warrantyPeriod !== null ? productData.warranty.warrantyPeriod : '',
+        warrantyType: productData.warranty?.warrantyType !== undefined ? productData.warranty.warrantyType : '',
+        warrantyPeriod: productData.warrantyPeriod !== undefined ? productData.warranty.warrantyPeriod : '',
         freeShipping: productData.freeShipping.status,
         weight: productData.package.weight,
         length: productData.package.dimensions.length,
@@ -723,7 +723,7 @@ const EditProductForm = (props) => {
                                                     }}
                                                     >
                                                         Size
-                                                </th>
+                                                    </th>
                                                     <th>Quntity</th>
                                                     <th>Price(Rs)</th>
                                                     <th>Discount(%)</th>
@@ -897,7 +897,7 @@ const EditProductForm = (props) => {
                                 <div className="text-info">
                                     <label>
                                         <input type="radio" name="warranty" value="yes"
-                                            defaultChecked={productData.warranty.warrantyType !== null ? true : false}
+                                            defaultChecked={productData.warranty?.warrantyType !== undefined ? true : false}
                                             onChange={() => setProductWarranty(true)} className="mr-1"
                                         />
                                         Product have Warranty ?
@@ -906,7 +906,7 @@ const EditProductForm = (props) => {
                                 <div className="text-info ml-3">
                                     <label>
                                         <input type="radio" name="warranty" value="no"
-                                            defaultChecked={productData.warranty.warrantyType === null ? true : false}
+                                            defaultChecked={productData.warranty?.warrantyType === undefined ? true : false}
                                             onChange={() => setProductWarranty(false)} className="mr-1"
                                         />
                                         Product doesn't have Warranty?
