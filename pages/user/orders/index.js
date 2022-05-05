@@ -10,7 +10,7 @@ import { useSelector } from 'react-redux';
 import axios from 'axios';
 import axiosApi from '../../../helpers/api';
 
-import { Layout, Card, message, Spin, Affix } from 'antd';
+import { Layout, Card, message, Spin, Affix, Button } from 'antd';
 const { Content } = Layout;
 import { LoadingOutlined } from '@ant-design/icons';
 
@@ -19,6 +19,7 @@ import moment from 'moment';
 import useWindowDimensions from '../../../helpers/useWindowDimensions';
 import UserSidebarNav from '../../../components/nav/UserSidebarNav';
 import Wrapper from '../../../components/Wrapper';
+import { customImageLoader } from '../../../helpers/functions';
 
 const Orders = ({ orders }) => {
 
@@ -201,6 +202,7 @@ const Orders = ({ orders }) => {
                                                                                         objectFit="cover"
                                                                                         objectPosition="top center"
                                                                                         quality="50"
+                                                                                        loader={customImageLoader}
                                                                                     />
                                                                                     <div className="product-detail ml-3" style={{ width: '100%' }}>
                                                                                         <div className="product-name">{item.name}</div>
@@ -227,13 +229,26 @@ const Orders = ({ orders }) => {
                                                                                                 </div>
                                                                                             }
                                                                                         </div>
-                                                                                        {onlyMobile && item.orderStatus === 'delivered' && item.paymentStatus === 'paid' &&
-                                                                                            <div className="d-block text-right mt-1 mr-2">
-                                                                                                <button className="btn btn-warning btn-sm">Write a Review</button>
+                                                                                        {onlyMobile && item.orderStatus === 'delivered' && pack.paymentStatus === 'paid' &&
+                                                                                            <div className="d-flex justify-content-end mt-1 mr-2">
+                                                                                                {
+                                                                                                    moment(moment(pack.maturityDate).format('YYYY-MM-DD'))
+                                                                                                        .isSameOrAfter(moment().format('YYYY-MM-DD')) === true &&
+                                                                                                    (item.productQty - item.returnProductQty >= 1) &&
+                                                                                                    <div className="text-right">
+                                                                                                        <Link Link href={`/user/return/request?orderId=${order._id}&id=${item.products[0]._id}&packageId=${pack._id}`}>
+                                                                                                            <Button size="small" danger>Return</Button>
+                                                                                                        </Link>
+                                                                                                        <div className="text-danger font12" style={{ fontWeight: 500 }}>
+                                                                                                            till {moment(pack.maturityDate).format('DD MMM YYYY')}
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                }
+                                                                                                <Button size="small" className="ml-2">Write a Review</Button>
                                                                                             </div>
                                                                                         }
                                                                                         {
-                                                                                            onlyMobile && item.orderStatus === 'not_confirmed' || item.orderStatus === 'confirmed' || item.orderStatus === 'packed'
+                                                                                            onlyMobile && (item.orderStatus === 'not_confirmed' || item.orderStatus === 'confirmed' || item.orderStatus === 'packed')
                                                                                                 ?
                                                                                                 <div className="d-block text-right mt-1 mr-2">
                                                                                                     <Link href={`/user/cancel/request?orderId=${order._id}&id=${item.products[0]._id}&packageId=${pack._id}`}>
@@ -256,9 +271,24 @@ const Orders = ({ orders }) => {
                                                                                     :
                                                                                     <span className="badge bg-warning">Processing</span>
                                                                                 }
-                                                                                {item.orderStatus === 'delivered' && item.paymentStatus === 'paid' &&
+                                                                                {item.orderStatus === 'delivered' && pack.paymentStatus === 'paid' &&
                                                                                     <div className="d-none d-sm-block d-md-none d-lg-none mt-3">
-                                                                                        <button className="btn btn-lg btn-warning">Write a Review</button>
+                                                                                        <div className="d-flex justify-content-end">
+                                                                                            {
+                                                                                                moment(moment(pack.maturityDate).format('YYYY-MM-DD'))
+                                                                                                    .isSameOrAfter(moment().format('YYYY-MM-DD')) === true &&
+                                                                                                (item.productQty - item.returnProductQty >= 1) &&
+                                                                                                <div className="text-right">
+                                                                                                    <Link Link href={`/user/return/request?orderId=${order._id}&id=${item.products[0]._id}&packageId=${pack._id}`}>
+                                                                                                        <Button size="small" danger>Return</Button>
+                                                                                                    </Link>
+                                                                                                    <div className="text-danger font12" style={{ fontWeight: 500 }}>
+                                                                                                        till {moment(pack.maturityDate).format('DD MMM YYYY')}
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            }
+                                                                                            <Button size="small" className="ml-2">Write a Review</Button>
+                                                                                        </div>
                                                                                     </div>
                                                                                 }
                                                                                 {
@@ -274,12 +304,24 @@ const Orders = ({ orders }) => {
                                                                                 }
                                                                             </div>
                                                                             <div className="d-none d-md-block col-md-4 text-right">
-                                                                                {item.orderStatus === 'delivered' && item.paymentStatus === 'paid'
-                                                                                    ?
-                                                                                    <div className="d-block">
-                                                                                        <button className="btn c-btn-primary">Write a Review</button>
+                                                                                {item.orderStatus === 'delivered' && pack.paymentStatus === 'paid' &&
+                                                                                    <div className="d-flex d-sm-block justify-content-end">
+                                                                                        {
+                                                                                            moment(moment(pack.maturityDate).format('YYYY-MM-DD'))
+                                                                                                .isSameOrAfter(moment().format('YYYY-MM-DD')) === true &&
+                                                                                            (item.productQty - item.returnProductQty >= 1) &&
+                                                                                            <div className="text-right">
+                                                                                                <Link Link href={`/user/return/request?orderId=${order._id}&id=${item.products[0]._id}&packageId=${pack._id}`}>
+                                                                                                    <Button size="small" danger>Return</Button>
+                                                                                                </Link>
+                                                                                                <div className="text-danger font12" style={{ fontWeight: 500 }}>
+                                                                                                    till {moment(pack.maturityDate).format('DD MMM YYYY')}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        }
+                                                                                        <Button size="small" className="ml-2 mt-sm-2">Write a Reviews</Button>
                                                                                     </div>
-                                                                                    : ''
+
                                                                                 }
                                                                                 {
                                                                                     item.orderStatus === 'not_confirmed' || item.orderStatus === 'confirmed' || item.orderStatus === 'packed' ?
