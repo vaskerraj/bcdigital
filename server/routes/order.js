@@ -5,11 +5,12 @@ const Order = mongoose.model('Order');
 const Package = mongoose.model('Package');
 const ShippingCost = mongoose.model('ShippingPlan');
 const Coupon = mongoose.model('Coupon');
-const User = mongoose.model('Users');
 const Payment = mongoose.model('Payment');
 const Cancellation = mongoose.model('Cancellation');
 const Refund = mongoose.model('Refund');
 const Users = mongoose.model('Users');
+const Return = mongoose.model('Return');
+const Seller = mongoose.model('Seller');
 
 const { requiredAuth, checkRole, checkAdminRole } = require('../middlewares/auth');
 
@@ -71,8 +72,8 @@ const getPakageDetailsWithProducts = async (packages) => {
             const packageObj = new Object();
             packageObj['_id'] = item._id;
             packageObj['products'] = await getProductDetail(item.products);
+            packageObj['maturityDate'] = item.maturityDate;
             packageObj['paymentStatus'] = item.paymentStatus;
-            packageObj['orderStatus'] = item.orderStatus;
             orderPackages.push(packageObj);
         })
     )
@@ -92,9 +93,45 @@ const getPakageDetailsWithProductsOnCancel = async (packages) => {
     )
     return orderPackages;
 }
+const getPakageDetailsWithProductsOnReturn = async (packages) => {
+    let orderPackages = [];
+    await Promise.all(
+        packages.map(async (item) => {
+            const packageObj = new Object();
+            packageObj['_id'] = item._id;
+            packageObj['products'] = await getProductDetail(item.products);
+            packageObj['amount'] = item.returnAmount;
+            orderPackages.push(packageObj);
+        })
+    )
+    return orderPackages;
+}
 
 const cancellableProductFromPackage = async (products) => {
     const onlyCancelableProduct = products.filter(item => item.orderStatus === 'not_confirmed' || item.orderStatus === 'confirmed' || item.orderStatus === 'packed');
+
+    const getProductIds = onlyCancelableProduct.map(item => item.productId);
+    const productDetail = await Product.find(
+        {
+            'products._id': { $in: getProductIds }
+        },
+        {
+            'products.$': 1
+        })
+        .select('_id name colour products').lean();
+
+    const parseProducts = JSON.parse(JSON.stringify(productDetail));
+    // combine proucts details and productQty
+    const combineProductWithCancelableProduct = parseProducts.map(item => ({
+        ...item,
+        ...products.find(ele => ele.productId == item.products[0]._id)
+    }));
+
+    return combineProductWithCancelableProduct;
+}
+
+const returnAbleProductFromPackage = async (products) => {
+    const onlyCancelableProduct = products.filter(item => item.orderStatus === 'delivered');
 
     const getProductIds = onlyCancelableProduct.map(item => item.productId);
     const productDetail = await Product.find(
@@ -235,7 +272,32 @@ module.exports = function (server) {
 
             // remove data from cart
             if (order && paymentType === 'cashondelivery') {
-                await Cart.deleteOne({ 'orderedBy': req.user._id });
+                await Cart.deleteOne({ 'orderedBy': req.user._id }).lean();
+
+                // send email
+                const userInfo = await Users.findById(req.user._id).select('name email registerMethod').lean();
+                if (userInfo.email && userInfo.registerMethod === 'web') {
+                    const orderSummery = {
+                        subtotal: total,
+                        shippingCharge,
+                        couponDiscount,
+                        grandTotal,
+                        paymentMethod: paymentType
+                    }
+
+                    const packagesForEmail = [];
+                    await Promise.all(
+                        packages.map(async (item) => {
+                            const packageObj = new Object();
+                            packageObj['products'] = await getProductDetail(item.products);
+                            packagesForEmail.push(packageObj)
+                        })
+                    )
+                    const orderIdUpperCase = order._id.toString().toUpperCase();
+                    const emailBody = orderConfirm(userInfo.name, orderIdUpperCase, packagesForEmail, orderSummery);
+                    const subject = "Your order is confirm of order id #" + orderIdUpperCase;
+                    await oderStatusEmailHandler(userInfo.email, subject, emailBody)
+                }
             }
 
             // 
@@ -257,7 +319,6 @@ module.exports = function (server) {
                 await newPackages.save();
             })
 
-
             return res.status(201).json({
                 id: order._id,
                 price: grandTotal,
@@ -270,8 +331,8 @@ module.exports = function (server) {
     server.get('/api/checkorder/:id', requiredAuth, checkRole(['subscriber']), async (req, res) => {
         const orderId = req.params.id;
         try {
-            const order = await Order.findOne({ _id: orderId, orderedBy: req.user._id }).lean();
-            const packages = await Package.find({ orderId: order._id }).select('paymentStatus').lean();
+            const order = await Order.findOne({ _id: orderId, orderedBy: req.user._id }).select('_id total shippingCharge couponDiscount grandTotal paymentType').lean();
+            const packages = await Package.find({ orderId: order._id }).select('paymentStatus products').lean();
 
             const checkedPaidPackages = packages.filter(item => item.paymentStatus === 'notpaid');
 
@@ -366,7 +427,7 @@ module.exports = function (server) {
         try {
 
             const order = await Order.findById(orderId).lean();
-            const userAddress = await User.findOne(
+            const userAddress = await Users.findOne(
                 {
                     "addresses._id": order.delivery,
                 }, { _id: 0 })
@@ -744,4 +805,201 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     })
+
+    // return item
+    server.get('/api/returnrequest/:id', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        const packageId = req.params.id;
+        try {
+            const package = await Package.findOne({
+                _id: packageId,
+                maturityDate: { $gte: new Date() }
+            }).
+                select('_id products orderId seller paymentId maturityDate')
+                .lean();
+            if (package) {
+                const packageObj = new Object();
+                packageObj['_id'] = package._id;
+                packageObj['products'] = await returnAbleProductFromPackage(package.products, package._id);
+                packageObj['paymentId'] = package.paymentId;
+                packageObj['maturityDate'] = package.maturityDate;
+
+                return res.status(200).json(packageObj);
+            } else {
+                return res.status(200).json({ products: {} });
+            }
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.put('/api/returnorder', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        const {
+            orderId,
+            orders,
+            returnRequestGroupPackage,
+            paymentId,
+            refundValue,
+            accountName,
+            accountNumber,
+            bankName,
+            branch,
+            esewaId
+        } = req.body;
+        try {
+            const orderStatusLog = {
+                status: 'return_request',
+                statusChangeBy: req.user._id,
+                statusChangeDate: new Date()
+            }
+
+            const createRandomId = () => {
+                const hex = "0123456789";
+                const model = "xxxxxxxxx";
+                var str = "";
+                for (var i = 0; i < model.length; i++) {
+                    var rnd = Math.floor(Math.random() * hex.length);
+                    str += model[i] == "x" ? hex[rnd] : model[i];
+                }
+
+                const addStrWithDate = Number(str) + Number(new Date())
+                return process.env.TRACKINGID_PREFIX + addStrWithDate.toString().slice(-9) + "RN";
+            }
+            const returnTrackingId = createRandomId();
+
+            // return can request base on same pakageId not with base on orderId
+            const packageId = returnRequestGroupPackage[0].packageId;
+
+            //check orderStatus for every product. for cancellation, order mustn't be shipped
+            const onlyProducts = await Package.findById(packageId, { _id: 0 }).select('products paymentType').lean();
+
+            const returnedFromPackage = async (productIds, action) => {
+                const parseOnlyProducts = JSON.parse(JSON.stringify(onlyProducts));
+                const onlyReturnProduct = parseOnlyProducts.products.filter((item) => productIds.includes(item.productId));
+
+                const combineProductAndReturnOrder = onlyReturnProduct.map(item => ({
+                    ...item,
+                    ...orders.find(ele => ele.productId == item.productId)
+                }));
+
+                switch (action) {
+                    case 'productPrice':
+                        const productsForPrice = parseOnlyProducts.products.filter(item => item.productId === productIds);
+                        return productsForPrice[0].price;
+                    case 'returnTotal':
+                        return combineProductAndReturnOrder.reduce((a, c) => ((a + c.reqReturnProductQty) * c.price), 0);
+                    case 'products':
+                        return combineProductAndReturnOrder;
+                    case 'checkReturnableOrder':
+                        const checkOrderForReturn = combineProductAndReturnOrder.some(item => item.orderStatus === 'delivered'
+                            && item.productQty > item.returnProductQty
+                            && item.productQty >= item.reqReturnProductQty
+                        );
+                        return checkOrderForReturn ? true : false;
+                    default:
+                        return null;
+                }
+            }
+            const checkReturnOrder = await returnedFromPackage(returnRequestGroupPackage[0].productId, 'checkReturnableOrder');
+
+            if (checkReturnOrder) {
+                let packageUpdate;
+
+                await Promise.all(
+                    packageUpdate = orders.map(async (order) => {
+                        await Package.findOneAndUpdate({
+                            _id: order.packageId,
+                            'products.productId': order.productId
+                        },
+                            {
+                                $inc: {
+                                    "products.$.returnProductQty": order.reqReturnProductQty
+                                }
+                            }
+                        );
+                    })
+                )
+
+                if (packageUpdate) {
+
+                    // insert rproduct at Package collection
+                    let returnProductsForPackageCollection = [];
+                    await Promise.all(
+                        orders.map(async (item) => {
+                            const productObj = new Object();
+                            productObj['productId'] = item.productId;
+                            productObj['trackingId'] = returnTrackingId;
+                            productObj['productQty'] = item.reqReturnProductQty;
+                            productObj['price'] = await returnedFromPackage(item.productId, 'productPrice');
+                            productObj['reason'] = item.reason;
+                            productObj['orderStatus'] = "return_request";
+                            productObj['orderStatusLog'] = orderStatusLog;
+
+                            returnProductsForPackageCollection.push(productObj);
+                        })
+                    )
+
+                    await Package.findByIdAndUpdate(
+                        packageId,
+                        {
+                            rproducts: returnProductsForPackageCollection
+                        }
+                    );
+
+                    // insert into return
+                    const returnProducts = await returnedFromPackage(returnRequestGroupPackage[0].productId, 'products');
+
+                    const totalReturnAmount = await returnedFromPackage(returnRequestGroupPackage[0].productId, 'returnTotal')
+
+                    const returnStatusLog = {
+                        status: 'progress',
+                        statusChangeBy: req.user._id,
+                        statusChangeDate: new Date()
+                    }
+                    const newReturn = new Return({
+                        orderId,
+                        packageId,
+                        trackingId: returnTrackingId,
+                        products: returnProducts,
+                        paymentId: paymentId,
+                        totalReturnAmount,
+                        requestBy: req.user._id,
+                        status: 'progress',
+                        statusLog: returnStatusLog
+                    });
+
+                    await newReturn.save();
+
+                    // save refund data
+                    if (newReturn) {
+                        const newRefund = new Refund({
+                            orderId,
+                            returnId: newReturn._id,
+                            amount: totalReturnAmount,
+                            refundType: 'return',
+                            paymentId,
+                            paymentType: onlyProducts.paymentType,
+                            paymentStatus: "paid",
+                            refundTo: req.user._id,
+                            esewaId,
+                            'account.title': accountName,
+                            'account.number': accountNumber,
+                            'account.bankName': bankName,
+                            'account.branch': branch
+                        });
+                        await newRefund.save();
+                        return res.status(200).json({ msg: 'success', id: returnTrackingId, "refund": "success" });
+                    }
+                    // report refund and return process has error.
+                    return res.status(200).json({ msg: 'success', id: returnTrackingId, "refund": "error" });
+                } else {
+                    return res.status(422).json({ error: "Some error occur. Please try again later." });
+                }
+            } else {
+                return res.status(422).json({ error: "Some error occur. Please try again later." });
+            }
+
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
 };
