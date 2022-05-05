@@ -1002,4 +1002,82 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
+
+    server.get('/api/returnresult/:packageId/:trackingId', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        const packageId = req.params.packageId;
+        const trackingId = req.params.trackingId;
+        try {
+            const returns = await Return.findOne(
+                {
+                    packageId,
+                    trackingId,
+                    requestBy: req.user._id,
+                }
+            )
+                .select('_id orderId products status')
+                .lean()
+                .populate('orderId', 'createdAt');
+
+            const returnOrders = new Object();
+            returnOrders['_id'] = returns._id;
+            returnOrders['order'] = returns.orderId;
+            returnOrders['products'] = await getProductDetail(returns.products);
+            returnOrders['status'] = returns.status;
+
+            return res.status(200).json(returnOrders);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    // oder/package details & package details to print label
+    server.get('/api/retrunitems/:packageId/:trackingId', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        const packageId = req.params.packageId;
+        const trackingId = req.params.trackingId;
+        try {
+            const package = await Package.findById(packageId)
+                .select("_id orderId seller rproducts trackingId")
+                .populate({
+                    path: 'orderId',
+                    populate: ([{
+                        path: 'orderedBy',
+                        select: 'name _id',
+                    }
+                    ])
+                })
+                .populate({
+                    path: 'seller',
+                    select: 'name',
+                }).lean();
+            console.log(package)
+
+            //seller return address
+            const sellerAddress = await Seller.findOne({
+                userId: package.seller._id,
+                'addresses.label': 'return'
+            }, {
+                'addresses.$': 1
+            }).select('addresses').lean()
+                .populate('addresses.region', 'name')
+                .populate('addresses.city', 'name')
+                .populate('addresses.area', 'name');
+
+            const filterdReturnProducts = package.rproducts.filter(item => item.trackingId === trackingId);
+            console.log(filterdReturnProducts)
+
+            const packageObj = new Object();
+            packageObj['_id'] = package._id;
+            packageObj['rproducts'] = await getProductDetail(filterdReturnProducts);
+            packageObj['returnAddress'] = sellerAddress;
+            packageObj['seller'] = package.seller;
+            packageObj['orders'] = package.orderId;
+            packageObj['trackingId'] = package.trackingId;
+            packageObj['returnTrackingId'] = trackingId;
+
+            return res.status(200).json(packageObj);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
 };
