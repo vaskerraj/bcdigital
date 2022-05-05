@@ -18,6 +18,10 @@ const packageSchema = new mongoose.Schema({
             type: Number,
             require: true
         },
+        returnProductQty: {
+            type: Number,
+            default: 0
+        },
         price: {
             type: Number,
             require: true
@@ -50,6 +54,56 @@ const packageSchema = new mongoose.Schema({
                 "cancel_request",
                 "cancel_approve",
                 "cancel_denide",
+            ]
+        },
+        orderStatusLog: [{
+            status: {
+                type: String
+            },
+            statusChangeBy: {
+                type: ObjectId,
+                ref: 'Users'
+            },
+            statusChangeDate: {
+                type: Date
+            }
+        }],
+    }],
+    rproducts: [{
+        productId: {
+            type: ObjectId,
+            ref: "Product"
+        },
+        location: {
+            type: ObjectId,
+            ref: 'Users'
+        },
+        trackingId: {
+            type: String
+        },
+        productQty: {
+            type: Number
+        },
+        price: {
+            type: Number,
+            require: true
+        },
+        pointAmount: {
+            type: Number,
+        },
+        reason: {
+            type: String
+        },
+        orderStatus: {
+            type: String,
+            enum: [
+                "return_request",
+                "return_approve",
+                "return_denide",
+                "return_shipped",
+                "return_atCity",
+                "return_sameCity",
+                "return_delivered",
             ]
         },
         orderStatusLog: [{
@@ -100,7 +154,7 @@ const packageSchema = new mongoose.Schema({
         require: true
     },
     totalPointAmount: {
-        type: Number, //need to update at delivery  
+        type: Number, //need to update at delivery
     },
     // ship agent id as deliveryRole="main"
     shipping: {

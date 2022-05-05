@@ -27,6 +27,7 @@ require('./models/Seller.js');
 require('./models/Payment.js');
 require('./models/Cancellation.js');
 require('./models/Refund.js');
+require('./models/Return.js');
 
 require('./models/Transaction.js');
 require('./models/SellerInvoiceDates.js');

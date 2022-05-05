@@ -1,82 +1,65 @@
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Schema;
 
-const orderSchema = new mongoose.Schema({
+const returnSchema = new mongoose.Schema({
     orderId: {
         type: ObjectId,
         ref: "Order"
     },
-    cancellationId: {
+    packageId: {
         type: ObjectId,
-        ref: "Cancellation"
+        ref: "Package"
     },
-    returnId: {
-        type: ObjectId,
-        ref: "Return"
-    },
-    amount: {
+    trackingId: {
         type: String,
         require: true
     },
-    refundType: {
-        type: String,
-        enum: [
-            "cancel",
-            "return",
-        ],
+    products: [{
+        productId: {
+            type: ObjectId,
+            ref: "Product"
+        },
+        productQty: {
+            type: Number,
+            require: true
+        },
+        price: {
+            type: Number,
+            require: true
+        },
+        reason: {
+            type: String,
+            require: true
+        }
+    }],
+    returnAmount: {
+        type: Number,
         require: true
     },
     paymentId: {
         type: ObjectId,
         ref: "Payment"
     },
-    paymentType: {
-        type: String,
+    totalReturnAmount: {
+        type: Number,
         require: true
     },
-    paymentStatus: {
-        type: String,
-        require: true
-    },
-    refundTo: {
+    requestBy: {
         type: ObjectId,
-        ref: "Users"
-    },
-    esewaId: {
-        type: String,
-    },
-    account: {
-        title: {
-            type: String
-        },
-        number: {
-            type: String
-        },
-        bankName: {
-            type: String,
-        },
-        branch: {
-            type: String,
-        },
-        chequeFile: {
-            type: String
-        },
+        ref: 'Users'
     },
     status: {
         type: String,
         enum: [
-            "justin",
             "progress",
             "complete",
             "denide"
-        ],
-        default: "justin"
+        ]
     },
     statusLog: [{
         status: {
             type: String,
             enum: [
-                "justin",
                 "progress",
                 "complete",
                 "denide"
@@ -95,4 +78,4 @@ const orderSchema = new mongoose.Schema({
     }],
 }, { timestamps: true });
 
-mongoose.models.Refund || mongoose.model('Refund', orderSchema)
+mongoose.models.Return || mongoose.model('Return', returnSchema)
