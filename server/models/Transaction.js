@@ -59,7 +59,18 @@ const transactionSchema = new mongoose.Schema({
     reversalCommissionStatus: {
         type: String,
         default: 'not_approved'
-    }
+    },
+    paymentStatus: {
+        type: String,
+        default: "not_paid"
+    },
+    paymentDate: {
+        type: Date
+    },
+    paymentBy: {
+        type: ObjectId,
+        ref: "Users"
+    },
 }, { timestamps: true });
 
 mongoose.models.Transaction || mongoose.model('Transaction', transactionSchema)
