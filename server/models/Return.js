@@ -32,10 +32,6 @@ const returnSchema = new mongoose.Schema({
             require: true
         }
     }],
-    returnAmount: {
-        type: Number,
-        require: true
-    },
     paymentId: {
         type: ObjectId,
         ref: "Payment"
