@@ -1080,4 +1080,49 @@ module.exports = function (server) {
         }
     });
 
+    server.get('/api/returnorders', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        try {
+            const returnOrders = await Return.find(
+                { requestBy: req.user._id }
+            )
+                .lean()
+                .populate('orderId', 'createdAt')
+                .populate('packageId', 'rproducts')
+                .sort({ createdAt: -1 });
+
+            const getRefundDetails = async (returnId, paymentType, paymentStatus) => {
+                const returnInfo = await Refund.findOne({ returnId, refundType: "return" }).lean();
+                return returnInfo ?
+                    returnInfo
+                    :
+                    null
+            }
+            let returnOrderProducts = [];
+
+            await Promise.all(
+                returnOrders.map(async (item) => {
+                    const productObj = new Object();
+                    productObj['_id'] = item._id;
+                    productObj['order'] = item.orderId;
+                    productObj['packageId'] = item.packageId;
+                    productObj['products'] = await getProductDetail(item.products);
+                    productObj['returnTrackingId'] = item.trackingId;
+                    productObj['amount'] = item.totalReturnAmount;
+                    productObj['paymentId'] = item.paymentId;
+                    productObj['paymentType'] = item.paymentType;
+                    productObj['paymentStatus'] = item.paymentStatus;
+                    productObj['status'] = item.status;
+                    productObj['statusLog'] = item.statusLog;
+                    productObj['refund'] = await getRefundDetails(item._id, item.paymentType, item.paymentStatus);
+                    productObj['createdAt'] = item.createdAt;
+
+                    returnOrderProducts.push(productObj);
+                })
+            );
+            return res.status(200).json(returnOrderProducts);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    })
+
 };
