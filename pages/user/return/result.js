@@ -8,7 +8,7 @@ import { parseCookies } from 'nookies';
 
 import axios from 'axios';
 
-import { Layout, Card, Affix, Steps, Button } from 'antd';
+import { Layout, Card, Affix, Steps, Button, Tag } from 'antd';
 const { Content } = Layout;
 const { Step } = Steps;
 import { ShoppingOutlined, PrinterOutlined, EnvironmentOutlined } from '@ant-design/icons';
@@ -16,10 +16,9 @@ import { ShoppingOutlined, PrinterOutlined, EnvironmentOutlined } from '@ant-des
 import useWindowDimensions from '../../../helpers/useWindowDimensions';
 import UserSidebarNav from '../../../components/nav/UserSidebarNav';
 import Wrapper from '../../../components/Wrapper';
-import { customImageLoader } from '../../../helpers/functions';
+import { customImageLoader, orderStatusText } from '../../../helpers/functions';
 
 const ReturnResult = ({ packages }) => {
-
     const [onlyMobile, setOnlyMoble] = useState(false);
 
     const productLength = packages.products.length;
@@ -40,7 +39,10 @@ const ReturnResult = ({ packages }) => {
     const handleReturnLabel = () => {
         return router.push(`/user/return/print/${pId}?trackingId=${trackingId}`)
     }
-
+    const getReturnProductStatus = (products, returnTrackingId) => {
+        const filterBaseOnTrackingId = products.filter(item => item.trackingId === returnTrackingId)
+        return filterBaseOnTrackingId[0].orderStatus;
+    }
     return (
         <Wrapper>
             <Head>
@@ -77,7 +79,7 @@ const ReturnResult = ({ packages }) => {
                                     ?
                                     <>
                                         <div className="d-block text-center text-success mt-3" style={{ fontSize: '2rem' }}>
-                                            Your return request was successfully submitted. You need to do some other step for return.
+                                            Your return request was successfully submitted.After 'return apporved'; you need to do some other step for return.
                                         </div>
                                         <div className="d-block mt-4">
                                             <Steps direction="vertical" size="small" current={6}>
@@ -109,9 +111,14 @@ const ReturnResult = ({ packages }) => {
                                         <div className="d-block mt-4 border-top">
                                             <div className="d-flex mt-4 justify-content-between">
                                                 <div className="font16 text-success">Returns Items</div>
-                                                <Link href={`/user/return/print/${pId}?trackingId=${trackingId}`}>
-                                                    <Button size="small" type="primary">View Return Detail</Button>
-                                                </Link>
+                                                <div>
+                                                    <Tag color="green" className="mr-2">
+                                                        Current Status : {orderStatusText(getReturnProductStatus(packages.package.rproducts, trackingId))}
+                                                    </Tag>
+                                                    <Link href={`/user/return/print/${pId}?trackingId=${trackingId}`}>
+                                                        <Button size="small" type="primary">View Return Detail</Button>
+                                                    </Link>
+                                                </div>
                                             </div>
                                             {
                                                 packages.products.map(item => (
@@ -190,7 +197,6 @@ export async function getServerSideProps(context) {
             }
         }
     } catch (err) {
-        console.log(err)
         return {
             redirect: {
                 destination: '../../login',

@@ -1014,13 +1014,15 @@ module.exports = function (server) {
                     requestBy: req.user._id,
                 }
             )
-                .select('_id orderId products status')
+                .select('_id orderId packageId products status')
                 .lean()
-                .populate('orderId', 'createdAt');
+                .populate('orderId', 'createdAt')
+                .populate('packageId', 'rproducts');
 
             const returnOrders = new Object();
             returnOrders['_id'] = returns._id;
             returnOrders['order'] = returns.orderId;
+            returnOrders['package'] = returns.packageId;
             returnOrders['products'] = await getProductDetail(returns.products);
             returnOrders['status'] = returns.status;
 
@@ -1049,7 +1051,6 @@ module.exports = function (server) {
                     path: 'seller',
                     select: 'name',
                 }).lean();
-            console.log(package)
 
             //seller return address
             const sellerAddress = await Seller.findOne({
@@ -1063,7 +1064,6 @@ module.exports = function (server) {
                 .populate('addresses.area', 'name');
 
             const filterdReturnProducts = package.rproducts.filter(item => item.trackingId === trackingId);
-            console.log(filterdReturnProducts)
 
             const packageObj = new Object();
             packageObj['_id'] = package._id;

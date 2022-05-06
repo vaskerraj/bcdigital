@@ -15,11 +15,21 @@ export const orderStatusText = (status) => {
         case 'cancelled':
             return "Cancelled"
         case 'cancelled_by_admin':
-            return "Cancelled By Admin"
+            return "Cancelled By Bc Digital"
         case 'cancelled_by_seller':
             return "Cancelled By Seller"
         case 'cancelled_by_user':
             return "Cancelled By User"
+        case 'return_request':
+            return "Returns Procced"
+        case 'return_approve':
+            return "Returns Approved"
+        case 'return_shipped':
+            return "Returns on way"
+        case 'return_atCity':
+            return "Returns at city"
+        case 'return_delivered':
+            return "Returns Delivered"
         default:
             status;
     }
