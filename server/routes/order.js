@@ -93,19 +93,6 @@ const getPakageDetailsWithProductsOnCancel = async (packages) => {
     )
     return orderPackages;
 }
-const getPakageDetailsWithProductsOnReturn = async (packages) => {
-    let orderPackages = [];
-    await Promise.all(
-        packages.map(async (item) => {
-            const packageObj = new Object();
-            packageObj['_id'] = item._id;
-            packageObj['products'] = await getProductDetail(item.products);
-            packageObj['amount'] = item.returnAmount;
-            orderPackages.push(packageObj);
-        })
-    )
-    return orderPackages;
-}
 
 const cancellableProductFromPackage = async (products) => {
     const onlyCancelableProduct = products.filter(item => item.orderStatus === 'not_confirmed' || item.orderStatus === 'confirmed' || item.orderStatus === 'packed');
@@ -984,7 +971,8 @@ module.exports = function (server) {
                             'account.title': accountName,
                             'account.number': accountNumber,
                             'account.bankName': bankName,
-                            'account.branch': branch
+                            'account.branch': branch,
+                            status: 'justin'
                         });
                         await newRefund.save();
                         return res.status(200).json({ msg: 'success', id: returnTrackingId, "refund": "success" });
