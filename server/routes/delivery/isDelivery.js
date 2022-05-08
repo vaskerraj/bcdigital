@@ -771,6 +771,48 @@ module.exports = function (server) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
     });
+
+    server.put('/api/delivery/makereturn', requiredAuth, checkRole(['delivery']), async (req, res) => {
+        const currentUser = req.user._id;
+        const { packageId, trackingId } = req.body;
+        try {
+            const returnStatusLog = {
+                status: 'return_shipped',
+                statusChangeBy: currentUser,
+                statusChangeDate: new Date()
+            }
+
+            const allProductFromPackage = await Package.findById(packageId, { _id: 0 }).select('rproducts').lean();
+            // filter return products base on checked trackingId
+            const returnProductRelTrackingId = allProductFromPackage.rproducts.filter(item => item.trackingId === trackingId && (item.orderStatus === 'return_approve'));
+
+            const returnProducts = returnProductRelTrackingId.map(item => item.productId);
+
+            await Promise.all(
+                returnProducts.map(async (id) => {
+                    await Package.findOneAndUpdate({
+                        _id: packageId,
+                        'rproducts.productId': id,
+                        'rproducts.orderStatus': 'return_approve'
+                    },
+                        {
+                            $set: {
+                                "rproducts.$.orderStatus": 'return_shipped'
+                            },
+                            $push: {
+                                'rproducts.$.orderStatusLog': returnStatusLog
+                            }
+                        }
+                    );
+                })
+            )
+
+            return res.status(200).json({ msg: "success" });
+
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
     // returns, react at city(seller return address's city)
     server.get('/api/delivery/receive/return/:id', requiredAuth, checkRole(['delivery']), async (req, res) => {
         const currentUser = req.user._id;
