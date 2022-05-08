@@ -43,7 +43,8 @@ export const signin = (email, password, platform) => async (dispatch) => {
         dispatch({ type: DELIVERY_SIGIN_SUCCESS, payload: dispatchData });
 
     } catch (error) {
-        dispatch({ type: DELIVERY_SIGIN_ERROR, payload: error.response.data });
+        const d_error = error.response.data ? error.response.data : error.message;
+        dispatch({ type: DELIVERY_SIGIN_ERROR, payload: d_error });
     }
 }
 
