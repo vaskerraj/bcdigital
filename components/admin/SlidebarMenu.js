@@ -34,10 +34,12 @@ const SlidebarMenu = ({ onActive }) => {
                             : onActive === 'sellers' || onActive === 'verify'
                                 ?
                                 'sub4'
-                                : onActive === 'cancellationList' || onActive === 'cancellationPending' || onActive === 'refundPending'
-                                    || onActive === 'refundList'
+                                : onActive === 'cancellationList' || onActive === 'cancellationPending'
+                                    || onActive === 'refundPending' || onActive === 'refundList'
+                                    || onActive === "returnPending" || onActive === "returnList"
                                     ? 'rrc'
-                                    : ''
+                                    :
+                                    ''
             ]}
             mode="inline"
         >

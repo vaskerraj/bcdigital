@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Cancellation = mongoose.model('Cancellation');
+const Return = mongoose.model('Return');
 const Refund = mongoose.model('Refund');
 const Product = mongoose.model('Product');
 const Package = mongoose.model('Package');
@@ -41,6 +42,13 @@ const getPakageDetailsWithProducts = async (packages) => {
         })
     )
     return orderPackages;
+}
+const getRefundDetails = async (returnId) => {
+    const returnInfo = await Refund.findOne({ returnId, refundType: "return" }).lean();
+    return returnInfo ?
+        returnInfo
+        :
+        null
 }
 
 module.exports = function (server) {
@@ -240,8 +248,169 @@ module.exports = function (server) {
         }
     });
 
-    // refund
+    // return
+    server.get("/api/return/pending", requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
+        try {
+            const returnList = await Return.find({
+                status: 'progress'
+            }).lean()
+                .populate('orderId')
+                .populate('requestBy', 'name mobile email _id');
 
+            let returnProducts = [];
+            await Promise.all(
+                returnList.map(async (item) => {
+                    const productObj = new Object();
+                    productObj['_id'] = item._id;
+                    productObj['order'] = item.orderId;
+                    productObj['trackingId'] = item.trackingId;
+                    productObj['products'] = await getProductDetail(item.products);
+                    productObj['amount'] = item.totalReturnAmount;
+                    productObj['paymentId'] = item.paymentId;
+                    productObj['refund'] = await getRefundDetails(item._id);
+                    productObj['requestBy'] = item.requestBy;
+                    productObj['status'] = item.status;
+                    productObj['statusLog'] = item.statusLog;
+                    productObj['createdAt'] = item.createdAt;
+
+                    returnProducts.push(productObj);
+                })
+            );
+            return res.status(200).json(returnProducts);
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
+
+    server.put("/api/return/pending", requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
+        const { returnId, status, denideReason } = req.body;
+        try {
+            const returnStatusLog = {
+                status,
+                statusChangeBy: req.user._id,
+                statusChangeDate: new Date()
+            }
+            const updateRetrun = await Return.findByIdAndUpdate(returnId,
+                {
+                    $set: {
+                        status
+                    },
+                    $push: {
+                        statusLog: returnStatusLog
+                    }
+                });
+
+            if (updateRetrun && status === 'complete') {
+                const returnApproveStatusLog = {
+                    status: 'retrun_approve',
+                    statusChangeBy: req.user._id,
+                    statusChangeDate: new Date()
+                }
+                await Promise.all(
+                    // when return got approve then update package document and send email to customer.
+
+                    updateRetrun.products.map(async (item) => {
+                        await Package.findOneAndUpdate(
+                            {
+                                _id: updateRetrun.packageId,
+                                'rproducts.productId': item.productId,
+                                'rproducts.orderStatus': 'return_request'
+                            },
+                            {
+                                $set: {
+                                    "rproducts.$.orderStatus": 'return_approve'
+                                },
+                                $push: {
+                                    'rproducts.$.orderStatusLog': returnApproveStatusLog
+                                },
+                            })
+                    })
+                )
+            } else if (updateRetrun && status === 'denide') {
+                // when return got denide then update package document and send email customer.
+                const refundStatusLog = {
+                    status: 'denide',
+                    statusChangeBy: req.user._id,
+                    statusChangeDate: new Date()
+                }
+                await Refund.findOneAndUpdate({ returnId }, {
+                    $set: {
+                        status: 'denide'
+                    },
+                    $push: {
+                        statusLog: refundStatusLog
+                    }
+                });
+
+                const returnDenideStatusLog = {
+                    status: 'return_denide',
+                    statusChangeBy: req.user._id,
+                    statusChangeDate: new Date()
+                }
+                await Promise.all(
+                    // when return got approve then update package document and send email to customer.
+
+                    updateRetrun.products.map(async (item) => {
+                        await Package.findOneAndUpdate(
+                            {
+                                _id: updateRetrun.packageId,
+                                'rproducts.productId': item.productId,
+                                'rproducts.orderStatus': 'return_request'
+                            },
+                            {
+                                $set: {
+                                    "rproducts.$.orderStatus": 'return_denide'
+                                },
+                                $push: {
+                                    'rproducts.$.orderStatusLog': returnDenideStatusLog
+                                },
+                            })
+                    })
+                )
+            }
+
+            return res.status(200).json({ msg: 'success' });
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
+
+    server.get("/api/return/list", requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
+        try {
+            const returnList = await Return.find({
+                status: { $ne: 'progress' }
+            }).lean()
+                .populate('orderId')
+                .populate('requestBy', 'name mobile email _id');
+
+            let returnProducts = [];
+
+            await Promise.all(
+                returnList.map(async (item) => {
+                    const productObj = new Object();
+                    productObj['_id'] = item._id;
+                    productObj['order'] = item.orderId;
+                    productObj['trackingId'] = item.trackingId;
+                    productObj['products'] = await getProductDetail(item.products);
+                    productObj['amount'] = item.totalReturnAmount;
+                    productObj['paymentId'] = item.paymentId;
+                    productObj['refund'] = await getRefundDetails(item._id);
+                    productObj['requestBy'] = item.requestBy;
+                    productObj['status'] = item.status;
+                    productObj['statusLog'] = item.statusLog;
+                    productObj['createdAt'] = item.createdAt;
+                    productObj['updatedAt'] = item.updatedAt;
+
+                    returnProducts.push(productObj);
+                })
+            );
+            return res.status(200).json(returnProducts);
+        } catch (error) {
+            return res.status(422).json({ error: "Something went wrong. Please try again later." })
+        }
+    });
+
+    // refund
     server.get("/api/refund/pending", requiredAuth, checkAdminRole(['superadmin', 'subsuperadmin', 'ordermanager']), async (req, res) => {
         try {
 
