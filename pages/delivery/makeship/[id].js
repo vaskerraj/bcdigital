@@ -177,8 +177,6 @@ const MakeShipped = ({ order, error }) => {
                                         <div>Total Weight:</div>
                                         <div>{getTotalWeight(order.products)} KG</div>
                                     </div>
-
-                                    {getShippedProduct(order.products)}
                                     {getShippedProduct(order.products) === false ?
                                         <div className="d-block mt-3 text-right">
                                             <Button type="primary" onClick={() => proceedToShipHandler(order._id)}>Proceed To Ship</Button>
