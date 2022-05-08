@@ -6,6 +6,7 @@ const Product = mongoose.model('Product');
 const Refund = mongoose.model('Refund');
 const Cancellation = mongoose.model('Cancellation');
 const Seller = mongoose.model('Seller');
+const Return = mongoose.model('Return');
 
 const admin = require('../../../firebase/firebaseAdmin');
 const { requiredAuth, checkRole } = require('../../middlewares/auth');
@@ -251,7 +252,9 @@ module.exports = function (server) {
             const totalPendingRefund = await Refund.countDocuments({
                 status: 'progress'
             });
-            const totalPendigRetrun = 0;
+            const totalPendingRetrun = await Return.countDocuments({
+                status: 'progress'
+            });
             const totalPendingCancellation = await Cancellation.countDocuments({
                 status: 'progress'
             });
@@ -333,7 +336,7 @@ module.exports = function (server) {
                 todayTotalProducts,
                 todayPendingProducts,
                 totalPendingRefund,
-                totalPendigRetrun,
+                totalPendingRetrun,
                 totalPendingCancellation,
                 totalSeller,
                 lastWeekTotalSellers,

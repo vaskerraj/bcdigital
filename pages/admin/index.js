@@ -31,7 +31,7 @@ const AdminIndex = ({
     todayTotalProducts,
     todayPendingProducts,
     totalPendingRefund,
-    totalPendigRetrun,
+    totalPendingRetrun,
     totalPendingCancellation,
     totalSeller,
     lastWeekTotalSellers,
@@ -297,7 +297,7 @@ const AdminIndex = ({
                                 </div>
                             </div>
                             <div className="custom-card-total">
-                                {totalPendingRefund + totalPendingRefund + totalPendingRefund}
+                                {totalPendingRetrun + totalPendingRefund + totalPendingCancellation}
                             </div>
                             <div className="d-block custom-card-content">
                                 <div className="d-flex justify-content-between">
@@ -311,7 +311,7 @@ const AdminIndex = ({
                                     <div className="d-flex mt-4">
                                         <Link href="/admin/rcc/return/pending">
                                             <a>
-                                                Return {totalPendigRetrun}
+                                                Return {totalPendingRetrun}
                                             </a>
                                         </Link>
                                     </div>
@@ -567,7 +567,7 @@ export async function getServerSideProps(context) {
                 todayTotalProducts: data.todayTotalProducts,
                 todayPendingProducts: data.todayPendingProducts,
                 totalPendingRefund: data.totalPendingRefund,
-                totalPendigRetrun: data.totalPendigRetrun,
+                totalPendingRetrun: data.totalPendingRetrun,
                 totalPendingCancellation: data.totalPendingCancellation,
                 totalSeller: data.totalSeller,
                 lastWeekTotalSellers: data.lastWeekTotalSellers,
