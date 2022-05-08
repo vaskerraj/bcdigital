@@ -14,6 +14,7 @@ import { message, Modal, Spin, Button } from 'antd';
 import { LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
 import Wrapper from '../../../components/delivery/Wrapper';
+import { customImageLoader } from '../../../helpers/functions';
 
 const OrdersDetailsAtDelivery = ({ order, userRole }) => {
     const [loading, setLoading] = useState(false);
@@ -101,7 +102,7 @@ const OrdersDetailsAtDelivery = ({ order, userRole }) => {
         Modal.confirm({
             title: 'Confirm Delivery',
             icon: <ExclamationCircleOutlined />,
-            content: order.paymentType === "cashondelivery" ? 'Are you sure you received payement & want to confirm this delivery?' : 'Are you sure to confirm this delivery?',
+            content: order.paymentType === "cashondelivery" ? 'Are you sure you received payment & want to confirm this delivery?' : 'Are you sure to confirm this delivery?',
             okText: 'Yes',
             onOk: () => handleDelivery(packageId),
             cancelText: 'NO',
@@ -315,7 +316,7 @@ const OrdersDetailsAtDelivery = ({ order, userRole }) => {
                                             }
                                         </div>
                                     </div>
-                                    {currentStatus === 'for_delivery' && userRole === "rider" &&
+                                    {order.deliveryDate === undefined && currentStatus === 'for_delivery' && userRole === "rider" &&
                                         <div className="d-flex justify-content-end mt-4">
                                             <Button type="primary" onClick={() => handleDeliveredConfirm(order._id)}>Receive Payment & Delivered</Button>
                                             <Button danger className="ml-2" onClick={() => setNotDeliveryModal(true)}>Not Delivered</Button>
@@ -342,6 +343,7 @@ const OrdersDetailsAtDelivery = ({ order, userRole }) => {
                                                             objectFit="cover"
                                                             objectPosition="top center"
                                                             quality="50"
+                                                            loader={customImageLoader}
                                                         />
                                                         <div className="product-detail ml-3" style={{ width: '100%' }}>
                                                             <div className="product-name">{item.name}</div>
@@ -398,7 +400,7 @@ const OrdersDetailsAtDelivery = ({ order, userRole }) => {
                                     }
                                 </div>
                             </div>
-                            {currentStatus === 'for_delivery' && userRole === "rider" &&
+                            {order.deliveryDate === undefined && currentStatus === 'for_delivery' && userRole === "rider" &&
                                 <div className="d-flex justify-content-end mt-4">
                                     <Button type="primary" onClick={() => handleDeliveredConfirm(order._id)}>Receive Payment & Delivered</Button>
                                     <Button danger className="ml-2" onClick={() => setNotDeliveryModal(true)}>Not Delivered</Button>
