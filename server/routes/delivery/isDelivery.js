@@ -6,8 +6,54 @@ const Package = mongoose.model('Package');
 const Users = mongoose.model('Users');
 const Product = mongoose.model('Product');
 const Transaction = mongoose.model('Transaction');
+const Seller = mongoose.model('Seller');
 
 const { requiredAuth, checkRole } = require('../../middlewares/auth');
+
+const { oderStatusEmailHandler } = require('../../../email');
+const { orderShipped } = require('../../../email/templets');
+
+const getProductDetail = async (products) => {
+    const getProductIds = products.map(item => item.productId);
+    let relatedProducts = [];
+    await Promise.all(
+        getProductIds.map(async (pro) => {
+            const orderProducts = await Product.findOne(
+                {
+                    'products._id': pro
+                },
+                {
+                    'products.$': 1
+                })
+                .select('_id name colour products package').lean();
+            relatedProducts.push(orderProducts);
+        })
+    );
+
+    const parseProducts = JSON.parse(JSON.stringify(relatedProducts));
+
+    // combine proucts details and productQty
+    const combineProductWithOrderitems = parseProducts.map(item => ({
+        ...item,
+        ...products.find(ele => ele.productId == item.products[0]._id)
+    }));
+
+    return combineProductWithOrderitems;
+}
+
+const getUserAddress = async (addressId) => {
+    const userAddress = await Users.findOne(
+        {
+            "addresses._id": addressId,
+        }, { _id: 0 })
+        .select('addresses')
+        .lean()
+        .populate('addresses.region', 'name')
+        .populate('addresses.city', 'name')
+        .populate('addresses.area', 'name');
+
+    return userAddress;
+}
 
 module.exports = function (server) {
 
@@ -344,34 +390,7 @@ module.exports = function (server) {
                     path: 'seller',
                     select: 'name mobile email picture _id'
                 });
-            const getProductDetail = async (products) => {
 
-                const getProductIds = products.map(item => item.productId);
-                let relatedProducts = [];
-                await Promise.all(
-                    getProductIds.map(async (pro) => {
-                        const orderProducts = await Product.findOne(
-                            {
-                                'products._id': pro
-                            },
-                            {
-                                'products.$': 1
-                            })
-                            .select('_id name colour products package').lean();
-                        relatedProducts.push(orderProducts);
-                    })
-                );
-
-                const parseProducts = JSON.parse(JSON.stringify(relatedProducts));
-
-                // combine proucts details and productQty
-                const combineProductWithOrderitems = parseProducts.map(item => ({
-                    ...item,
-                    ...products.find(ele => ele.productId == item.products[0]._id)
-                }));
-
-                return combineProductWithOrderitems;
-            }
             const getUserAddress = async (addressId) => {
                 const userAddress = await Users.findOne(
                     {
@@ -416,7 +435,7 @@ module.exports = function (server) {
             }
 
             const allProductFromPackage = await Package.findById(packageId).
-                select('orderId products shippingCharge')
+                select('orderId paymentType products shippingCharge')
                 .lean()
                 .populate({
                     path: 'orderId',
@@ -466,7 +485,7 @@ module.exports = function (server) {
                 })
 
                 //insert shippingcharge for shipping agent after package been shipped
-                const orderId = allProductFromPackage.orderId;
+                const orderId = allProductFromPackage.orderId._id;
                 const orderByCreatedBy = allProductFromPackage.orderId.orderedBy._id;
                 const createdForUser_shipAgent = allProductFromPackage.orderId.shipping.shipAgentId._id;
 
@@ -480,10 +499,35 @@ module.exports = function (server) {
                     createdForString: "delivery",
                 });
                 await newComission.save();
+
+                // send email
+                const userInfo = await Users.findById(orderByCreatedBy).select('name email registerMethod').lean();
+                if (userInfo.email && userInfo.registerMethod === 'web') {
+
+                    const finalOrderTotal = packedProductOnly.reduce((a, c) => (a + (c.productQty * c.price)), 0);
+                    const shippingCharge = allProductFromPackage.shippingCharge;
+
+                    const totalAtShipped = finalOrderTotal + shippingCharge;
+
+                    const orderSummery = {
+                        subtotal: finalOrderTotal,
+                        shippingCharge,
+                        couponDiscount: 0,
+                        grandTotal: totalAtShipped,
+                        paymentMethod: allProductFromPackage.paymentType
+                    }
+
+                    const packagesForEmail = await getProductDetail(packedProductOnly);
+                    const orderIdUpperCase = orderId.toString().toUpperCase();
+                    const emailBody = orderShipped(userInfo.name, orderIdUpperCase, packagesForEmail, orderSummery);
+
+                    const subject = "Your order is shipped #" + orderIdUpperCase;
+                    await oderStatusEmailHandler(userInfo.email, subject, emailBody);
+                }
             }
             return res.status(200).json({ msg: 'success' });
         } catch (error) {
-            return res.status(422).json({ error: "Some error occur. Please try again later." });
+            return res.status(422).json({ error: error.response ? error.response.data.error : error.message });
         }
     });
 
@@ -585,6 +629,252 @@ module.exports = function (server) {
             );
 
             return res.status(200).json({ msg: "success" });
+
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    //////////////// process return ////////////////
+    //check page base on return trackingId(check duplicate)
+    server.get('/api/delivery/check/return/:id', requiredAuth, checkRole(['delivery']), async (req, res) => {
+        const trackingId = req.params.id;
+        try {
+            const packages = await Package.find({
+                "rproducts.trackingId": trackingId,
+                "rproducts.orderStatus": "return_approve"
+            })
+                .populate({
+                    path: 'orderId',
+                    populate: ([{
+                        path: 'shipping',
+                        select: 'name',
+                        populate: ({
+                            path: 'shipAgentId',
+                            select: 'name _id number email relatedCity',
+                        })
+                    }
+                    ])
+                })
+                .populate({
+                    path: 'seller',
+                    select: 'name mobile _id',
+                }).
+                lean();
+
+            if (packages.length === 0) {
+                return res.status(200).json({ packages, trackingId, msg: "not_found" });
+            } else {
+                return res.status(200).json({ packages, trackingId, msg: "found" });
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    });
+
+    //////// make return ////////
+    server.get('/api/package/makereturn/:id/:trackingId', requiredAuth, checkRole(['delivery']), async (req, res) => {
+        const packageId = req.params.id;
+        const trackingId = req.params.trackingId;
+        try {
+            const package = await Package.findById(packageId)
+                .select('_id orderId products rproducts deliveryMobile paymentType paymentStatus seller trackingId deliveryDate maturityDate createdAt')
+                .lean()
+                .populate({
+                    path: 'orderId',
+                    populate: ([{
+                        path: 'shipping',
+                        select: 'name _id amount maxDeliveryTime minDeliveryTime isDefault',
+                        populate: ({
+                            path: 'shipAgentId',
+                            select: 'name _id number email address relatedCity',
+                        })
+                    },
+                    {
+                        path: 'orderedBy',
+                        select: 'name username role _id',
+                    }
+                    ])
+                })
+                .populate({
+                    path: 'seller',
+                    select: 'name mobile email picture _id'
+                });
+
+            // filter return products base on checked trackingId
+            const returnProductRelTrackingId = package.rproducts.filter(item => item.trackingId === trackingId && (item.orderStatus === 'return_approve' || item.orderStatus === 'return_sameCity'));
+
+            //seller return address
+            const sellerAddress = await Seller.findOne({ userId: package.seller._id }).select('addresses').lean()
+                .populate('addresses.region', 'name')
+                .populate('addresses.city', 'name')
+                .populate('addresses.area', 'name');
+            const sellerReturnAddress = sellerAddress.addresses.find(item => item.label === "return");
+
+            //check delivery branch city and seller return city
+            const sellerReturnCity = sellerReturnAddress.city._id;
+
+            const deliveryUser = await ShippingAgent.findOne({ userId: req.user._id }).select("relatedCity").lean();
+            const deliveryRelatedCity = deliveryUser.relatedCity;
+
+            let sameCity = false;
+            let returnSameCityUpdate;
+            if (deliveryRelatedCity.toString() === sellerReturnCity.toString()) {
+                const returnProducts = returnProductRelTrackingId.map(item => item.productId);
+                const orderStatusLog = {
+                    status: 'return_sameCity',
+                    statusChangeBy: req.user._id,
+                    statusChangeDate: new Date()
+                }
+                // update return status as 'return_sameCity'
+                await Promise.all(
+                    returnProducts.map(async (id) => {
+                        returnSameCityUpdate = await Package.findOneAndUpdate({
+                            _id: packageId,
+                            'rproducts.productId': id,
+                            'rproducts.orderStatus': 'return_approve'
+                        },
+                            {
+                                $set: {
+                                    "rproducts.$.orderStatus": 'return_sameCity'
+                                },
+                                $push: {
+                                    'rproducts.$.orderStatusLog': orderStatusLog
+                                }
+                            }
+                        );
+                    })
+                )
+                if (returnSameCityUpdate) sameCity = true;
+            }
+
+            const packageObj = new Object();
+            packageObj['_id'] = package._id;
+            packageObj['sameCity'] = sameCity;
+            packageObj['products'] = await getProductDetail(package.products);
+            packageObj['rproducts'] = await getProductDetail(returnProductRelTrackingId);
+            packageObj['returnAddress'] = sellerReturnAddress;
+            packageObj['delivery'] = await getUserAddress(package.orderId.delivery);
+            packageObj['deliveryMobile'] = package.orderId.deliveryMobile;
+            packageObj['paymentType'] = package.paymentType;
+            packageObj['paymentStatus'] = package.paymentStatus;
+            packageObj['seller'] = package.seller;
+            packageObj['orders'] = package.orderId;
+            packageObj['trackingId'] = package.trackingId;
+            packageObj['deliveryDate'] = package.deliveryDate;
+            packageObj['maturityDate'] = package.maturityDate;
+            packageObj['rtrackingId'] = trackingId;
+            packageObj['createdAt'] = package.createdAt;
+
+            return res.status(200).json(packageObj);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+    // returns, react at city(seller return address's city)
+    server.get('/api/delivery/receive/return/:id', requiredAuth, checkRole(['delivery']), async (req, res) => {
+        const currentUser = req.user._id;
+        const trackingId = req.params.id;
+        try {
+            const deliveryUser = await ShippingAgent.findOne({ userId: currentUser }).select("relatedCity").lean();
+            const packages = await Package.find({
+                "rproducts.trackingId": trackingId,
+                "rproducts.orderStatus": "return_shipped"
+            }).select("orderId seller _id")
+                .populate({
+                    path: 'orderId',
+                    populate: ([{
+                        path: 'shipping',
+                        select: 'name',
+                        populate: ({
+                            path: 'shipAgentId',
+                            select: 'name _id number email relatedCity',
+                        })
+                    }
+                    ])
+                })
+                .populate({
+                    path: 'seller',
+                    select: 'name mobile _id',
+                }).lean();
+            if (packages.length === 0) {
+                return res.status(200).json({ packages, msg: "not_found" });
+            } else {
+
+                const getUserAddress = async (addressId) => {
+                    const userAddress = await Users.findOne(
+                        {
+                            "addresses._id": addressId,
+                        }, { _id: 0 })
+                        .select('addresses')
+                        .lean();
+                    return userAddress.addresses[0].city;
+                }
+
+                let packagesArray = [];
+                await Promise.all(
+                    packages.map(async (item) => {
+                        const packageObj = new Object();
+                        packageObj['_id'] = item._id;
+                        packageObj['deliveryCity'] = await getUserAddress(item.orderId.delivery);
+                        packageObj['seller'] = item.seller;
+                        packageObj['orderId'] = item.orderId;
+
+                        packagesArray.push(packageObj);
+                    })
+                )
+
+                return res.status(200).json({
+                    packages: packagesArray,
+                    msg: "found",
+                    relatedCity: deliveryUser.relatedCity
+                });
+            }
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.put('/api/delivery/receive/return', requiredAuth, checkRole(['delivery']), async (req, res) => {
+        const currentUser = req.user._id;
+        const { packageId, trackingId } = req.body;
+        try {
+            const returnStatusLog = {
+                status: 'return_atCity',
+                statusChangeBy: currentUser,
+                statusChangeDate: new Date()
+            }
+
+            const allProductFromPackage = await Package.findById(packageId, { _id: 0 }).select('rproducts').lean();
+            // filter return products base on checked trackingId
+            const returnProductRelTrackingId = allProductFromPackage.rproducts.filter(item => item.trackingId === trackingId && (item.orderStatus === 'return_shipped'));
+
+            const returnProducts = returnProductRelTrackingId.map(item => item.productId);
+
+            let checkReturnUpdate;
+            await Promise.all(
+                returnProducts.map(async (id) => {
+                    checkReturnUpdate = await Package.findOneAndUpdate({
+                        _id: packageId,
+                        'rproducts.productId': id,
+                        'rproducts.orderStatus': 'return_shipped'
+                    },
+                        {
+                            $set: {
+                                "rproducts.$.orderStatus": 'return_atCity'
+                            },
+                            $push: {
+                                'rproducts.$.orderStatusLog': returnStatusLog
+                            }
+                        }
+                    );
+                })
+            )
+            if (checkReturnUpdate) {
+                return res.status(200).json({ msg: "success", packageId, trackingId });
+            } else {
+                return res.status(422).json({ error: "error" });
+            }
 
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
