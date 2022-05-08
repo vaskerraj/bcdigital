@@ -13,6 +13,8 @@ const SellerInvoiceDates = mongoose.model('SellerInvoiceDates');
 const moment = require('moment');
 
 const { requiredAuth, checkRole } = require('../../middlewares/auth');
+const { orderDelivered } = require('../../../email/templets');
+const { oderStatusEmailHandler } = require('../../../email');
 
 const getProductDetail = async (products) => {
 
@@ -90,6 +92,15 @@ module.exports = function (server) {
                         reachedLocation: req.user._id,
                         'products.orderStatus': 'not_delivered',
                     }
+                case 'return':
+                    return {
+                        rproducts: { "orderStatusLog.statusChangeBy": req.user._id },
+
+                        rproducts: {
+                            $elemMatch: { "orderStatusLog.status": ['return_shipped', 'return_atCity', 'return_sameCity', 'return_delivered'] }
+                        }
+                    }
+
                 default:
                     return {
                         reachedLocation: req.user._id,
@@ -156,6 +167,10 @@ module.exports = function (server) {
                     path: 'deliveredBy',
                     select: 'name mobile _id'
                 })
+                .populate({
+                    path: 'seller',
+                    select: 'name _id'
+                })
                 .sort(sortBy(sort))
                 .skip((currentPage - 1) * orderPerPage)
                 .limit(orderPerPage);
@@ -182,7 +197,9 @@ module.exports = function (server) {
                     productObj['_id'] = item._id;
                     productObj['products'] = await getProductDetail(item.products);
                     productObj['delivery'] = await getUserAddress(item.orderId.delivery);
-                    productObj['seller'] = await getSellerAddress(item.seller);
+                    productObj['rproducts'] = status === "return" ? await getProductDetail(item.rproducts) : [];
+                    productObj['seller'] = item.seller;
+                    productObj['sellerAddress'] = await getSellerAddress(item.seller);
                     productObj['shippingCharge'] = item.shippingCharge;
                     productObj['grandTotal'] = item.grandTotal;
                     productObj['paymentType'] = item.paymentType;
@@ -815,7 +832,7 @@ module.exports = function (server) {
                 })
             );
 
-            const orderId = allProductFromPackage.orderId;
+            const orderId = allProductFromPackage.orderId._id;
             const orderByCreatedBy = allProductFromPackage.orderId.orderedBy._id;
             const sellerRole = allProductFromPackage.sellerRole;
 
@@ -834,7 +851,7 @@ module.exports = function (server) {
                     paymentId: payment._id,
                     paymentDate: new Date()
                 });
-                await Order.findOneAndUpdate({ orderId: allProductFromPackage.orderId._id }, {
+                await Order.findOneAndUpdate({ orderId }, {
                     paymentStatus: "paid"
                 });
             }

@@ -16,6 +16,7 @@ import { SearchOutlined, CloseOutlined } from '@ant-design/icons';
 import { MapPin, Phone } from 'react-feather';
 
 import Wrapper from '../../../components/delivery/Wrapper';
+import { orderStatusText } from '../../../helpers/functions'
 
 // config antdesign message
 message.config({
@@ -219,6 +220,10 @@ const BranchDeliveries = ({ deliveryData, total }) => {
         }
     }
 
+    const getReturnAtCityProduct = (products) => {
+        return products.some(item => item.orderStatus === 'return_atCity');
+    }
+
     const columns = [
         {
             title: 'ID',
@@ -243,8 +248,10 @@ const BranchDeliveries = ({ deliveryData, total }) => {
         {
             title: 'Receiveable',
             render: (text, record) => <>Rs.{
-                (record.paymentStatus === 'notpaid' || record.paymentType === 'cashondelivery') ?
-                    getProductTotal(record.products, activeTab) + record.shippingCharge
+                activeTab !== "return" ?
+                    (record.paymentStatus === 'notpaid' || record.paymentType === 'cashondelivery') ?
+                        getProductTotal(record.products, activeTab) + record.shippingCharge
+                        : 0
                     : 0
             }</>,
         },
@@ -255,23 +262,46 @@ const BranchDeliveries = ({ deliveryData, total }) => {
             render: (text) => <>{moment(text).fromNow()}</>,
         },
         {
-            title: 'Delivery Details',
+            title: activeTab !== "return" ? 'Delivery Details' : "Return Details",
             render: (text, record) => <>
-                <div className="font14">{record.delivery.name}</div>
-                <div className="d-flex mt-1">
-                    <Phone size={14} className="mt-1" />
-                    <div className="ml-2">
-                        {record.orders.deliveryMobile}
-                    </div>
-                </div>
-                <div className="d-flex mt-1">
-                    <MapPin size={14} className="mt-1" />
-                    <div className="ml-2">
-                        {record.delivery.street}
-                        {record.delivery.area ? record.delivery.area.city : ''}
-                        {',' + record.delivery.city.name + ', ' + record.delivery.region.name}
-                    </div>
-                </div>
+                {activeTab !== "return" ?
+                    <>
+                        <div className="font14">{record.delivery.name}</div>
+                        <div className="d-flex mt-1">
+                            <Phone size={14} className="mt-1" />
+                            <div className="ml-2">
+                                {record.orders.deliveryMobile}
+                            </div>
+                        </div>
+                        <div className="d-flex mt-1">
+                            <MapPin size={14} className="mt-1" />
+                            <div className="ml-2">
+                                {record.delivery.street}
+                                {record.delivery.area ? record.delivery.area.city : ''}
+                                {',' + record.delivery.city.name + ', ' + record.delivery.region.name}
+                            </div>
+                        </div>
+                    </>
+                    :
+                    <>
+                        Seller: <b>{record.seller.name}</b>
+                        <div className="font14">{record.sellerAddress.legalName}</div>
+                        <div className="d-flex mt-1">
+                            <Phone size={14} className="mt-1" />
+                            <div className="ml-2">
+                                {record.sellerAddress.addresses[0]?.mobile}
+                            </div>
+                        </div>
+                        <div className="d-flex mt-1">
+                            <MapPin size={15} className="mt-1" />
+                            <div className="ml-2">
+                                {record.sellerAddress.addresses[0]?.street}
+                                {record.sellerAddress.addresses[0]?.area ? record.sellerAddress.addresses[0]?.area.city : ''}
+                                {',' + record.sellerAddress.addresses[0]?.city.name + ', ' + record.sellerAddress.addresses[0]?.region.name}
+                            </div>
+                        </div>
+                    </>
+                }
             </>,
         },
         {
@@ -358,7 +388,7 @@ const BranchDeliveries = ({ deliveryData, total }) => {
                                 Need to reattempt
                             </div>
                             :
-                            record.seller.addresses[0]?.city._id === record.delivery.city._id ?
+                            record.sellerAddress.addresses[0]?.city._id === record.delivery.city._id ?
                                 <>
                                     <div className="text-danger font12">Seller from same city. Call seller to pick package</div>
                                     <Button size="small" type="primary" onClick={() => handleSameCity(record._id, record.seller)}>Seller detail</Button>
@@ -374,8 +404,12 @@ const BranchDeliveries = ({ deliveryData, total }) => {
                 {record.currentStatus === "fail_delivery" && (record.failDeliveryStatus?.status === "fd_reachedSellerCity" || record.failDeliveryStatus?.status === "fd_sameCity") &&
                     <div className="text-danger font12">
                         Call seller to pick package
-                        <Button size="small" type="primary" onClick={() => handleViweSellerDetails(record.seller, record._id)}>Seller detail</Button>
+                        <Button size="small" type="primary" onClick={() => handleViweSellerDetails(record.sellerAddress, record._id)}>Seller detail</Button>
                     </div>
+                }
+                {
+                    getReturnAtCityProduct(record.rproducts) === true &&
+                    <div className="text-danger font12">Return action needed.<span className="text-info cp">Click here</span> </div>
                 }
             </>,
         },
@@ -433,6 +467,60 @@ const BranchDeliveries = ({ deliveryData, total }) => {
         return router.reload();
     }
 
+    const getCurrentOrderStatusDate = (orderStatus, statusLog) => {
+        const currentStatusLog = statusLog.filter(item => item.status === orderStatus);
+        const currentStatusDate = moment(currentStatusLog.statusChangeDate).format('DD MMM YYYY HH:mm');
+        return currentStatusDate;
+    }
+    const expandedRowRender = (record) => {
+        return (
+            <div className="col">
+                <div className="font15" style={{ fontWeight: 500 }}>Return Product(s)</div>
+                <table className="table">
+                    <thead>
+                        <tr>
+                            <td>Name</td>
+                            <td>Tracking Id</td>
+                            <td>R.Quantity</td>
+                            <td>Reason</td>
+                            <td>Status</td>
+                            <td>Action</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {record.rproducts.map(item =>
+                            <tr>
+                                <td>
+                                    {item.name}
+                                </td>
+                                <td>{item.trackingId}</td>
+                                <td>{item.productQty}</td>
+                                <td><div style={{ fontWeight: 500 }}>{item.reason}</div></td>
+                                <td>
+                                    <Tag color="green">
+                                        {orderStatusText(item.orderStatus)}
+                                    </Tag>
+                                    <div className="text-danger" style={{ fontWeight: 500 }}>
+                                        {getCurrentOrderStatusDate(item.orderStatus, item.orderStatusLog)}
+                                    </div>
+                                </td>
+                                <td>
+                                    {item.orderStatus === "return_atCity"
+                                        ?
+                                        <Link href={`/delivery/return/${record._id}?tid=${item.trackingId}`}>
+                                            <Button size="small" danger>View & Handover</Button>
+                                        </Link>
+                                        :
+                                        '-'
+                                    }
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div >
+        )
+    }
     return (
         <>
             <Head>
@@ -511,8 +599,8 @@ const BranchDeliveries = ({ deliveryData, total }) => {
                         <div className={`activebar ${activeTab === 'delivered' ? 'active' : ''}`}></div>
                     </div>
 
-                    <div className="filter-tab ml-4 cp" onClick={() => handleStatusChange('returned')}>
-                        Returned
+                    <div className="filter-tab ml-4 cp" onClick={() => handleStatusChange('return')}>
+                        Returns
                         <div className={`activebar ${activeTab === 'return' ? 'active' : ''}`}></div>
                     </div>
                 </div>
@@ -557,6 +645,12 @@ const BranchDeliveries = ({ deliveryData, total }) => {
                         rowKey="_id"
                         columns={columns}
                         dataSource={data}
+                        expandable={{
+                            expandRowByClick: activeTab === "return" ? true : false,
+                            expandedRowRender: record =>
+                                expandedRowRender(record),
+                            rowExpandable: record => activeTab === "return" ? true : false
+                        }}
                         pagination={pagination}
                         loading={loading}
                     />
