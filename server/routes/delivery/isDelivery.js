@@ -12,9 +12,6 @@ const Refund = mongoose.model('Refund');
 
 const { requiredAuth, checkRole } = require('../../middlewares/auth');
 
-const { oderStatusEmailHandler } = require('../../../email');
-const { orderShipped } = require('../../../email/templets');
-
 const getProductDetail = async (products) => {
     const getProductIds = products.map(item => item.productId);
     let relatedProducts = [];
@@ -501,31 +498,6 @@ module.exports = function (server) {
                     createdForString: "delivery",
                 });
                 await newComission.save();
-
-                // send email
-                const userInfo = await Users.findById(orderByCreatedBy).select('name email registerMethod').lean();
-                if (userInfo.email && userInfo.registerMethod === 'web') {
-
-                    const finalOrderTotal = packedProductOnly.reduce((a, c) => (a + (c.productQty * c.price)), 0);
-                    const shippingCharge = allProductFromPackage.shippingCharge;
-
-                    const totalAtShipped = finalOrderTotal + shippingCharge;
-
-                    const orderSummery = {
-                        subtotal: finalOrderTotal,
-                        shippingCharge,
-                        couponDiscount: 0,
-                        grandTotal: totalAtShipped,
-                        paymentMethod: allProductFromPackage.paymentType
-                    }
-
-                    const packagesForEmail = await getProductDetail(packedProductOnly);
-                    const orderIdUpperCase = orderId.toString().toUpperCase();
-                    const emailBody = orderShipped(userInfo.name, orderIdUpperCase, packagesForEmail, orderSummery);
-
-                    const subject = "Your order is shipped #" + orderIdUpperCase;
-                    await oderStatusEmailHandler(userInfo.email, subject, emailBody);
-                }
             }
             return res.status(200).json({ msg: 'success' });
         } catch (error) {
@@ -721,7 +693,7 @@ module.exports = function (server) {
 
             let sameCity = false;
             let returnSameCityUpdate;
-            if (deliveryRelatedCity.toString() !== sellerReturnCity.toString()) {
+            if (deliveryRelatedCity.toString() === sellerReturnCity.toString()) {
                 const returnProducts = returnProductRelTrackingId.map(item => item.productId);
                 const orderStatusLog = {
                     status: 'return_sameCity',
