@@ -892,7 +892,23 @@ module.exports = function (server) {
                 });
                 await newSellerInvoiceDate.save();
             }
+            // send email
+            if (userInfo.email && userInfo.registerMethod === 'web') {
+                const orderSummery = {
+                    subtotal: finalOrderTotal,
+                    shippingCharge,
+                    couponDiscount: 0,
+                    grandTotal: totalAtDelivery,
+                    paymentMethod: allProductFromPackage.paymentType
+                }
 
+                const packagesForEmail = await getProductDetail(wayToDeliveryProductOnly);
+                const orderIdUpperCase = orderId.toString().toUpperCase();
+                const emailBody = orderDelivered(userInfo.name, orderIdUpperCase, packagesForEmail, orderSummery);
+
+                const subject = "Your package has been delivered.";
+                await oderStatusEmailHandler(userInfo.email, subject, emailBody);
+            }
             return res.status(200).json({ msg: "success" });
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
@@ -963,113 +979,57 @@ module.exports = function (server) {
     // returns products deleivered to seller
     server.put('/api/delivery/return/delivered', requiredAuth, checkRole(['delivery']), async (req, res) => {
         const { packageId, trackingId } = req.body;
-        console.log(req.body)
         const currentUser = req.user._id;
-        // try {
-        const allProductFromPackage = await Package.findById(packageId)
-            .select('rproducts products orderId seller sellerRole')
-            .lean()
-            .populate({
-                path: 'orderId',
-                populate: ({
-                    path: 'orderedBy',
-                    select: '_id',
-                })
-            });
+        try {
+            const allProductFromPackage = await Package.findById(packageId)
+                .select('rproducts products orderId seller sellerRole')
+                .lean()
+                .populate({
+                    path: 'orderId',
+                    populate: ({
+                        path: 'orderedBy',
+                        select: '_id',
+                    })
+                });
 
-        const returnsAtCityProductOnly = allProductFromPackage.rproducts.filter(item => item.trackingId === trackingId && (item => item.orderStatus === "return_atCity" || item.orderStatus === "return_sameCity"));
-        if (returnsAtCityProductOnly.length === 0) {
-            return res.status(200).json({ msg: "not_found" });
-        }
+            const returnsAtCityProductOnly = allProductFromPackage.rproducts.filter(item => item.trackingId === trackingId && (item => item.orderStatus === "return_atCity" || item.orderStatus === "return_sameCity"));
+            if (returnsAtCityProductOnly.length === 0) {
+                return res.status(200).json({ msg: "not_found" });
+            }
 
-        // sellerId
-        const createdForUser_seller = allProductFromPackage.seller;
-
-        // recalculate return order total
-        const finalOrderTotal = returnsAtCityProductOnly.reduce((a, c) => (a + (c.productQty * c.price)), 0);
-
-
-        // recalculate reserval commission amount
-        let returnProductWithoutProductQty = [];
-        returnsAtCityProductOnly.map(item => {
-            const productObj = new Object();
-            productObj['productId'] = item.productId;
-            productObj['rProductQty'] = item.productQty;
-            productObj['trackingId'] = item.trackingId;
-            returnProductWithoutProductQty.push(productObj);
-        });
-
-        const combineReturnProductWithProduct = allProductFromPackage.products.map(item => ({
-            ...item,
-            ...returnProductWithoutProductQty.find(ele => ele.productId.toString() === item.productId.toString())
-        }));
-
-        // get comission of productQty = 1 and then multiply by return product qty;
-        const reservasalCommission = combineReturnProductWithProduct.reduce((a, c) => (a + ((c.pointAmount / c.productQty) * c.rProductQty)), 0)
-
-        const returnDeliveredLog = {
-            status: 'return_delivered',
-            statusChangeBy: currentUser,
-            statusChangeDate: new Date()
-        };
+            const returnDeliveredLog = {
+                status: 'return_delivered',
+                statusChangeBy: currentUser,
+                statusChangeDate: new Date()
+            };
 
 
-        let returnDeliveredUpdate;
-        await Promise.all(
-            returnsAtCityProductOnly.map(async pro => {
-                returnDeliveredUpdate = await Package.findOneAndUpdate({
-                    _id: packageId,
-                    'rproducts._id': pro._id
-                },
-                    {
-                        $set: {
-                            "rproducts.$.orderStatus": 'return_delivered'
-                        },
-                        $push: {
-                            'rproducts.$.orderStatusLog': returnDeliveredLog
+            let returnDeliveredUpdate;
+            await Promise.all(
+                returnsAtCityProductOnly.map(async pro => {
+                    returnDeliveredUpdate = await Package.findOneAndUpdate({
+                        _id: packageId,
+                        'rproducts._id': pro._id
+                    },
+                        {
+                            $set: {
+                                "rproducts.$.orderStatus": 'return_delivered'
+                            },
+                            $push: {
+                                'rproducts.$.orderStatusLog': returnDeliveredLog
+                            }
                         }
-                    }
-                );
-            })
-        );
+                    );
+                })
+            );
 
-        if (returnDeliveredUpdate) {
-            const orderId = allProductFromPackage.orderId._id;
-            const orderByCreatedBy = allProductFromPackage.orderId.orderedBy._id;
-            const sellerRole = allProductFromPackage.sellerRole;
-
-            // insert return order total
-            const newOrderTotal = new Transaction({
-                orderId,
-                packageId,
-                transType: 'returnOrderTotal',
-                amount: finalOrderTotal,
-                createdBy: createdForUser_seller,
-                createdForUser: orderByCreatedBy,
-                createdForString: "subscriber"
-            });
-
-            await newOrderTotal.save();
-
-            //insert resersal commission
-            const newComission = new Transaction({
-                orderId,
-                packageId,
-                transType: 'reversalCommission',
-                amount: reservasalCommission,
-                createdForUser: createdForUser_seller,
-                createdForString: sellerRole === 'own' ? 'own_seler' : "seller",
-                reversalCommissionStatus: "approved"
-            });
-
-            await newComission.save();
-
-            return res.status(200).json({ msg: "success" });
-        } else {
+            if (returnDeliveredUpdate) {
+                return res.status(200).json({ msg: "success" });
+            } else {
+                return res.status(422).json({ error: "Some error occur. Please try again later." });
+            }
+        } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
-        // } catch (error) {
-        //     return res.status(422).json({ error: "Some error occur. Please try again later." });
-        // }
     });
 }

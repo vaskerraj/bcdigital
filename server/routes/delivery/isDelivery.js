@@ -7,6 +7,8 @@ const Users = mongoose.model('Users');
 const Product = mongoose.model('Product');
 const Transaction = mongoose.model('Transaction');
 const Seller = mongoose.model('Seller');
+const Return = mongoose.model('Return');
+const Refund = mongoose.model('Refund');
 
 const { requiredAuth, checkRole } = require('../../middlewares/auth');
 
@@ -678,7 +680,7 @@ module.exports = function (server) {
         const trackingId = req.params.trackingId;
         try {
             const package = await Package.findById(packageId)
-                .select('_id orderId products rproducts deliveryMobile paymentType paymentStatus seller trackingId deliveryDate maturityDate createdAt')
+                .select('_id orderId products rproducts deliveryMobile sellerRole paymentType paymentStatus seller trackingId deliveryDate maturityDate createdAt')
                 .lean()
                 .populate({
                     path: 'orderId',
@@ -719,7 +721,7 @@ module.exports = function (server) {
 
             let sameCity = false;
             let returnSameCityUpdate;
-            if (deliveryRelatedCity.toString() === sellerReturnCity.toString()) {
+            if (deliveryRelatedCity.toString() !== sellerReturnCity.toString()) {
                 const returnProducts = returnProductRelTrackingId.map(item => item.productId);
                 const orderStatusLog = {
                     status: 'return_sameCity',
@@ -745,7 +747,68 @@ module.exports = function (server) {
                         );
                     })
                 )
-                if (returnSameCityUpdate) sameCity = true;
+
+                if (returnSameCityUpdate) {
+                    sameCity = true;
+                    // update refund process(same city means receive by delivery agent)                    
+
+                    // insert new transaction for return order total & reversalCommission
+
+                    // sellerId
+                    const createdForUser_seller = package.seller._id;
+
+                    // recalculate return order total
+                    const finalOrderTotal = returnProductRelTrackingId.reduce((a, c) => a + c.price, 0);
+
+
+                    // recalculate reserval commission amount
+                    let returnProductWithoutProductQty = [];
+                    returnProductRelTrackingId.map(item => {
+                        const productObj = new Object();
+                        productObj['productId'] = item.productId;
+                        productObj['rProductQty'] = item.productQty;
+                        productObj['trackingId'] = item.trackingId;
+                        returnProductWithoutProductQty.push(productObj);
+                    });
+
+                    const combineReturnProductWithProduct = returnProductWithoutProductQty.map(item => ({
+                        ...item,
+                        ...package.products.find(ele => ele.productId.toString() === item.productId.toString())
+                    }));
+
+                    // get comission of productQty = 1 and then multiply by return product qty;
+                    const reservasalCommission = combineReturnProductWithProduct.reduce((a, c) => (a + ((c.pointAmount / c.productQty) * c.rProductQty)), 0)
+
+                    const orderId = package.orderId._id;
+                    const orderByCreatedBy = package.orderId.orderedBy._id;
+                    const sellerRole = package.sellerRole;
+
+                    // insert return order total
+                    const newOrderTotal = new Transaction({
+                        orderId,
+                        packageId,
+                        transType: 'returnOrderTotal',
+                        amount: finalOrderTotal,
+                        createdBy: createdForUser_seller,
+                        createdForUser: orderByCreatedBy,
+                        createdForString: "subscriber",
+                        returnOrderStatus: "approved"
+                    });
+
+                    await newOrderTotal.save();
+
+                    //insert resersal commission
+                    const newComission = new Transaction({
+                        orderId,
+                        packageId,
+                        transType: 'reversalCommission',
+                        amount: reservasalCommission,
+                        createdForUser: createdForUser_seller,
+                        createdForString: sellerRole === 'own' ? 'own_seler' : "seller",
+                        reversalCommissionStatus: "approved"
+                    });
+                    await newComission.save();
+                }
             }
 
             const packageObj = new Object();
@@ -782,7 +845,29 @@ module.exports = function (server) {
                 statusChangeDate: new Date()
             }
 
-            const allProductFromPackage = await Package.findById(packageId, { _id: 0 }).select('rproducts').lean();
+            const allProductFromPackage = await Package.findById(packageId, { _id: 0 })
+                .select('orderId products rproducts seller')
+                .lean()
+                .populate({
+                    path: 'orderId',
+                    populate: ([{
+                        path: 'shipping',
+                        select: 'name _id amount maxDeliveryTime minDeliveryTime isDefault',
+                        populate: ({
+                            path: 'shipAgentId',
+                            select: 'name _id number email address relatedCity',
+                        })
+                    },
+                    {
+                        path: 'orderedBy',
+                        select: 'name username role _id',
+                    }
+                    ])
+                })
+                .populate({
+                    path: 'seller',
+                    select: 'name mobile email picture _id'
+                });;
             // filter return products base on checked trackingId
             const returnProductRelTrackingId = allProductFromPackage.rproducts.filter(item => item.trackingId === trackingId && (item.orderStatus === 'return_approve'));
 
@@ -805,7 +890,98 @@ module.exports = function (server) {
                         }
                     );
                 })
-            )
+            );
+
+            // update refund process(same city means receive by delivery agent)  
+
+            const orderId = allProductFromPackage.orderId._id;
+
+            const returnDetails = await Return.findOne({
+                orderId,
+                packageId,
+                trackingId,
+            })
+                .select("_id")
+                .lean();
+
+            const relatedReturnId = returnDetails._id;
+            if (relatedReturnId) {
+                const refundStatusLog = {
+                    status: 'progress',
+                    statusChangeBy: req.user._id,
+                    statusChangeDate: new Date()
+                }
+                await Refund.findOneAndUpdate({
+                    returnId: relatedReturnId,
+                    status: 'justin'
+                },
+                    {
+                        $set: {
+                            status: 'progress'
+                        },
+                        $push: {
+                            statusLog: refundStatusLog
+                        }
+                    }
+                );
+
+                // insert new transaction for return order total & reversalCommission
+
+                // sellerId
+                const createdForUser_seller = allProductFromPackage.seller._id;
+
+                // recalculate return order total
+                const finalOrderTotal = returnProductRelTrackingId.reduce((a, c) => a + c.price, 0);
+
+                // recalculate reserval commission amount
+                let returnProductWithoutProductQty = [];
+                returnProductRelTrackingId.map(item => {
+                    const productObj = new Object();
+                    productObj['productId'] = item.productId;
+                    productObj['rProductQty'] = item.productQty;
+                    productObj['trackingId'] = item.trackingId;
+                    returnProductWithoutProductQty.push(productObj);
+                });
+
+                const combineReturnProductWithProduct = returnProductWithoutProductQty.map(item => ({
+                    ...item,
+                    ...allProductFromPackage.products.find(ele => ele.productId.toString() === item.productId.toString())
+                }));
+
+                // get commission of productQty = 1 and then multiply by return product qty;
+                const reservasalCommission = combineReturnProductWithProduct.reduce((a, c) => (a + ((c.pointAmount / c.productQty) * c.rProductQty)), 0)
+
+
+                const orderByCreatedBy = allProductFromPackage.orderId.orderedBy._id;
+                const sellerRole = allProductFromPackage.sellerRole;
+
+                // insert return order total
+                const newOrderTotal = new Transaction({
+                    orderId,
+                    packageId,
+                    transType: 'returnOrderTotal',
+                    amount: finalOrderTotal,
+                    createdBy: createdForUser_seller,
+                    createdForUser: orderByCreatedBy,
+                    createdForString: "subscriber",
+                    returnOrderStatus: "approved"
+                });
+
+                await newOrderTotal.save();
+
+                //insert resersal commission
+                const newComission = new Transaction({
+                    orderId,
+                    packageId,
+                    transType: 'reversalCommission',
+                    amount: reservasalCommission,
+                    createdForUser: createdForUser_seller,
+                    createdForString: sellerRole === 'own' ? 'own_seler' : "seller",
+                    reversalCommissionStatus: "approved"
+                });
+
+                await newComission.save();
+            }
 
             return res.status(200).json({ msg: "success" });
 
