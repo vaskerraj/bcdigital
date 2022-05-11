@@ -927,7 +927,9 @@ module.exports = function (server) {
                     await Package.findByIdAndUpdate(
                         packageId,
                         {
-                            rproducts: returnProductsForPackageCollection
+                            $push: {
+                                rproducts: returnProductsForPackageCollection
+                            }
                         }
                     );
 
