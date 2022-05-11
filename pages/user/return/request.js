@@ -169,6 +169,10 @@ const ReturnRequest = ({ packages, defaultItemForReturn }) => {
             } else {
                 setReturnProductsQty([...returnProductsQty, checkProductsQtyObj]);
             }
+        } else {
+            if (returnProductsQty.some(item => item.productId === productId)) {
+                setReturnProductsQty(returnProductsQty.filter(item => item.productId !== productId));
+            }
         }
     }
 
@@ -352,10 +356,11 @@ const ReturnRequest = ({ packages, defaultItemForReturn }) => {
                                                                                                         1
                                                                                                     </div>
                                                                                                 }
-
-
                                                                                             </div>
-                                                                                            <p className={`errorMsg ml-5 errorQty_${item.products[0]._id}`}></p>
+                                                                                            {
+                                                                                                item.productQty - item.returnProductQty !== 1 &&
+                                                                                                <p className={`errorMsg ml-5 errorQty_${item.products[0]._id}`}></p>
+                                                                                            }
                                                                                         </div>
                                                                                     }
                                                                                 </div>
@@ -392,10 +397,11 @@ const ReturnRequest = ({ packages, defaultItemForReturn }) => {
                                                                                     1
                                                                                 </div>
                                                                             }
-
-
                                                                         </div>
-                                                                        <p className={`errorMsg ml-5 errorQty_${item.products[0]._id}`}></p>
+                                                                        {
+                                                                            item.productQty - item.returnProductQty !== 1 &&
+                                                                            <p className={`errorMsg ml-5 errorQty_${item.products[0]._id}`}></p>
+                                                                        }
                                                                     </div>
 
                                                                     <div className="col-sm-3 col-md-3 text-right">
