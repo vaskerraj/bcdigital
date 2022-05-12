@@ -377,6 +377,8 @@ const SellerOrder = ({ ordersData, total }) => {
                     || product.status === 'cancelled_by_admin'
                     || product.status === 'cancelled_by_user'
                 ));
+        } else if (activeTab === 'return') {
+            getNonCancelProduct = products.filter(product => product.orderStatus === 'return_request' || product.orderStatus === 'return_approve' || product.orderStatus === 'return_shipped' || product.orderStatus === 'return_atCity' || product.orderStatus === 'return_sameCity' || product.orderStatus === 'return_delivered')
         } else {
             getNonCancelProduct = products.filter(item => item.orderStatus === activeTab);
         }
@@ -425,7 +427,7 @@ const SellerOrder = ({ ordersData, total }) => {
         },
         {
             title: 'Total',
-            render: (text, record) => <>Rs.{getProductTotal(record.products, activeTab)}</>,
+            render: (text, record) => <>Rs.{getProductTotal(activeTab !== 'return' ? record.products : record.rproducts, activeTab)}</>,
         },
         {
             title: 'Shipping',
@@ -433,8 +435,16 @@ const SellerOrder = ({ ordersData, total }) => {
 
         },
         {
-            title: 'Grand Total',
-            render: (text, record) => <>Rs.{getProductTotal(record.products, activeTab) + getShippingCharge(record.products, record.shippingCharge, activeTab)}</>,
+            title: activeTab !== 'return' ? 'Grand Total' : 'Return Amount',
+            render: (text, record) => <>
+                Rs.
+                {
+                    activeTab !== 'return' ?
+                        getProductTotal(record.products, activeTab) + getShippingCharge(record.products, record.shippingCharge, activeTab)
+                        :
+                        getProductTotal(record.rproducts, activeTab)
+                }
+            </>,
         },
         {
             title: 'Order By',
@@ -574,7 +584,8 @@ const SellerOrder = ({ ordersData, total }) => {
                             </div>
                         </div>
                     </div>
-                    <div className="col-8 border-right">
+
+                    <div className={`${activeTab !== "return" ? "col-8" : "col-6"} border-right`}>
                         {record.products.map(item => (
                             <div key={item._id} className="d-block">
                                 <div className="font16" style={{ fontWeight: 600 }}>
@@ -593,7 +604,7 @@ const SellerOrder = ({ ordersData, total }) => {
                                     </div>
                                     <div>
                                         <strong style={{ fontWeight: '500' }}>
-                                            Paid Amt.: <span className="text-success font15 font-weight-bold"> Rs.{item.price * item.productQty}
+                                            Paid Amt.: <span className="text-success font15 font-weight-bold"> Rs.{item.price}
                                             </span>
                                         </strong>
                                     </div>
@@ -661,30 +672,104 @@ const SellerOrder = ({ ordersData, total }) => {
                             </div>
                         ))}
                     </div>
-                    <div className="col-4">
-                        <div>
-                            <div className="border-bottom mt-2 pt-2 font16" style={{ fontWeight: 500 }}>
-                                Delivery Info:
-                            </div>
-                            <div className="d-block">
-                                Mobile: {record.orders.deliveryMobile}
-                            </div>
-                            <div className="d-block">
-                                Ordered By: {record.orders.orderedBy?.name}
-                            </div>
-                            <div className="d-block">
-                                Ordered At: {moment(record.createdAt).format("DD MMM YYYY HH:mm")}
-                            </div>
-                            <div className="d-block">
-                                Shipping Plan: {record.orders.shipping?.name}
-                            </div>
-                            <div className="d-block">
-                                Shipping Agent: {record.orders.shipping?.shipAgentId.name}
+                    {activeTab !== "return" ?
+                        <div className="col-4">
+                            <div>
+                                <div className="border-bottom mt-2 pt-2 font16" style={{ fontWeight: 500 }}>
+                                    Delivery Info:
+                                </div>
+                                <div className="d-block">
+                                    Mobile: {record.orders.deliveryMobile}
+                                </div>
+                                <div className="d-block">
+                                    Ordered By: {record.orders.orderedBy?.name}
+                                </div>
+                                <div className="d-block">
+                                    Ordered At: {moment(record.createdAt).format("DD MMM YYYY HH:mm")}
+                                </div>
+                                <div className="d-block">
+                                    Shipping Plan: {record.orders.shipping?.name}
+                                </div>
+                                <div className="d-block">
+                                    Shipping Agent: {record.orders.shipping?.shipAgentId.name}
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        :
+                        <div className="col-6">
+                            {record.rproducts.map(item => (
+                                <div key={item._id} className="d-block">
+                                    <div className="font16" style={{ fontWeight: 600 }}>
+                                        <Link href={`/admin/orders/product/${item._id}/${item.slug}`}>
+                                            <a target="_blank">
+                                                {item.name}
+                                            </a>
+                                        </Link>
+                                    </div>
+                                    <div className="d-flex justify-content-between mt-2">
+                                        <div>
+                                            <strong style={{ fontWeight: '500' }}>Return Qty</strong>: {item.productQty}
+                                        </div>
+                                        <div>
+                                            <strong style={{ fontWeight: '500' }}>Size</strong>: {item.products[0].size}
+                                        </div>
+                                        <div>
+                                            <strong style={{ fontWeight: '500' }}>
+                                                Return Amt.: <span className="text-success font15 font-weight-bold"> Rs.{item.price}
+                                                </span>
+                                            </strong>
+                                        </div>
+                                    </div>
+                                    <div className="d-flex justify-content-between bg-light border-top border-bottom mt-4 pb-2 pt-3 pr-2 pl-2 position-relative">
+                                        <div className="badge bg-info" style={{ position: 'absolute', top: '-0.8rem' }}>
+                                            Reason
+                                        </div>
+                                        <div className="pb-1">
+                                            Return Reason: <b>{item.reason}</b>
+                                        </div>
+                                    </div>
+                                    <>
+                                        <div className="border-bottom mt-2 pt-2 font16" style={{ fontWeight: 500 }}>
+                                            Payment Info:
+                                        </div>
+                                        <div className="d-flex justify-content-between align-items-center pt-2">
+                                            <div>
+                                                Type:
+                                                <Tag color="green" className="ml-1">{paymentTypeText(record.paymentType)}
+                                                </Tag>
+                                            </div>
+                                            <div>
+                                                Status:
+                                                <span className="badge bg-success ml-2">
+                                                    {record.paymentStatus === 'notpaid' ? 'Not Paid' : 'Paid'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </>
+
+                                    <div className="d-flex justify-content-between align-items-center border-top mt-3 pb-2 pt-3">
+                                        <div>
+                                            Current Status:
+                                            <Tag color="black" key={item.orderStatus} className="ml-1">
+                                                {orderStatusText(item.orderStatus)}
+                                            </Tag>
+                                        </div>
+                                        {item.orderStatus === 'not_confirmed' &&
+                                            <div>
+                                                <select className="form-control" defaultValue={item.orderStatus} onChange={(e) => orderStatusOnChange(e.target.value, item._id, record.orders._id, record._id, record.paymentStatus, record.paymentType)}>
+                                                    <option value="confirmed">Confirmed</option>
+                                                    <option value="cancelled">Cancelled</option>
+                                                    <option value="not_confirmed" disabled={true}>Not Confirmed</option>
+                                                </select>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    }
                 </div>
-            </div >
+            </div>
         )
     }
 
