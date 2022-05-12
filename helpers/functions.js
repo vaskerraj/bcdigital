@@ -28,6 +28,8 @@ export const orderStatusText = (status) => {
             return "Returns on way"
         case 'return_atCity':
             return "Returns at city"
+        case 'return_sameCity':
+            return "Returns at city"
         case 'return_delivered':
             return "Returns Delivered"
         default:

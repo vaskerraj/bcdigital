@@ -9,7 +9,6 @@ import axiosApi from '../../../helpers/api';
 import Countdown from "react-countdown";
 
 import moment from 'moment';
-import { useForm } from 'react-hook-form';
 
 import { message, Table, Tag, Modal, Input, DatePicker, Button, Select, Menu, Dropdown, Pagination } from 'antd';
 const { Option } = Select;
@@ -17,7 +16,7 @@ const { RangePicker } = DatePicker;
 import { SearchOutlined, CloseOutlined, DownOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
 import Wrapper from '../../../components/seller/Wrapper';
-import { paymentTypeText, generateTrackingId } from '../../../helpers/functions'
+import { paymentTypeText, orderStatusText } from '../../../helpers/functions'
 
 // config antdesign message
 message.config({
@@ -59,8 +58,6 @@ const SellerOrders = ({ ordersData, total }) => {
     const router = useRouter();
 
     const { sellerAuth } = useSelector(state => state.sellerAuth);
-
-    const { register, handleSubmit, errors, } = useForm();
 
     const recallProductList = async (filterByOrderId, filterByPaymentMethod, filterByOrderDateRange) => {
         setLoading(true);
@@ -241,12 +238,21 @@ const SellerOrders = ({ ordersData, total }) => {
                 (
                     product.orderStatus === 'cancelled_by_seller'
                 ));
-        } else if (activeTab === 'all') {
+        } else if (activeTab === 'return') {
+            getNonCancelProduct = products.filter(product => product.orderStatus === 'return_request' || product.orderStatus === 'return_approve' || product.orderStatus === 'return_shipped' || product.orderStatus === 'return_atCity' || product.orderStatus === 'return_sameCity' || product.orderStatus === 'return_delivered')
+        }
+        else if (activeTab === 'all') {
             getNonCancelProduct = products.filter(product => product.orderStatusLog.some(item => item.status !== 'cancelled_by_seller'));
         } else {
             getNonCancelProduct = products.filter(item => item.orderStatus === activeTab);
         }
         return getNonCancelProduct.reduce((a, c) => (a + c.productQty * c.price), 0);
+    }
+
+    const getCurrentOrderStatusDate = (orderStatus, statusLog) => {
+        const currentStatusLog = statusLog.filter(item => item.status === orderStatus);
+        const currentStatusDate = moment(currentStatusLog.statusChangeDate).format('DD MMM YYYY HH:mm');
+        return currentStatusDate;
     }
 
     const handlePrintMenuClick = (e, packageId) => {
@@ -285,8 +291,15 @@ const SellerOrders = ({ ordersData, total }) => {
         },
         {
             title: 'Pending From',
-            dataIndex: ['ordersConfirmedAt'],
-            render: (text) => <>{moment(text).fromNow()}</>,
+            render: (text, record) => <>
+                {activeTab === "pending" || activeTab === "packed" ?
+                    <>
+                        {moment(record.ordersConfirmedAt).fromNow()}
+                    </>
+                    :
+                    '-'
+                }
+            </>,
         },
         {
             title: 'Payment Method',
@@ -299,7 +312,7 @@ const SellerOrders = ({ ordersData, total }) => {
         },
         {
             title: 'Amount',
-            render: (text, record) => <>Rs.{getProductTotal(record.products, activeTab)}</>,
+            render: (text, record) => <>Rs.{getProductTotal(activeTab !== 'return' ? record.products : record.rproducts, activeTab)}</>,
         },
         {
             title: 'Remaining Time',
@@ -358,7 +371,55 @@ const SellerOrders = ({ ordersData, total }) => {
             </div >,
         },
     ];
-
+    const expandedRowRender = (record) => {
+        return (
+            <div className="col">
+                <div className="font15" style={{ fontWeight: 500 }}>Return Product(s)</div>
+                <table className="table">
+                    <thead>
+                        <tr>
+                            <td>Name</td>
+                            <td>Tracking Id</td>
+                            <td>Quantity</td>
+                            <td>Price</td>
+                            <td>Reason</td>
+                            <td>Status</td>
+                            <td>Action</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {record.rproducts.map(item =>
+                            <tr>
+                                <td>
+                                    {item.name}
+                                </td>
+                                <td>{item.trackingId}</td>
+                                <td>{item.productQty}</td>
+                                <td>Rs.{item.price}</td>
+                                <td><div style={{ fontWeight: 500 }}>{item.reason}</div></td>
+                                <td>
+                                    <Tag color="green">
+                                        {orderStatusText(item.orderStatus)}
+                                    </Tag>
+                                    <div className="text-danger" style={{ fontWeight: 500 }}>
+                                        {getCurrentOrderStatusDate(item.orderStatus, item.orderStatusLog)}
+                                    </div>
+                                </td>
+                                <td>
+                                    {item.orderStatus === "return_atCity" || item.orderStatus === "return_sameCity"
+                                        ?
+                                        <div className="font12 text-success">Wait for call then receive returns</div>
+                                        :
+                                        '-'
+                                    }
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div >
+        )
+    }
     const handleStatusChange = useCallback(value => {
         setOnFirstLoad(false);
         setFilter(prevState => prevState === true ? true : false);
@@ -488,8 +549,12 @@ const SellerOrders = ({ ordersData, total }) => {
                         <div className={`activebar ${activeTab === 'cancelled' ? 'active' : ''}`}></div>
                     </div>
                     <div className="filter-tab ml-4 cp" onClick={() => handleStatusChange('return')}>
-                        Return
+                        Returned
                         <div className={`activebar ${activeTab === 'return' ? 'active' : ''}`}></div>
+                    </div>
+                    <div className="filter-tab ml-4 cp" onClick={() => handleStatusChange('fail_delivery')}>
+                        Fail Delivery
+                        <div className={`activebar ${activeTab === 'fail_delivery' ? 'active' : ''}`}></div>
                     </div>
                 </div>
                 <div className="d-block mb-5">
@@ -541,6 +606,11 @@ const SellerOrders = ({ ordersData, total }) => {
                         rowKey="_id"
                         columns={columns}
                         dataSource={data}
+                        expandable={{
+                            expandedRowRender: record =>
+                                expandedRowRender(record),
+                            rowExpandable: record => activeTab === "return" ? true : false
+                        }}
                         pagination={pagination}
                         loading={loading}
                     />

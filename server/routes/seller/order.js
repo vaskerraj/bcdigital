@@ -88,18 +88,12 @@ module.exports = function (server) {
                 case 'return':
                     return {
                         seller: req.user._id,
-                        products: {
-                            $elemMatch: { "orderStatusLog.status": ['return_request'] }
-                        },
-                        $or: [
-                            { paymentType: 'cashondelivery' },
-                            {
-                                $and: [
-                                    { paymentType: { $ne: 'cashondelivery' } },
-                                    { paymentStatus: 'paid' }
-                                ]
-                            },
-                        ],
+                        rproducts: {
+                            $elemMatch: {
+                                "orderStatusLog.status": ['return_approve', 'return_atCity',
+                                    'return_sameCity', 'return_shipped', 'return_delivered']
+                            }
+                        }
                     }
                 case 'all':
                     return {
@@ -234,6 +228,7 @@ module.exports = function (server) {
                     const productObj = new Object();
                     productObj['_id'] = item._id;
                     productObj['products'] = await getProductDetail(item.products);
+                    productObj['rproducts'] = status === "return" ? await getProductDetail(item.rproducts) : [];
                     productObj['shippingCharge'] = item.shippingCharge;
                     productObj['grandTotal'] = item.grandTotal;
                     productObj['delivery'] = item.delivery;
