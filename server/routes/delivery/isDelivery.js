@@ -722,67 +722,98 @@ module.exports = function (server) {
 
                 if (returnSameCityUpdate) {
                     sameCity = true;
-                    // update refund process(same city means receive by delivery agent)                    
-
-                    // insert new transaction for return order total & reversalCommission
-
-                    // sellerId
-                    const createdForUser_seller = package.seller._id;
-
-                    // recalculate return order total
-                    const finalOrderTotal = returnProductRelTrackingId.reduce((a, c) => a + c.price, 0);
-
-
-                    // recalculate reserval commission amount
-                    let returnProductWithoutProductQty = [];
-                    returnProductRelTrackingId.map(item => {
-                        const productObj = new Object();
-                        productObj['productId'] = item.productId;
-                        productObj['rProductQty'] = item.productQty;
-                        productObj['trackingId'] = item.trackingId;
-                        returnProductWithoutProductQty.push(productObj);
-                    });
-
-                    const combineReturnProductWithProduct = returnProductWithoutProductQty.map(item => ({
-                        ...item,
-                        ...package.products.find(ele => ele.productId.toString() === item.productId.toString())
-                    }));
-
-                    // get comission of productQty = 1 and then multiply by return product qty;
-                    const reservasalCommission = combineReturnProductWithProduct.reduce((a, c) => (a + ((c.pointAmount / c.productQty) * c.rProductQty)), 0)
+                    // update refund process(same city means receive by delivery agent)
 
                     const orderId = package.orderId._id;
-                    const orderByCreatedBy = package.orderId.orderedBy._id;
-                    const sellerRole = package.sellerRole;
 
-                    // insert return order total
-                    const newOrderTotal = new Transaction({
+                    const returnDetails = await Return.findOne({
                         orderId,
                         packageId,
-                        transType: 'returnOrderTotal',
-                        amount: finalOrderTotal,
-                        createdBy: createdForUser_seller,
-                        createdForUser: orderByCreatedBy,
-                        createdForString: "subscriber",
-                        returnOrderStatus: "approved"
-                    });
+                        trackingId,
+                    })
+                        .select("_id")
+                        .lean();
 
-                    await newOrderTotal.save();
+                    const relatedReturnId = returnDetails._id;
+                    if (relatedReturnId) {
+                        const refundStatusLog = {
+                            status: 'progress',
+                            statusChangeBy: req.user._id,
+                            statusChangeDate: new Date()
+                        }
+                        await Refund.findOneAndUpdate({
+                            returnId: relatedReturnId,
+                            status: 'justin'
+                        },
+                            {
+                                $set: {
+                                    status: 'progress'
+                                },
+                                $push: {
+                                    statusLog: refundStatusLog
+                                }
+                            }
+                        );
 
-                    //insert resersal commission
-                    const newComission = new Transaction({
-                        orderId,
-                        packageId,
-                        transType: 'reversalCommission',
-                        amount: reservasalCommission,
-                        createdForUser: createdForUser_seller,
-                        createdForString: sellerRole === 'own' ? 'own_seler' : "seller",
-                        reversalCommissionStatus: "approved"
-                    });
-                    await newComission.save();
+
+                        // insert new transaction for return order total & reversalCommission
+
+                        // sellerId
+                        const createdForUser_seller = package.seller._id;
+
+                        // recalculate return order total
+                        const finalOrderTotal = returnProductRelTrackingId.reduce((a, c) => a + c.price, 0);
+
+
+                        // recalculate reserval commission amount
+                        let returnProductWithoutProductQty = [];
+                        returnProductRelTrackingId.map(item => {
+                            const productObj = new Object();
+                            productObj['productId'] = item.productId;
+                            productObj['rProductQty'] = item.productQty;
+                            productObj['trackingId'] = item.trackingId;
+                            returnProductWithoutProductQty.push(productObj);
+                        });
+
+                        const combineReturnProductWithProduct = returnProductWithoutProductQty.map(item => ({
+                            ...item,
+                            ...package.products.find(ele => ele.productId.toString() === item.productId.toString())
+                        }));
+
+                        // get comission of productQty = 1 and then multiply by return product qty;
+                        const reservasalCommission = combineReturnProductWithProduct.reduce((a, c) => (a + ((c.pointAmount / c.productQty) * c.rProductQty)), 0)
+
+                        const orderByCreatedBy = package.orderId.orderedBy._id;
+                        const sellerRole = package.sellerRole;
+
+                        // insert return order total
+                        const newOrderTotal = new Transaction({
+                            orderId,
+                            packageId,
+                            transType: 'returnOrderTotal',
+                            amount: finalOrderTotal,
+                            createdBy: createdForUser_seller,
+                            createdForUser: orderByCreatedBy,
+                            createdForString: "subscriber",
+                            returnOrderStatus: "approved"
+                        });
+
+                        await newOrderTotal.save();
+
+                        //insert resersal commission
+                        const newComission = new Transaction({
+                            orderId,
+                            packageId,
+                            transType: 'reversalCommission',
+                            amount: reservasalCommission,
+                            createdForUser: createdForUser_seller,
+                            createdForString: sellerRole === 'own' ? 'own_seler' : "seller",
+                            reversalCommissionStatus: "approved"
+                        });
+                        await newComission.save();
+                    }
                 }
             }
-
             const packageObj = new Object();
             packageObj['_id'] = package._id;
             packageObj['sameCity'] = sameCity;
