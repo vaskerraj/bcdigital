@@ -95,6 +95,11 @@ module.exports = function (server) {
                             }
                         }
                     }
+                case 'fail_delivery':
+                    return {
+                        seller: req.user._id,
+                        'products.orderStatus': 'fail_delivery',
+                    }
                 case 'all':
                     return {
                         seller: req.user._id,
