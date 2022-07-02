@@ -106,8 +106,8 @@ const OwnShopList = ({ sellerData, defaultAddresses }) => {
         business_name: filterBusinessAdd.fullname,
         business_mobile: filterBusinessAdd.mobile,
         business_email: filterBusinessAdd.email,
-        businessRegion: filterBusinessAdd.region.name,
-        businessCity: filterBusinessAdd.city.name,
+        businessRegion: filterBusinessAdd.region?.name,
+        businessCity: filterBusinessAdd.city?.name,
         businessArea: filterBusinessAdd.area?.name,
         businessStreet: filterBusinessAdd.street,
     }
@@ -194,8 +194,8 @@ const OwnShopList = ({ sellerData, defaultAddresses }) => {
         warehouse_name: filterWarehouseAdd.fullname,
         warehouse_mobile: filterWarehouseAdd.mobile,
         warehouse_email: filterWarehouseAdd.email,
-        warehouseRegion: filterWarehouseAdd.region._id,
-        warehouseCity: filterWarehouseAdd.city._id,
+        warehouseRegion: filterWarehouseAdd.region?._id,
+        warehouseCity: filterWarehouseAdd.city?._id,
         warehouse_street: filterWarehouseAdd.street
     }
 
@@ -266,8 +266,8 @@ const OwnShopList = ({ sellerData, defaultAddresses }) => {
         return_name: filterReturneAdd.fullname,
         return_mobile: filterReturneAdd.mobile,
         return_email: filterReturneAdd.email,
-        returnRegion: filterReturneAdd.region._id,
-        returnCity: filterReturneAdd.city._id,
+        returnRegion: filterReturneAdd.region?._id,
+        returnCity: filterReturneAdd.city?._id,
         return_street: filterReturneAdd.street
     }
     const {
@@ -755,8 +755,8 @@ const OwnShopList = ({ sellerData, defaultAddresses }) => {
                                         errors={ware_errors}
                                         reset={ware_reset}
                                         getValues={ware_getValues}
-                                        defaultRegion={filterWarehouseAdd.region._id}
-                                        defaultCity={filterWarehouseAdd.city._id}
+                                        defaultRegion={filterWarehouseAdd.region?._id}
+                                        defaultCity={filterWarehouseAdd.city?._id}
                                         defaultArea={filterWarehouseAdd.area?._id}
                                     />
                                 </div>
@@ -836,8 +836,8 @@ const OwnShopList = ({ sellerData, defaultAddresses }) => {
                                         errors={return_errors}
                                         reset={return_reset}
                                         getValues={return_getValues}
-                                        defaultRegion={filterWarehouseAdd.region._id}
-                                        defaultCity={filterWarehouseAdd.city._id}
+                                        defaultRegion={filterWarehouseAdd.region?._id}
+                                        defaultCity={filterWarehouseAdd.city?._id}
                                         defaultArea={filterWarehouseAdd.area?._id}
                                     />
                                 </div>
