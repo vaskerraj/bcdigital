@@ -457,6 +457,40 @@ const DeliveryDashbaord = () => {
                         </Card>
                     </div>
                     <div className="col-12 col-md-4 mt-4">
+                        <Card title="Fail Delivery Dispatch">
+                            <div className="d-flex">
+                                <div>
+                                    <div className="d-block">Tracking Id </div>
+                                    <Input
+                                        allowClear
+                                        className="mt-1"
+                                        onChange={(e) => setRecivePackageTrackId(e.target.value)}
+                                    />
+                                </div>
+                                <div className="mt-3">
+                                    <Button danger className="mt-4 ml-2" onClick={handlerReceivePackage}>Check</Button>
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+                    <div className="col-12 col-md-4 mt-4">
+                        <Card title="Fail Delivery(Reach at city)">
+                            <div className="d-flex">
+                                <div>
+                                    <div className="d-block">Tracking Id </div>
+                                    <Input
+                                        allowClear
+                                        className="mt-1"
+                                        onChange={(e) => setRecivePackageTrackId(e.target.value)}
+                                    />
+                                </div>
+                                <div className="mt-3">
+                                    <Button type="primary" className="mt-4 ml-2" onClick={handlerReceivePackage}>Submit</Button>
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+                    <div className="col-12 col-md-4 mt-4">
                         <Card title="Ship Returns">
                             <div className="d-flex">
                                 <div>
