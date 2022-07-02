@@ -1,7 +1,6 @@
 const axios = require('axios');
 
 const smsGetway = async (mobile, smstext) => {
-    console.log(mobile);
     const baseurl = "https://www.hamrosms.com/SMSSend/Message.asp";
     const apiid = process.env.SMS_API_ID;
     const userid = process.env.SMS_USER_ID;
