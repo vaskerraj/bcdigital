@@ -9,7 +9,6 @@ const AddressSelectPart = ({ addresses, formRegister, errors, reset, getValues }
             let index = e.target.selectedIndex;
             let el = e.target.childNodes[index];
             const addressesChild = el.getAttribute('subs');
-            console.log(addressesChild);
             if (type === 'region') {
                 setCities(JSON.parse(addressesChild));
             } else if (type === 'city') {
