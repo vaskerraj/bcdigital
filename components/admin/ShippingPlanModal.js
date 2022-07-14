@@ -113,7 +113,7 @@ const SubAdminModal = (props) => {
         if (modalAction === 'edit_shipplan') {
             setCityDisable(false);
             const filterdCities = addresses && addresses.filter(item => item._id === shippingPlanData.cityId.parentId);
-            setCities(filterdCities[0].children);
+            setCities(filterdCities[0]?.children);
         }
     }, [visible, modalAction]);
 
