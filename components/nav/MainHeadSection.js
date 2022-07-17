@@ -46,7 +46,7 @@ const MainHeadSection = ({ mobileTabBar }) => {
     const menu = (
         <Menu style={{ fontSize: '1.6rem' }}>
             <Menu.Item className="pl-5 pr-5">
-                <Link href="user/profile">
+                <Link href="/user/profile">
                     <a target="_blank" rel="noopener noreferrer">
                         <UserOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
                         Manage Account
@@ -54,7 +54,7 @@ const MainHeadSection = ({ mobileTabBar }) => {
                 </Link>
             </Menu.Item>
             <Menu.Item className="pl-5 pr-5">
-                <Link href="user/orders">
+                <Link href="/user/orders">
                     <a target="_blank" rel="noopener noreferrer">
                         <ShoppingOutlined style={{ fontSize: '2rem', marginRight: '1.7rem' }} />
                         Oders

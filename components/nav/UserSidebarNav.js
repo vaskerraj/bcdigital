@@ -33,7 +33,7 @@ const UserSidebarNav = ({ onActive }) => {
                 >
                     <SubMenu key="sub1" className="position-relative" icon={<UserOutlined />} title="Manage Account">
                         <Menu.Item key="overview" className="main-menu">
-                            <Link href="/user/">Manage Account</Link>
+                            <Link href="/user/profile">Manage Account</Link>
                         </Menu.Item>
                         <Menu.Item key="profile">
                             <Link href="/user/profile">Profile</Link>
