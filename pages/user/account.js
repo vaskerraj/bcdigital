@@ -69,13 +69,13 @@ const account = () => {
                                     Orders
                                 </li>
                             </Link>
-                            <Link href="/user/returnorder">
+                            <Link href="/user/return/orders">
                                 <li className="list-group-item">
                                     <RollbackOutlined style={{ fontSize: '2rem', marginLeft: '1rem', marginRight: '1rem' }} />
                                     Return Orders
                                 </li>
                             </Link>
-                            <Link href="/user/cancelorder">
+                            <Link href="/user/cancel/orders">
                                 <li className="list-group-item">
                                     <CloseCircleOutlined style={{ fontSize: '2rem', marginLeft: '1rem', marginRight: '1rem' }} />
                                     Cancel Orders
