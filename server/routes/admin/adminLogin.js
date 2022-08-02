@@ -5,7 +5,7 @@ const admin = require('../../../firebase/firebaseAdmin');
 
 module.exports = function (server) {
 
-    server.post('/api/alogin', async (req, res) => {
+    server.post('api/alogin', async (req, res) => {
         const { email, password } = req.body;
         if (!email || !password) {
             return res.status(422).json({ error: 'Provide both email and password' });
