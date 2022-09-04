@@ -27,6 +27,7 @@ import { sellerStatusText } from '../../../helpers/functions';
 
 import EditSellerUsernameModal from '../../../components/admin/EditSellerUsernameModal';
 import EditSellerPasswordModal from '../../../components/admin/EditSellerPasswordModal';
+import BusinessAddress from '../../../components/admin/BusinessAddress';
 
 // config antdesign message
 message.config({
@@ -639,41 +640,19 @@ const OwnShopList = ({ sellerData, defaultAddresses }) => {
                                     />
                                     {errors.business_email && <p className="errorMsg">{errors.business_email.message}</p>}
                                 </div>
+                                
+                                
                                 <div className="d-block mt-3">
-                                    <label htmlFor="businessRegion">
-                                        Region
-                                    </label>
-                                    <input name="businessRegion" className="form-control" disabled
-                                        id="businessRegion"
-                                        ref={register({
-                                            required: "Provide"
-                                        })}
-                                    />
-                                    {errors.businessRegion && <p className="errorMsg">{errors.businessRegion.message}</p>}
-                                </div>
-                                <div className="d-block mt-3">
-                                    <label htmlFor="businessCity">
-                                        City
-                                    </label>
-                                    <input name="businessCity" className="form-control" disabled
-                                        id="businessCity"
-                                        ref={register({
-                                            required: "Provide"
-                                        })}
-                                    />
-                                    {errors.businessCity && <p className="errorMsg">{errors.businessCity.message}</p>}
-                                </div>
-                                <div className="d-block mt-3">
-                                    <label htmlFor="businessArea">
-                                        Area
-                                    </label>
-                                    <input name="businessArea" className="form-control" disabled
-                                        id="businessArea"
-                                        ref={register({
-                                            required: "Provide"
-                                        })}
-                                    />
-                                    {errors.businessArea && <p className="errorMsg">{errors.businessArea.message}</p>}
+                                <BusinessAddress
+                                        addresses={defaultAddresses}
+                                        formRegister={register}
+                                        errors={ware_errors}
+                                        reset={reset}
+                                        getValues={getValues}
+                                        defaultRegion={filterBusinessAdd.region?._id}
+                                        defaultCity={filterBusinessAdd.city?._id}
+                                        defaultArea={filterBusinessAdd.area?._id}
+                                    />    
                                 </div>
                                 <div className="d-block mt-3">
                                     <label htmlFor="businessStreet">
