@@ -116,14 +116,14 @@ const ProductDetail = ({ product, pr, qty, as }) => {
         if (product) {
             const categoryData = product.category;
             if (categoryData) {
-                const firstLevelCategory = categoryData.parentId.parentId ? categoryData.parentId.parentId.name : null;
-                setFirstBreadcrumb({ name: firstLevelCategory, slug: categoryData.parentId.slug });
+                const firstLevelCategory = categoryData.parentId?.parentId ? categoryData?.parentId?.parentId.name : null;
+                setFirstBreadcrumb({ name: firstLevelCategory, slug: categoryData?.parentId?.slug });
 
-                const secondLevelCategory = categoryData.parentId ? categoryData.parentId.name : null;
-                setSecondBreadcrumb({ name: secondLevelCategory, slug: categoryData.slug });
+                const secondLevelCategory = categoryData?.parentId ? categoryData.parentId.name : null;
+                setSecondBreadcrumb({ name: secondLevelCategory, slug: categoryData?.slug });
 
                 const thirdLevelCategory = categoryData.name;
-                setThirdBreadcrumb({ name: thirdLevelCategory, slug: categoryData.slug });
+                setThirdBreadcrumb({ name: thirdLevelCategory, slug: categoryData?.slug });
             }
         }
 
@@ -348,18 +348,22 @@ const ProductDetail = ({ product, pr, qty, as }) => {
                                 {firstBreadcrumb.name ?
                                     (
                                         <>
+                                        {firstBreadcrumb.name &&
                                             <li className="breadcrumb-item">
                                                 {firstBreadcrumb.name}
                                             </li>
+                                        }
+                                        {secondBreadcrumb.name &&
                                             <li className="breadcrumb-item">
-                                                <Link href={`/search?q=${secondBreadcrumb.slug}&type=cat`}>
+                                                <Link href={`/search?q=${secondBreadcrumb?.slug}&type=cat`}>
                                                     <a className="text-info">
                                                         {secondBreadcrumb.name}
                                                     </a>
                                                 </Link>
                                             </li>
+                                        }
                                             <li className="breadcrumb-item">
-                                                <Link href={`/search?q=${secondBreadcrumb.slug}&type=cat`}>
+                                                <Link href={`/search?q=${secondBreadcrumb?.slug}&type=cat`}>
                                                     <a className="text-info">
                                                         {thirdBreadcrumb.name}
                                                     </a>
@@ -370,11 +374,13 @@ const ProductDetail = ({ product, pr, qty, as }) => {
                                     :
                                     (
                                         <>
+                                        {secondBreadcrumb.name &&
                                             <li className="breadcrumb-item">
                                                 {secondBreadcrumb.name}
                                             </li>
+                                        }
                                             <li className="breadcrumb-item">
-                                                <Link href={`/search?q=${secondBreadcrumb.slug}&type=cat`}>
+                                                <Link href={`/search?q=${secondBreadcrumb?.slug}&type=cat`}>
                                                     <a className="text-info">
                                                         {thirdBreadcrumb.name}
                                                     </a>
