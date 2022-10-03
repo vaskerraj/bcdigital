@@ -71,7 +71,7 @@ module.exports = function (server) {
 
     server.get('/api/shipagent', requiredAuth, checkRole(['admin']), async (req, res) => {
         try {
-            const shipAgents = await ShippingAgent.find({}).lean();
+            const shipAgents = await ShippingAgent.find({ deliveryRole: 'main' }).lean();
             return res.status(200).json(shipAgents);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
