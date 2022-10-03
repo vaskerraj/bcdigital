@@ -144,8 +144,8 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
             productObj['productQty'] = item.productQty;
             productObj['price'] = Number(finalPrice) * Number(item.productQty);
 
-            //////////////////////////////////
-            productObj['pointAmount'] = item.pointAmt;
+            ////////////////////////////////R
+            productObj['pointAmount'] = item.pointAmt || 0;
             ////////////////////////////
             cartItemWithFixPrice.push(productObj);
         });
@@ -192,7 +192,7 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
         setChangeDeliveryMobile(false);
     }
     const onAddressChangeCancel = () => {
-        setChangeAddress(false);
+        SetChangeAddress(false);
         setChangeDeliveryMobile(false);
     }
     // shipping address radio change
@@ -332,6 +332,30 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
                 }
                 // 
                 post(path, params);
+            }
+        	else if(data && paymentType === 'khalti'){
+                 try {
+
+                const { data } = await axiosApi.post(`https://a.khalti.com/api/v2/epayment/initiate`, {
+                    return_url: "https://bcdigital.online/payment/khalti-success",
+                    website_url: "https://bcdigital.online/",
+                    amount: grandTotal,
+                    purchase_order_id: "test123",
+                    purchase_order_name: "test",
+                },
+                    {
+                        headers: {
+                            "Authorization": "Key live_secret_key_104d2d42ceb54726aad4dd134d9039e2",
+                        }
+                    }
+                );
+                console.log(data)
+                
+                       
+                } catch (error) {
+                    console.log(error);
+                }
+                
             }
         } catch (error) {
             setSubmitOrderLoading(false);
@@ -540,12 +564,13 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
                                         style={{ width: '100%' }}
                                     >
                                         <Space direction="vertical" style={{ width: '100%' }}>
-                                            <Radio value="card" style={{ width: '100%', borderBottom: '1px solid #ddd', paddingBottom: '1.5rem' }}>
+                                            {/* <Radio value="card" style={{ width: '100%', borderBottom: '1px solid #ddd', paddingBottom: '1.5rem' }}>
                                                 <div className="d-inline-flex align-items-center">
                                                     <span className="font16 mr-2">Credt/Debit Card</span>
                                                     <Image src="/payment-card.png" layout="fixed" width="60" height="33" />
                                                 </div>
                                             </Radio>
+                                            */}
                                             <Radio value="esewa" style={{ width: '100%', borderBottom: '1px solid #ddd', paddingBottom: '1.5rem' }}>
                                                 <div className="d-inline-flex align-items-center">
                                                     <span className="font16 mr-2">e-Sewa</span>
