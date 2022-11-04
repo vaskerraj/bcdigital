@@ -282,7 +282,7 @@ input.hiddenAndFocus {
 .vertical-menu .vmenu-content li .verticale-mega-menu,
 .submenu-item {
   width: 20rem;
-  height: -moz-available;
+  height: 100%;
   height: -webkit-fill-available;
   position: absolute;
   z-index: 99;
