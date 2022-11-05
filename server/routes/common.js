@@ -8,6 +8,7 @@ const ShippingCost = mongoose.model('ShippingPlan');
 const Coupon = mongoose.model('Coupon');
 const Seller = mongoose.model('Seller');
 const Package = mongoose.model('Package');
+const CommonSetting = mongoose.model('CommonSetting');
 
 const admin = require('../../firebase/firebaseAdmin');
 const { requiredAuth, checkRole } = require('../middlewares/auth');
@@ -96,6 +97,15 @@ module.exports = function (server) {
             // get list of categories with subs
             const allCategories = categoriesListWithSubs(categories)
             return res.status(200).json(allCategories);
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." });
+        }
+    });
+
+    server.get('/api/content/footer', async (req, res) => {
+        try {
+            const footerContent = await CommonSetting.findOne({}, { _id: 0 }).lean();
+            return res.status(200).json(footerContent);
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." });
         }
