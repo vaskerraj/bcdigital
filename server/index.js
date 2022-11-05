@@ -31,6 +31,7 @@ require('./models/Return.js');
 
 require('./models/Transaction.js');
 require('./models/SellerInvoiceDates.js');
+require('./models/CommonSetting.js');
 
 const port = parseInt(process.env.PORT, 10) || 3000
 const dev = process.env.NODE_ENV !== 'production'
