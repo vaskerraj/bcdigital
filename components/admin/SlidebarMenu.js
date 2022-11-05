@@ -140,7 +140,7 @@ const SlidebarMenu = ({ onActive }) => {
                 </Menu.Item>
             </SubMenu>
             <Menu.Item key="setting" icon={<SettingOutlined />}>
-                <Link href="/admin/setting/default-address">Setting</Link>
+                <Link href="/admin/setting">Setting</Link>
             </Menu.Item>
         </Menu >
     );
