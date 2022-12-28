@@ -93,6 +93,19 @@ const getPakageDetailsWithProductsOnCancel = async (packages) => {
     )
     return orderPackages;
 }
+const getPakageDetailsWithProductsOnReturn = async (packages) => {
+    let orderPackages = [];
+    await Promise.all(
+        packages.map(async (item) => {
+            const packageObj = new Object();
+            packageObj['_id'] = item._id;
+            packageObj['products'] = await getProductDetail(item.products);
+            packageObj['amount'] = item.returnAmount;
+            orderPackages.push(packageObj);
+        })
+    )
+    return orderPackages;
+}
 
 const cancellableProductFromPackage = async (products) => {
     const onlyCancelableProduct = products.filter(item => item.orderStatus === 'not_confirmed' || item.orderStatus === 'confirmed' || item.orderStatus === 'packed');
@@ -424,6 +437,8 @@ module.exports = function (server) {
                 .populate('addresses.city', 'name')
                 .populate('addresses.area', 'name');
 
+            const actualAddress = userAddress.addresses.filter(add => add._id.toString() === order.delivery.toString());
+
             const packages = await Package.find(
                 {
                     orderId: orderId
@@ -447,7 +462,7 @@ module.exports = function (server) {
 
             return res.status(200).json({
                 order,
-                deliveryAddress: userAddress.addresses[0],
+                deliveryAddress: actualAddress ? actualAddress[0]: [],
                 packages: orderPackages
             });
         } catch (error) {
@@ -871,8 +886,9 @@ module.exports = function (server) {
                 switch (action) {
                     case 'productPrice':
                         const productsForPrice = parseOnlyProducts.products.filter(item => item.productId === productIds);
-                        // get price of per per productQty coz return QTY wont be same as order QTY
-                        return (productsForPrice[0].price / productsForPrice[0].productQty);
+                        return productsForPrice[0].price;
+                    case 'returnTotal':
+                        return combineProductAndReturnOrder.reduce((a, c) => ((a + c.reqReturnProductQty) * c.price), 0);
                     case 'products':
                         return combineProductAndReturnOrder;
                     case 'checkReturnableOrder':
@@ -915,7 +931,7 @@ module.exports = function (server) {
                             productObj['productId'] = item.productId;
                             productObj['trackingId'] = returnTrackingId;
                             productObj['productQty'] = item.reqReturnProductQty;
-                            productObj['price'] = parseInt(await returnedFromPackage(item.productId, 'productPrice')) * parseInt(item.reqReturnProductQty);
+                            productObj['price'] = await returnedFromPackage(item.productId, 'productPrice');
                             productObj['reason'] = item.reason;
                             productObj['orderStatus'] = "return_request";
                             productObj['orderStatusLog'] = orderStatusLog;
@@ -927,26 +943,14 @@ module.exports = function (server) {
                     await Package.findByIdAndUpdate(
                         packageId,
                         {
-                            $push: {
-                                rproducts: returnProductsForPackageCollection
-                            }
+                            rproducts: returnProductsForPackageCollection
                         }
                     );
 
                     // insert into return
-                    let returnProductsForReturnCollection = [];
-                    await Promise.all(
-                        orders.map(async (item) => {
-                            const productObj = new Object();
-                            productObj['productId'] = item.productId;
-                            productObj['productQty'] = item.reqReturnProductQty;
-                            productObj['price'] = parseInt(await returnedFromPackage(item.productId, 'productPrice')) * parseInt(item.reqReturnProductQty);
-                            productObj['reason'] = item.reason;
-                            returnProductsForReturnCollection.push(productObj);
-                        })
-                    )
+                    const returnProducts = await returnedFromPackage(returnRequestGroupPackage[0].productId, 'products');
 
-                    const totalReturnAmount = returnProductsForReturnCollection.reduce((a, c) => a + c.price, 0)
+                    const totalReturnAmount = await returnedFromPackage(returnRequestGroupPackage[0].productId, 'returnTotal')
 
                     const returnStatusLog = {
                         status: 'progress',
@@ -957,7 +961,7 @@ module.exports = function (server) {
                         orderId,
                         packageId,
                         trackingId: returnTrackingId,
-                        products: returnProductsForReturnCollection,
+                        products: returnProducts,
                         paymentId: paymentId,
                         totalReturnAmount,
                         requestBy: req.user._id,
@@ -982,8 +986,7 @@ module.exports = function (server) {
                             'account.title': accountName,
                             'account.number': accountNumber,
                             'account.bankName': bankName,
-                            'account.branch': branch,
-                            status: 'justin'
+                            'account.branch': branch
                         });
                         await newRefund.save();
                         return res.status(200).json({ msg: 'success', id: returnTrackingId, "refund": "success" });
