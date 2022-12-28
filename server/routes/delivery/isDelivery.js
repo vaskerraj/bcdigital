@@ -51,7 +51,8 @@ const getUserAddress = async (addressId) => {
         .populate('addresses.city', 'name')
         .populate('addresses.area', 'name');
 
-    return userAddress;
+        const actualAddress = userAddress.addresses.filter(add => add._id.toString() === addressId.toString());
+        return { addresses: actualAddress};
 }
 
 module.exports = function (server) {
@@ -401,7 +402,8 @@ module.exports = function (server) {
                     .populate('addresses.city', 'name')
                     .populate('addresses.area', 'name');
 
-                return userAddress;
+                const actualAddress = userAddress.addresses.filter(add => add._id.toString() === addressId.toString());
+                return { addresses: actualAddress};
             }
 
             const packageObj = new Object();
@@ -543,7 +545,9 @@ module.exports = function (server) {
                         }, { _id: 0 })
                         .select('addresses')
                         .lean();
-                    return userAddress.addresses[0].city;
+
+                    const actualAddress = userAddress.addresses.filter(add => add._id.toString() === addressId.toString());
+                    return actualAddress[0].city;
                 }
 
                 let packagesArray = [];
@@ -1029,7 +1033,9 @@ module.exports = function (server) {
                         }, { _id: 0 })
                         .select('addresses')
                         .lean();
-                    return userAddress.addresses[0].city;
+
+                    const actualAddress = userAddress.addresses.filter(add => add._id.toString() === addressId.toString());
+                    return actualAddress[0].city;
                 }
 
                 let packagesArray = [];

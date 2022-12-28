@@ -56,7 +56,9 @@ const getUserAddress = async (addressId) => {
         .populate('addresses.city', 'name')
         .populate('addresses.area', 'name');
 
-    return userAddress.addresses[0];
+    const actualAddress = userAddress.addresses.filter(add => add._id.toString() === addressId.toString());
+
+    return actualAddress[0];
 }
 module.exports = function (server) {
     server.post('/api/deliveries/list/branch', requiredAuth, checkRole(['delivery']), async (req, res) => {
@@ -406,7 +408,9 @@ module.exports = function (server) {
                     .populate('addresses.city', 'name')
                     .populate('addresses.area', 'name');
 
-                return userAddress;
+                const actualAddress = userAddress.addresses.filter(add => add._id.toString() === addressId.toString());
+                return { addresses: actualAddress};
+
             }
 
             const packageObj = new Object();

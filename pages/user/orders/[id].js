@@ -87,7 +87,7 @@ const OrdersDetails = ({ order, deliveryAddress, packages }) => {
                                         <div className="font12 text-muted">
                                             {deliveryAddress.street}
                                             {deliveryAddress.area ? deliveryAddress.area.city : ''}
-                                            {',' + deliveryAddress.city.name + ', ' + deliveryAddress.region.name}
+                                            {',' + deliveryAddress?.city?.name + ', ' + deliveryAddress?.region?.name}
                                         </div>
                                     </div>
                                 </div>
@@ -118,7 +118,7 @@ const OrdersDetails = ({ order, deliveryAddress, packages }) => {
                                                     <div className="font12 text-muted">
                                                         {deliveryAddress.street}
                                                         {deliveryAddress.area ? deliveryAddress.area.city : ''}
-                                                        {',' + deliveryAddress.city.name + ', ' + deliveryAddress.region.name}
+                                                        {',' + deliveryAddress.city?.name + ', ' + deliveryAddress.region?.name}
                                                     </div>
                                                 </div>
                                             </div>

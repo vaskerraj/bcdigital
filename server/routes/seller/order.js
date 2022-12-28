@@ -391,7 +391,8 @@ module.exports = function (server) {
                     .populate('addresses.city', 'name')
                     .populate('addresses.area', 'name');
 
-                return userAddress;
+                const actualAddress = userAddress.addresses.filter(add => add._id.toString() === addressId.toString());
+                return { addresses: actualAddress};
             }
 
             const packageObj = new Object();
