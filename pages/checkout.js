@@ -192,7 +192,7 @@ const Checkout = ({ cartDetails, products, shippingPlans, defaultAddresses, addr
         setChangeDeliveryMobile(false);
     }
     const onAddressChangeCancel = () => {
-        SetChangeAddress(false);
+        setChangeAddress(false);
         setChangeDeliveryMobile(false);
     }
     // shipping address radio change
