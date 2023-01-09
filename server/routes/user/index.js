@@ -1,8 +1,20 @@
 const mongoose = require('mongoose');
+const multer = require('multer');
+
 const Users = mongoose.model('Users');
 
 const admin = require('../../../firebase/firebaseAdmin');
 const { requiredAuth, checkRole } = require('../../middlewares/auth');
+
+var storage = multer.diskStorage({
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '_' + file.originalname)
+    }
+})
+
+var upload = multer({ storage: storage })
+
+const { singleImageUpload, updateSingleImage } = require('../../utils/imageUpload');
 
 module.exports = function (server) {
 
@@ -55,6 +67,22 @@ module.exports = function (server) {
                 await Users.findByIdAndUpdate(req.user.id, { email: updateValue });
             }
             return res.status(200).json({ msg: "success" });
+        } catch (error) {
+            return res.status(422).json({ error: "Some error occur. Please try again later." })
+        }
+
+    });
+    server.post('/api/profile/image', requiredAuth, checkRole(['subscriber']), upload.single('file'), async (req, res) => {
+        try {
+            if (req.file) {
+                const preProfileImage = await Users.findById(req.user._id).select('picture');
+                if (preProfileImage) {
+                    await updateSingleImage(req, preProfileImage.picture, 'user');
+                }else{
+                    await singleImageUpload(req, 'user');
+                }
+                
+            }
         } catch (error) {
             return res.status(422).json({ error: "Some error occur. Please try again later." })
         }
