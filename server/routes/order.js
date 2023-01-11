@@ -421,6 +421,166 @@ module.exports = function (server) {
         }
     });
 
+    // order list for app
+    server.post('/api/orders/list', requiredAuth, checkRole(['subscriber']), async (req, res) => {
+        const { page, type, limit } = req.body;
+        try {
+            const currentPage = page || 1;
+            const productPerPage = limit || 10;
+            const filterType = type || 'all';
+
+            const skipBy = (currentPage, productPerPage) => {
+                return ((currentPage - 1) * productPerPage)
+            }
+            const filterByType = (type) => {
+                if (type === 'all') {
+                    return {
+                        "$and": [
+                            { orderedBy: req.user._id },
+                            {
+                                "$or": [
+                                    { "packages.paymentType": 'cashondelivery' },
+                                    {
+                                        $and: [
+                                            { "packages.paymentType": { $ne: 'cashondelivery' } },
+                                            { 'packages.paymentStatus': 'paid' }
+                                        ]
+                                    },
+                                ],
+                            }
+                        ]
+                    }
+                } else if (type === 'unpaid') {
+                    return {
+                        "$and": [
+                            { orderedBy: req.user._id },
+                            { "packages.paymentType": 'cashondelivery' },
+                            { 'packages.paymentStatus': 'notpaid' },
+                            { 'packages.orderStatus': { $ne: 'delivered' } }
+
+                        ]
+                    }
+                } else if (type === 'paid') {
+                    return {
+                        "$and": [
+                            { orderedBy: req.user._id },
+                            { 'packages.paymentStatus': 'paid' },
+                            { 'packages.orderStatus': { $ne: 'delivered' } }
+                        ]
+                    }
+                } else if (type === 'processing') {
+                    return {
+                        "$and": [
+                            { orderedBy: req.user._id },
+                            {
+                                "$or": [
+                                    { "packages.paymentType": 'cashondelivery' },
+                                    {
+                                        $and: [
+                                            { "packages.paymentType": { $ne: 'cashondelivery' } },
+                                            { 'packages.paymentStatus': 'paid' }
+                                        ]
+                                    },
+                                    { 'packages.orderStatus': 'not_confirmed' },
+                                    { 'packages.orderStatus': 'confirmed' },
+                                    { 'packages.orderStatus': 'packed' },
+                                    { 'packages.orderStatus': 'shipped' },
+                                    { 'packages.orderStatus': 'reached_at_city' },
+                                    { 'packages.orderStatus': 'for_delivery' },
+                                    { 'packages.orderStatus': 'not_delivered' },
+                                    { 'packages.orderStatus': 'fail_delivery' },
+                                ],
+                            }
+                        ]
+                    }
+                }else if (type === 'delivered') {
+                    return {
+                        "$and": [
+                            { orderedBy: req.user._id },
+                            { 'packages.orderStatus': 'delivered' },
+                            {
+                                "$or": [
+                                    { "packages.paymentType": 'cashondelivery' },
+                                    {
+                                        $and: [
+                                            { "packages.paymentType": { $ne: 'cashondelivery' } },
+                                            { 'packages.paymentStatus': 'paid' }
+                                        ]
+                                    },
+                                ],
+                            },
+                        ]
+                    }
+                } else {
+                    return {
+                        "$and": [
+                            { orderedBy: req.user._id },
+                            {
+                                "$or": [
+                                    { "packages.paymentType": 'cashondelivery' },
+                                    {
+                                        $and: [
+                                            { "packages.paymentType": { $ne: 'cashondelivery' } },
+                                            { 'packages.paymentStatus': 'paid' }
+                                        ]
+                                    },
+                                ],
+                            }
+                        ]
+                    }
+                }
+            }
+
+            const orders = await Order.aggregate([
+                {
+                    '$lookup': {
+                        'from': 'packages',
+                        'let': {
+                            'orderId': '$_id'
+                        },
+                        'pipeline': [{
+                            '$match': { '$expr': { '$eq': ['$orderId', '$$orderId'] } }
+                        }, {
+                            '$sort': { 'createdAt': 1 }
+                        },
+                        ],
+                        'as': 'packages'
+                    }
+                },
+                {
+                    "$match": filterByType(filterType)
+                },
+                {
+                    "$skip": skipBy(currentPage, productPerPage)
+                },
+                {
+                    "$limit": productPerPage
+                }
+
+            ]);
+
+            let orderProducts = [];
+            await Promise.all(
+                orders.map(async (item) => {
+                    const productObj = new Object();
+                    productObj['_id'] = item._id;
+                    productObj['packages'] = await getPakageDetailsWithProducts(item.packages);
+                    productObj['total'] = item.total;
+                    productObj['shippingCharge'] = item.shippingCharge;
+                    productObj['grandTotal'] = item.grandTotal;
+                    productObj['paymentType'] = item.paymentType;
+                    productObj['createdAt'] = item.createdAt;
+
+                    orderProducts.push(productObj);
+                })
+            );
+            return res.status(200).json(orderProducts);
+
+        } catch (error) {
+            return res.status(422).json(error);
+        }
+    });
+
     // order details
     server.get('/api/orders/detail/:id', requiredAuth, checkRole(['subscriber']), async (req, res) => {
         const orderId = req.params.id;
@@ -462,7 +622,7 @@ module.exports = function (server) {
 
             return res.status(200).json({
                 order,
-                deliveryAddress: actualAddress ? actualAddress[0]: [],
+                deliveryAddress: actualAddress ? actualAddress[0] : [],
                 packages: orderPackages
             });
         } catch (error) {
