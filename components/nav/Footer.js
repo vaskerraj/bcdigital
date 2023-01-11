@@ -12,7 +12,6 @@ const Footer = () => {
     useEffect(() => {
         (async function getFooterData() {
             try {
-                console.log("hello")
                 const { data } = await axiosApi.get("/api/content/footer");
                 setFooterData(data);
             } catch (error) {
