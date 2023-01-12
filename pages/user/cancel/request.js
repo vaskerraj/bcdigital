@@ -217,8 +217,7 @@ const CancelRequest = ({ packages, defaultItemForCancel }) => {
                                                                             <div className="d-flex justify-content-between align-items-center mt-1">
                                                                                 <div>
                                                                                     <div className="">
-                                                                                        {item.products[0]._id}
-                                                                                        {item.products[0].size !== 'nosize' ? `Size : ${item.products[0].size} ` : ''}
+                                                                                        {item.products[0].size !== 'nosize' ? `Size : ${item.products[0].size}` : ''}
                                                                                     </div>
                                                                                     <div className="mt-1">
                                                                                         <b>Qty</b>:{item.productQty}
