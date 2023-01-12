@@ -253,7 +253,7 @@ module.exports = function (server) {
         }
     });
 
-    server.delete('/api/product/:id', requiredAuth, checkRole(['admin', 'seller']), async (req, res) => {
+    server.put('/api/product/:id', requiredAuth, checkRole(['admin', 'seller']), async (req, res) => {
         const productId = req.params.id;
         try {
             await Product.findOneAndUpdate({ 'products._id': productId },

@@ -225,7 +225,7 @@ const ManageProduct = ({ productDatas }) => {
 
     const deleteProductHandler = useCallback(async (id) => {
         try {
-            const { data } = await axiosApi.delete(`/api/product/${id}`, {
+            const { data } = await axiosApi.put(`/api/product/${id}`, {
                 headers: {
                     token: sellerAuth.token
                 }
