@@ -196,4 +196,4 @@ const MainHeadSection = ({ mobileTabBar }) => {
     );
 }
 
-export default MainHeadSection;
+export default React.memo(MainHeadSection);

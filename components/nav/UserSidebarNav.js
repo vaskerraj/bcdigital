@@ -66,4 +66,4 @@ const UserSidebarNav = ({ onActive }) => {
     );
 }
 
-export default UserSidebarNav;
+export default React.memo(UserSidebarNav);

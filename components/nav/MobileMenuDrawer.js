@@ -61,4 +61,4 @@ const MobileMenuDrawer = ({ categories, cateogoriesList, mobileMenuVisibleHandle
     );
 }
 
-export default MobileMenuDrawer;
+export default React.memo(MobileMenuDrawer);

@@ -19,7 +19,6 @@ const Footer = () => {
         })()
     }, [])
 
-    console.log(footerData)
     return (
         <footer className="position-relative mt-5 d-none d-sm-block">
             <div className="footer-bottom">
@@ -155,4 +154,4 @@ const Footer = () => {
     );
 }
 
-export default Footer;
+export default React.memo(Footer);

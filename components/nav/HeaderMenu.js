@@ -179,4 +179,4 @@ const HeaderMenu = ({ loginUser, totalCartItems }) => {
     );
 }
 
-export default HeaderMenu;
+export default React.memo(HeaderMenu);

@@ -109,4 +109,4 @@ const SearchBar = ({ screen, searchInputClass, searchBtnClass, searchDropdown })
     );
 };
 
-export default SearchBar;
+export default React.memo(SearchBar);

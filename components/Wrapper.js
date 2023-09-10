@@ -18,4 +18,4 @@ const Wrapper = ({ children, mobileTabBar }) => {
     );
 }
 
-export default Wrapper;
+export default React.memo(Wrapper);
